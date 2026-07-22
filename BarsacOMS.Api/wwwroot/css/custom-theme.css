@@ -1,0 +1,410 @@
+﻿/* ==========================================
+   VARIABLES DE TEMA (Claro por defecto)
+   ========================================== */
+:root {
+    --bg-main: #f8f9fc;
+    --bg-card: #ffffff;
+    --text-color: #333333;
+    --text-muted: #858796;
+    --border-color: #e3e6f0;
+    --sidebar-bg: #224abe;
+    --table-header-bg: #f8f9fc;
+}
+
+/* ==========================================
+   ESTILOS GENERALES Y REGLAS COMUNES
+   ========================================== */
+
+/* Botones de acciones en tablas (Ver, Editar, Eliminar) */
+.table .btn-sm {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.table td .btn-sm {
+    margin: 0 2px;
+}
+
+/* Badge de Talle: Texto blanco garantizado en ambos temas */
+.badge-talle,
+.badge-secondary {
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* Íconos de títulos de modales en celeste para ambos temas */
+.modal-title i,
+.modal-title .fas,
+.modal-title .far {
+    color: #17a2b8 !important;
+}
+
+
+/* ==========================================
+   AJUSTES PARA MODO CLARO (Default / Light)
+   ========================================== */
+
+/* 1. Badges y Fechas */
+:root:not([data-theme="dark"]) .badge-talle,
+:root:not([data-theme="dark"]) .badge-secondary {
+    background-color: #6c757d !important;
+}
+
+[data-theme="light"] .text-warning,
+:root:not([data-theme="dark"]) .text-warning {
+    color: #d97706 !important; /* Naranja/Ámbar cálido visible en blanco */
+}
+
+:root:not([data-theme="dark"]) .modal-body .card {
+    background-color: #f8f9fc !important;
+    border: 1px solid #e3e6f0 !important;
+}
+
+/* 2. Inputs Estéticos en Tema Claro (Gris suave mate, bordes limpios) */
+:root:not([data-theme="dark"]) .modal-body .form-control,
+:root:not([data-theme="dark"]) .modal-body select.form-control,
+:root:not([data-theme="dark"]) .modal-body .custom-select {
+    background-color: #f4f5f8 !important;
+    border: 1px solid #d1d5db !important;
+    color: #333333 !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+    box-shadow: none !important;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+    :root:not([data-theme="dark"]) .modal-body .form-control:focus,
+    :root:not([data-theme="dark"]) .modal-body select.form-control:focus,
+    :root:not([data-theme="dark"]) .modal-body .custom-select:focus {
+        background-color: #ffffff !important;
+        border-color: #224abe !important;
+        box-shadow: 0 0 0 0.2rem rgba(34, 74, 190, 0.15) !important;
+    }
+
+:root:not([data-theme="dark"]) .modal-body label {
+    color: #4a5568 !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+}
+
+/* 3. Botones Verdes -> Azul Sidebar (#224abe) en Modo Claro */
+:root:not([data-theme="dark"]) .btn-success {
+    background-color: #224abe !important;
+    border-color: #224abe !important;
+    color: #ffffff !important;
+}
+
+    :root:not([data-theme="dark"]) .btn-success:hover,
+    :root:not([data-theme="dark"]) .btn-success:focus,
+    :root:not([data-theme="dark"]) .btn-success:active {
+        background-color: #1a3a99 !important;
+        border-color: #1a3a99 !important;
+    }
+
+
+/* ==========================================
+   PALETA BASE EN MODO OSCURO (Dark Mode)
+   Fondo general: #15151a
+   Cards / Sidebar: #1e1e24
+   Bordes / Inputs: #3a3a42 / #2d2d35
+   ========================================== */
+
+/* Fondo general y Body */
+[data-theme="dark"],
+[data-theme="dark"] body {
+    background-color: #15151a !important;
+    color: #e0e0e0 !important;
+}
+
+    /* Arreglo para el contenedor principal */
+    [data-theme="dark"] #content-wrapper,
+    [data-theme="dark"] #content {
+        background-color: #15151a !important;
+    }
+
+    /* Sidebar / Barra lateral */
+    [data-theme="dark"] .sidebar {
+        background-color: #1e1e24 !important;
+        background-image: none !important;
+        border-right: 1px solid #3a3a42 !important;
+    }
+
+    [data-theme="dark"] .sidebar-divider {
+        border-top: 1px solid #3a3a42 !important;
+    }
+
+    [data-theme="dark"] .sidebar .nav-item .nav-link:hover {
+        background-color: #2d2d35 !important;
+        border-radius: 6px;
+    }
+
+    /* Topbar / Barra Superior */
+    [data-theme="dark"] .topbar {
+        background-color: #1e1e24 !important;
+        border-bottom: 1px solid #3a3a42 !important;
+    }
+
+    /* Cards / Tarjetas y Contenedores */
+    [data-theme="dark"] .card {
+        background-color: #1e1e24 !important;
+        border: 1px solid #3a3a42 !important;
+        border-radius: 8px;
+    }
+
+    [data-theme="dark"] .card-header {
+        background-color: #1e1e24 !important;
+        border-bottom: 1px solid #3a3a42 !important;
+    }
+
+    /* Tablas */
+    [data-theme="dark"] .table {
+        color: #e0e0e0 !important;
+        border-color: #3a3a42 !important;
+    }
+
+        [data-theme="dark"] .table th,
+        [data-theme="dark"] .table td {
+            border-color: #2d2d35 !important;
+        }
+
+        [data-theme="dark"] .table thead th {
+            background-color: #25252d !important;
+            color: #ffffff !important;
+            border-bottom: 2px solid #3a3a42 !important;
+        }
+
+    [data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    [data-theme="dark"] .table-hover tbody tr:hover {
+        background-color: #25252d !important;
+    }
+
+    /* DataTables Buscador y Paginación */
+    [data-theme="dark"] .dataTables_wrapper input[type="search"],
+    [data-theme="dark"] .dataTables_wrapper select {
+        background-color: #15151a !important;
+        color: #ffffff !important;
+        border: 1px solid #3a3a42 !important;
+        border-radius: 6px;
+    }
+
+    [data-theme="dark"] .page-link {
+        background-color: #1e1e24 !important;
+        border-color: #3a3a42 !important;
+        color: #cccccc !important;
+    }
+
+    [data-theme="dark"] .page-item.active .page-link {
+        background-color: #25252d !important;
+        border-color: #17a2b8 !important;
+        color: #17a2b8 !important;
+        font-weight: bold;
+    }
+
+    [data-theme="dark"] .page-item.disabled .page-link {
+        background-color: #18181d !important;
+        border-color: #2d2d35 !important;
+        color: #777777 !important;
+    }
+
+    [data-theme="dark"] .page-link:hover {
+        background-color: #2d2d35 !important;
+        color: #ffffff !important;
+    }
+
+    /* Textos e Íconos */
+    [data-theme="dark"] h1,
+    [data-theme="dark"] h2,
+    [data-theme="dark"] h3,
+    [data-theme="dark"] h4,
+    [data-theme="dark"] h5,
+    [data-theme="dark"] h6 {
+        color: #ffffff !important;
+    }
+
+        [data-theme="dark"] h1.h3,
+        [data-theme="dark"] .card-header h6 {
+            color: #17a2b8 !important;
+        }
+
+    [data-theme="dark"] .text-gray-600 {
+        color: #a0a0a0 !important;
+    }
+
+    [data-theme="dark"] .text-warning {
+        color: #f6c23e !important; /* Amarillo brillante */
+    }
+
+    [data-theme="dark"] .text-success {
+        color: #17a2b8 !important; /* Saldo o positivos a Celeste */
+    }
+
+    [data-theme="dark"] .badge-talle,
+    [data-theme="dark"] .badge-secondary {
+        background-color: #4e5d6c !important;
+    }
+
+    /* Footer */
+    [data-theme="dark"] footer.sticky-footer {
+        background-color: #15151a !important;
+        border-top: 1px solid #3a3a42 !important;
+        color: #888888 !important;
+    }
+
+    /* ==========================================
+   MODALES Y FORMULARIOS EN MODO OSCURO
+   ========================================== */
+
+    [data-theme="dark"] .modal-content {
+        background-color: #1e1e24 !important;
+        border: 1px solid #3a3a42 !important;
+        color: #e0e0e0 !important;
+        border-radius: 12px;
+    }
+
+    [data-theme="dark"] .modal-header,
+    [data-theme="dark"] .modal-footer {
+        border-color: #3a3a42 !important;
+    }
+
+    [data-theme="dark"] .modal-body .card {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Inputs Estéticos en Modales (Tema Oscuro) */
+    [data-theme="dark"] .modal-body .form-control,
+    [data-theme="dark"] .modal-body select.form-control,
+    [data-theme="dark"] .modal-body .custom-select {
+        background-color: #2b2c34 !important;
+        border: 1px solid #3f404a !important;
+        color: #e1e1e6 !important;
+        border-radius: 6px !important;
+        padding: 8px 12px !important;
+        font-size: 0.9rem !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Inputs de DataTables (Show entries / Search) - Arreglo de dimensiones */
+    [data-theme="dark"] .dataTables_wrapper .dataTables_length select,
+    [data-theme="dark"] .dataTables_wrapper .dataTables_filter input {
+        background-color: #15151a !important;
+        color: #ffffff !important;
+        border: 1px solid #3a3a42 !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+    }
+
+    /* Específico para el select de "Show entries" (Evita que la flecha pise el número) */
+    [data-theme="dark"] .dataTables_wrapper .dataTables_length select {
+        padding: 4px 24px 4px 10px !important; /* Más espacio a la derecha para la flechita */
+        min-width: 60px !important; /* Ancho mínimo garantizado */
+        height: 35px !important; /* Altura cómoda estándar de Bootstrap */
+    }
+
+    /* Específico para el buscador */
+    [data-theme="dark"] .dataTables_wrapper .dataTables_filter input {
+        padding: 4px 10px !important;
+        height: 35px !important;
+    }
+
+        [data-theme="dark"] .dataTables_wrapper .dataTables_length select:focus,
+        [data-theme="dark"] .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #17a2b8 !important;
+            outline: none !important;
+        }
+
+        [data-theme="dark"] .dataTables_wrapper .dataTables_length select:focus,
+        [data-theme="dark"] .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #17a2b8 !important;
+            outline: none !important;
+        }
+
+        [data-theme="dark"] .modal-body .form-control:focus,
+        [data-theme="dark"] .modal-body select.form-control:focus,
+        [data-theme="dark"] .modal-body .custom-select:focus,
+        [data-theme="dark"] .form-control:focus {
+            background-color: #32333d !important;
+            border-color: #17a2b8 !important;
+            box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .modal-body .form-control::placeholder {
+            color: #8f92a1 !important;
+            opacity: 1;
+        }
+
+    [data-theme="dark"] .modal-body label {
+        color: #a0a5b5 !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        margin-bottom: 4px !important;
+    }
+
+    [data-theme="dark"] .modal-header .close {
+        color: #ffffff !important;
+        opacity: 0.8;
+    }
+
+        [data-theme="dark"] .modal-header .close:hover {
+            opacity: 1;
+        }
+
+    /* Botones Verdes -> Celeste (#17a2b8) en Modo Oscuro */
+    [data-theme="dark"] .btn-success {
+        background-color: #17a2b8 !important;
+        border-color: #17a2b8 !important;
+        color: #ffffff !important;
+    }
+
+        [data-theme="dark"] .btn-success:hover,
+        [data-theme="dark"] .btn-success:focus,
+        [data-theme="dark"] .btn-success:active {
+            background-color: #138496 !important;
+            border-color: #117a8b !important;
+        }
+
+    /* Estilos oscuros para inputs, selects y textareas en Dark Mode */
+    [data-theme="dark"] .form-control,
+    [data-theme="dark"] select.form-control,
+    [data-theme="dark"] input[type="text"],
+    [data-theme="dark"] input[type="number"],
+    [data-theme="dark"] input[type="date"] {
+        background-color: #15151a !important; /* Fondo oscuro integrado */
+        color: #e2e8f0 !important; /* Texto claro legible */
+        border: 1px solid #3a3a42 !important; /* Borde fino sutil */
+        border-radius: 6px !important;
+    }
+
+        /* Campos de solo lectura (readonly / disabled) */
+        [data-theme="dark"] .form-control:disabled,
+        [data-theme="dark"] .form-control[readonly] {
+            background-color: #0f0f12 !important; /* Un poco más oscuro para denotar que no se edita */
+            color: #8a8a93 !important; /* Texto un poco más apagado */
+            border-color: #2a2a32 !important;
+        }
+
+        /* Efecto al hacer foco (clickear) en un campo */
+        [data-theme="dark"] .form-control:focus {
+            background-color: #1a1a22 !important;
+            border-color: #17a2b8 !important; /* Borde turquesa del tema */
+            color: #ffffff !important;
+            box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25) !important;
+        }
+
+        /* Corrección de color para los iconos de calendario en inputs date y desplegables */
+        [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8);
+        }

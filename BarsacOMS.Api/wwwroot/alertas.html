@@ -1,0 +1,291 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Barsac2 - Alertas de Vencimiento</title>
+
+    <!-- Custom fonts for this template -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this page -->
+    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+
+    <!-- TU CSS PERSONALIZADO -->
+    <link href="css/custom-theme.css" rel="stylesheet">
+
+    <style>
+        /* Estilos suaves para destacar filas en modo Claro y Oscuro */
+        tr.alerta-roja {
+            background-color: rgba(220, 53, 69, 0.25) !important;
+        }
+        tr.alerta-amarilla {
+            background-color: rgba(255, 193, 7, 0.25) !important;
+        }
+        tr.alerta-verde {
+            background-color: rgba(40, 167, 69, 0.25) !important;
+        }
+    </style>
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+                <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-laugh-wink"></i></div>
+                <div class="sidebar-brand-text mx-3">Barsac<sup>2</sup></div>
+            </a>
+            <hr class="sidebar-divider my-0">
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Compras</div>
+            <li class="nav-item"><a class="nav-link" href="proveedores.html"><i class="fas fa-fw fa-truck"></i><span>Proveedores</span></a></li>
+            <li class="nav-item active"><a class="nav-link" href="pagos.html"><i class="fas fa-fw fa-file-invoice-dollar"></i><span>Pagos</span></a></li>
+
+            <!-- Menú desplegable para Materias Primas -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMateria" aria-expanded="false" aria-controls="collapseMateria">
+                    <i class="fas fa-fw fa-box"></i><span>Materia Prima</span>
+                </a>
+                <div id="collapseMateria" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="materiaPrimaTela.html">Telas</a>
+                        <a class="collapse-item" href="materiaPrimaPapel.html">Papel</a>
+                        <a class="collapse-item" href="materiaPrimaInsumo.html">Insumos DTF</a>
+                        <a class="collapse-item" href="materiaPrimaMerceria.html">Merceria</a>
+                        <a class="collapse-item" href="materiaPrimaOtros.html">Otros</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="productos.html"><i class="fas fa-fw fa-box"></i><span>Productos</span></a></li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Gestion</div>
+            <li class="nav-item"><a class="nav-link" href="clientes.html"><i class="fas fa-fw fa-users"></i><span>Clientes</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="pedidos.html"><i class="fas fa-fw fa-table"></i><span>Pedidos</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="cobros.html"><i class="fas fa-fw fa-hand-holding-usd"></i><span>Cobros</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="estadisticas.html"><i class="fas fa-fw fa-chart-bar"></i><span>Estadisticas</span></a></li>
+            <li class="nav-item active"><a class="nav-link" href="alertas.html"><i class="fas fa-fw fa-bell"></i><span>Alertas</span></a></li>
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light topbar mb-4 static-top shadow d-flex justify-content-end px-4">
+                    <button id="themeToggle" class="btn btn-link rounded-circle mr-3 border-0" title="Cambiar Tema">
+                        <i id="themeIcon" class="fas fa-moon text-gray-600 font-size-18"></i>
+                    </button>
+                </nav>
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid pt-2">
+
+                    <!-- Page Heading -->
+                    <h1 class="h3 mb-4 font-weight-bold">Alertas de Vencimiento</h1>
+
+                    <!-- Tabla de Alertas -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Pedidos Próximos a Vencer</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTableAlertas" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 3%;">N° Ord.</th>
+                                            <th style="width: 10%;">Fecha Entrega</th>
+                                            <th style="width: 4%;">Año</th>
+                                            <th style="width: 5%;">N° Cliente</th>
+                                            <th style="width: 17%;">Cliente</th>
+                                            <th style="width: 12%;">Solicitante</th>
+                                            <th style="width: 8%;">Disciplina</th>
+                                            <th style="width: 5%;">Cant. Prendas</th>
+                                            <th style="width: 7%;">Importe</th>
+                                            <th style="width: 7%;">Señas</th>
+                                            <th style="width: 7%;">Saldo</th>
+                                            <th style="width: 6%;">Estado</th>
+                                            <th style="width: 9%;" class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="alertasBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- /.container-fluid -->
+
+            </div>
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            <footer class="sticky-footer">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; BARSAC OMS 2026</span>
+                    </div>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- MODAL PARA VER DETALLES DEL PEDIDO -->
+    <div class="modal fade" id="modalVerPedido" tabindex="-1" role="dialog" aria-labelledby="modalVerPedidoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header py-3">
+                    <h5 class="modal-title d-flex align-items-center font-weight-bold" id="modalVerPedidoLabel">
+                        <i class="fas fa-file-alt mr-2" style="color: #17a2b8;"></i> Detalle del Pedido #<span id="viewIdOrden"></span>
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body px-4 py-3">
+                    <div class="card p-3 mb-3 shadow-sm">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <small class="text-muted d-block">Cliente</small>
+                                <strong id="viewCliente" class="text-info font-weight-bold" style="font-size: 1.05rem;"></strong>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <small class="text-muted d-block">Solicitante</small>
+                                <strong id="viewSolicitante" class="font-weight-bold">-</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Teléfono</small>
+                                <strong id="viewTelefono" class="font-weight-bold">-</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Fecha Pedido</small>
+                                <strong id="viewFechaPedido" class="font-weight-bold">-</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Fecha Entrega</small>
+                                <strong id="viewFechaEntrega" class="text-warning font-weight-bold">-</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="font-weight-bold mb-2 text-muted" style="font-size: 0.9rem;">Prendas Solicitadas</h6>
+
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 8%;">Cant.</th>
+                                    <th>Producto</th>
+                                    <th style="width: 15%;">Talle</th>
+                                    <th style="width: 18%;" class="text-right">Precio Un.</th>
+                                    <th style="width: 18%;" class="text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="viewDetalleBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="row justify-content-end">
+                        <div class="col-md-5">
+                            <div class="card p-3 shadow-sm">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted" style="font-size: 0.9rem;">Total General:</span>
+                                    <span class="font-weight-bold" id="viewTotalGeneral">$0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted" style="font-size: 0.9rem;">Señas:</span>
+                                    <span class="text-success font-weight-bold" id="viewSenas">-$0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted" style="font-size: 0.9rem;">Otros Cobros:</span>
+                                    <span class="text-success font-weight-bold" id="viewOtrosCobros">-$0</span>
+                                </div>
+                                <hr class="my-1">
+                                <div class="d-flex justify-content-between pt-1">
+                                    <span class="font-weight-bold text-warning" style="font-size: 0.95rem;">Saldo Pendiente:</span>
+                                    <span class="font-weight-bold text-warning" id="viewSaldo" style="font-size: 0.95rem;">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Base -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- Plugins DataTables -->
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <!-- JS específico de Alertas -->
+    <script src="js/alertas.js"></script>
+
+    <!-- Script Modo Oscuro / Claro -->
+    <script>
+        const toggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+
+        if (currentTheme === 'dark') {
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+        }
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                let theme = document.documentElement.getAttribute('data-theme');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

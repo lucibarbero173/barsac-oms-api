@@ -1,0 +1,294 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Barsac2 - Pagos / Gastos</title>
+
+    <!-- Custom fonts for this template -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this page -->
+    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+
+    <!-- TU CSS PERSONALIZADO -->
+    <link href="css/custom-theme.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+                <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-laugh-wink"></i></div>
+                <div class="sidebar-brand-text mx-3">Barsac<sup>2</sup></div>
+            </a>
+            <hr class="sidebar-divider my-0">
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Compras</div>
+            <li class="nav-item"><a class="nav-link" href="proveedores.html"><i class="fas fa-fw fa-truck"></i><span>Proveedores</span></a></li>
+            <li class="nav-item active"><a class="nav-link" href="pagos.html"><i class="fas fa-fw fa-file-invoice-dollar"></i><span>Pagos</span></a></li>
+
+            <!-- Menú desplegable para Materias Primas -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMateria" aria-expanded="false" aria-controls="collapseMateria">
+                    <i class="fas fa-fw fa-box"></i><span>Materia Prima</span>
+                </a>
+                <div id="collapseMateria" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="materiaPrimaTela.html">Telas</a>
+                        <a class="collapse-item" href="materiaPrimaPapel.html">Papel</a>
+                        <a class="collapse-item" href="materiaPrimaInsumo.html">Insumos DTF</a>
+                        <a class="collapse-item" href="materiaPrimaMerceria.html">Merceria</a>
+                        <a class="collapse-item" href="materiaPrimaOtros.html">Otros</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="productos.html"><i class="fas fa-fw fa-box"></i><span>Productos</span></a></li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Gestion</div>
+            <li class="nav-item"><a class="nav-link" href="clientes.html"><i class="fas fa-fw fa-users"></i><span>Clientes</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="pedidos.html"><i class="fas fa-fw fa-table"></i><span>Pedidos</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="cobros.html"><i class="fas fa-fw fa-hand-holding-usd"></i><span>Cobros</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="estadisticas.html"><i class="fas fa-fw fa-chart-bar"></i><span>Estadisticas</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="alertas.html"><i class="fas fa-fw fa-bell"></i><span>Alertas</span></a></li>
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Botón para retraer la barra lateral -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <!-- End of Sidebar -->
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar / Barra Superior con Botón Modo Oscuro -->
+                <nav class="navbar navbar-expand navbar-light topbar mb-4 static-top shadow d-flex justify-content-end px-4">
+                    <button id="themeToggle" class="btn btn-link rounded-circle mr-3 border-0" title="Cambiar Tema">
+                        <i id="themeIcon" class="fas fa-moon text-gray-600 font-size-18"></i>
+                    </button>
+                </nav>
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid pt-2">
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 font-weight-bold">Registro de Pagos y Gastos</h1>
+                    </div>
+
+                    <!-- Tabla de Pagos -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Listado de Pagos y Egresos</h6>
+                            <button class="btn btn-success" onclick="abrirModalNuevoPago()">
+                                <i class="fas fa-plus"></i> Nuevo Pago
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTablePagos" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha Factura</th>
+                                            <th>Proveedor</th>
+                                            <th>Concepto</th>
+                                            <th>Medio de Pago</th>
+                                            <th class="text-right">Importe</th>
+                                            <th class="text-center">Estado</th>
+                                            <th>Fecha Pago</th>
+                                            <th class="text-center">Mes</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pagosBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- /.container-fluid -->
+
+            </div>
+            <!-- End of Main Content -->
+            <!-- Footer -->
+            <footer class="sticky-footer">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; BARSAC OMS 2026</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Modal Nuevo / Editar Pago -->
+    <div class="modal fade" id="modalNuevoPago" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center text-primary font-weight-bold" id="tituloModal">
+                        <i class="fas fa-file-invoice-dollar mr-2"></i> <span id="textoTituloModal">Registrar Nuevo Pago</span>
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="formPago">
+                        <!-- Campo Oculto para Guardar el ID al Editar -->
+                        <input type="hidden" id="inputPagoId" value="0">
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label class="font-weight-bold">Fecha Factura</label>
+                                <input type="date" id="inputFechaFactura" class="form-control" required>
+                            </div>
+                            <div class="form-group col-md-8">
+                                <label class="font-weight-bold">Proveedor / Destinatario</label>
+                                <input type="text" id="inputProveedor" class="form-control" placeholder="Ej: Gaston, Fabrika SA, Tere..." required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">Concepto</label>
+                                <select id="selectConcepto" class="form-control" required>
+                                    <option value="">Seleccione Concepto...</option>
+                                    <option value="Sueldos (empleados)">Sueldos (empleados)</option>
+                                    <option value="Modistas">Modistas</option>
+                                    <option value="EPE (servicio)">EPE (servicio)</option>
+                                    <option value="Internet (servicio)">Internet (servicio)</option>
+                                    <option value="Agua (servicio)">Agua (servicio)</option>
+                                    <option value="Sueldo Gerente">Sueldo Gerente</option>
+                                    <option value="Inversión">Inversión</option>
+                                    <option value="Gastos varios administrativos">Gastos varios administrativos</option>
+                                    <option value="Tela">Tela</option>
+                                    <option value="Tinta">Tinta</option>
+                                    <option value="Papel">Papel</option>
+                                    <option value="Cierres">Cierres</option>
+                                    <option value="Fletes">Fletes</option>
+                                    <option value="Leyes sociales">Leyes sociales</option>
+                                    <option value="Viaticos y combustibles">Viaticos y combustibles</option>
+                                    <option value="Insumo modistas">Insumo modistas</option>
+                                    <option value="Medias">Medias</option>
+                                    <option value="Elastico">Elastico</option>
+                                    <option value="Publicidad">Publicidad</option>
+                                    <option value="Prestamos">Prestamos</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label class="font-weight-bold">Medio de Pago</label>
+                                <select id="selectMedio" class="form-control" required>
+                                    <option value="EFECTIVO">EFECTIVO</option>
+                                    <option value="ICBC">ICBC</option>
+                                    <option value="MERCADO PAGO">MERCADO PAGO</option>
+                                    <option value="UALA">UALA</option>
+                                    <option value="CHEQUE">CHEQUE</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label class="font-weight-bold">Importe ($)</label>
+                                <input type="number" step="0.01" id="inputImporte" class="form-control" placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">Estado</label>
+                                <select id="selectEstado" class="form-control" onchange="toggleFechaPago()">
+                                    <option value="1">PAGADO</option>
+                                    <option value="0">PENDIENTE</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">Fecha de Pago Efectiva</label>
+                                <input type="date" id="inputFechaPago" class="form-control">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary px-4" data-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-success px-4" onclick="guardarPago()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Base -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- Plugins DataTables -->
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <!-- JS de la vista -->
+    <script src="js/pagos.js"></script>
+
+    <!-- Script Lógica Modo Oscuro / Claro Sincronizado -->
+    <script>
+        const toggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                if (themeIcon) themeIcon.classList.replace('fa-moon', 'fa-sun');
+            } else {
+                document.body.classList.remove('dark-mode');
+                if (themeIcon) themeIcon.classList.replace('fa-sun', 'fa-moon');
+            }
+        }
+
+        // Cargar tema guardado
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(currentTheme);
+
+        // Toggle al hacer clic
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                let activeTheme = document.documentElement.getAttribute('data-theme');
+                let newTheme = activeTheme === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+        }
+    </script>
+</body>
+
+</html>

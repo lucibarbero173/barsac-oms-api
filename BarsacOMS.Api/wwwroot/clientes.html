@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Barsac2 - Clientes</title>
+
+    <!-- Custom fonts for this template -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this page -->
+    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+
+    <!-- TU CSS PERSONALIZADO -->
+    <link href="css/custom-theme.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+                <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-laugh-wink"></i></div>
+                <div class="sidebar-brand-text mx-3">Barsac<sup>2</sup></div>
+            </a>
+            <hr class="sidebar-divider my-0">
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Compras</div>
+            <li class="nav-item"><a class="nav-link" href="proveedores.html"><i class="fas fa-fw fa-truck"></i><span>Proveedores</span></a></li>
+            <li class="nav-item active"><a class="nav-link" href="pagos.html"><i class="fas fa-fw fa-file-invoice-dollar"></i><span>Pagos</span></a></li>
+
+            <!-- Menú desplegable para Materias Primas -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMateria" aria-expanded="false" aria-controls="collapseMateria">
+                    <i class="fas fa-fw fa-box"></i><span>Materia Prima</span>
+                </a>
+                <div id="collapseMateria" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="materiaPrimaTela.html">Telas</a>
+                        <a class="collapse-item" href="materiaPrimaPapel.html">Papel</a>
+                        <a class="collapse-item" href="materiaPrimaInsumo.html">Insumos DTF</a>
+                        <a class="collapse-item" href="materiaPrimaMerceria.html">Merceria</a>
+                        <a class="collapse-item" href="materiaPrimaOtros.html">Otros</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="productos.html"><i class="fas fa-fw fa-box"></i><span>Productos</span></a></li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Gestion</div>
+            <li class="nav-item active"><a class="nav-link" href="clientes.html"><i class="fas fa-fw fa-users"></i><span>Clientes</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="pedidos.html"><i class="fas fa-fw fa-table"></i><span>Pedidos</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="cobros.html"><i class="fas fa-fw fa-hand-holding-usd"></i><span>Cobros</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="estadisticas.html"><i class="fas fa-fw fa-chart-bar"></i><span>Estadisticas</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="alertas.html"><i class="fas fa-fw fa-bell"></i><span>Alertas</span></a></li>
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Botón para retraer la barra lateral -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <!-- End of Sidebar -->
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar / Barra Superior con Botón Modo Oscuro -->
+                <nav class="navbar navbar-expand navbar-light topbar mb-4 static-top shadow d-flex justify-content-end px-4">
+                    <button id="themeToggle" class="btn btn-link rounded-circle mr-3 border-0" title="Cambiar Tema">
+                        <i id="themeIcon" class="fas fa-moon text-gray-600 font-size-18"></i>
+                    </button>
+                </nav>
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid pt-2">
+
+                    <!-- Page Heading -->
+                    <h1 class="h3 mb-4 font-weight-bold">Clientes</h1>
+
+                    <!-- Tabla de Clientes -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Listado de Clientes</h6>
+                            <button class="btn btn-success" data-toggle="modal" data-target="#modalCliente">
+                                <i class="fas fa-plus"></i> Nuevo Cliente
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Disciplina</th>
+                                            <th>Teléfono</th>
+                                            <th>Solicitante</th>
+                                            <th>Lista Precios</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="clientesBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- /.container-fluid -->
+
+            </div>
+            <!-- End of Main Content -->
+            <!-- Footer -->
+            <footer class="sticky-footer">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; BARSAC OMS 2026</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Modal Nuevo / Editar Cliente -->
+    <div class="modal fade" id="modalCliente" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center text-info font-weight-bold" id="tituloModal">
+                        <i class="fas fa-user-plus mr-2"></i> Nuevo Cliente
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="nombre" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Disciplina</label>
+                        <select id="disciplina" class="form-control">
+                            <option>Futbol</option>
+                            <option>Basquet</option>
+                            <option>Tenis</option>
+                            <option>Padel</option>
+                            <option>Rugby</option>
+                            <option>Automovilismo</option>
+                            <option>Hockey</option>
+                            <option>Golf</option>
+                            <option>Running</option>
+                            <option>Boxeo</option>
+                            <option>Gimnasio</option>
+                            <option>Patin</option>
+                            <option>Taekwondo</option>
+                            <option>Natacion</option>
+                            <option>Ciclismo</option>
+                            <option>Pelota paleta</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="telefono" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Solicitante</label>
+                        <input type="text" id="solicitante" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Lista de Precios</label>
+                        <select id="listaPrecios" class="form-control">
+                            <option>GENERAL</option>
+                            <option>ESPECIAL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary px-4" data-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-success px-4" onclick="guardarCliente()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Base -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- Plugins DataTables -->
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="js/demo/datatables-demo.js"></script>
+
+    <!-- JS de la vista -->
+    <script src="js/clientes.js"></script>
+
+    <!-- Script Lógica Modo Oscuro / Claro -->
+    <script>
+        const toggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        // Cargar tema guardado
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+
+        if (currentTheme === 'dark') {
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+        }
+
+        // Toggle al hacer clic
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                let theme = document.documentElement.getAttribute('data-theme');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

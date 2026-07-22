@@ -21,11 +21,48 @@ public class ClienteController : ControllerBase
         return Ok(clientes);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var cliente = await _context.Clientes.FindAsync(id);
+
+        if (cliente == null)
+            return NotFound();
+
+        return Ok(cliente);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(Cliente cliente)
     {
         _context.Clientes.Add(cliente);
         await _context.SaveChangesAsync();
         return Ok(cliente);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Cliente cliente)
+    {
+        if (id != cliente.Id)
+            return BadRequest();
+
+        _context.Entry(cliente).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+
+        return Ok(cliente);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var cliente = await _context.Clientes.FindAsync(id);
+
+        if (cliente == null)
+            return NotFound();
+
+        _context.Clientes.Remove(cliente);
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
 }

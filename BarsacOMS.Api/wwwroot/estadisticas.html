@@ -1,0 +1,493 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Barsac OMS - Estadísticas">
+    <meta name="author" content="">
+
+    <title>Barsac2 - Estadísticas</title>
+
+    <!-- Custom fonts for this template -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+    <!-- Plugins DataTables -->
+    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+
+    <!-- TU CSS PERSONALIZADO -->
+    <link href="css/custom-theme.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+                <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-laugh-wink"></i></div>
+                <div class="sidebar-brand-text mx-3">Barsac<sup>2</sup></div>
+            </a>
+            <div class="sidebar-heading">Compras</div>
+            <li class="nav-item"><a class="nav-link" href="proveedores.html"><i class="fas fa-fw fa-truck"></i><span>Proveedores</span></a></li>
+            <li class="nav-item active"><a class="nav-link" href="pagos.html"><i class="fas fa-fw fa-file-invoice-dollar"></i><span>Pagos</span></a></li>
+            <!-- Menú desplegable para Materias Primas -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMateria" aria-expanded="false" aria-controls="collapseMateria">
+                    <i class="fas fa-fw fa-box"></i><span>Materia Prima</span>
+                </a>
+                <div id="collapseMateria" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="materiaPrimaTela.html">Telas</a>
+                        <a class="collapse-item" href="materiaPrimaPapel.html">Papel</a>
+                        <a class="collapse-item" href="materiaPrimaInsumo.html">Insumos DTF</a>
+                        <a class="collapse-item" href="materiaPrimaMerceria.html">Merceria</a>
+                        <a class="collapse-item" href="materiaPrimaOtros.html">Otros</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="productos.html"><i class="fas fa-fw fa-box"></i><span>Productos</span></a></li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Gestion</div>
+            <li class="nav-item"><a class="nav-link" href="clientes.html"><i class="fas fa-fw fa-users"></i><span>Clientes</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="pedidos.html"><i class="fas fa-fw fa-table"></i><span>Pedidos</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="cobros.html"><i class="fas fa-fw fa-hand-holding-usd"></i><span>Cobros</span></a></li>
+            <li class="nav-item active"><a class="nav-link" href="estadisticas.html"><i class="fas fa-fw fa-chart-bar"></i><span>Estadisticas</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="alertas.html"><i class="fas fa-fw fa-bell"></i><span>Alertas</span></a></li>
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Botón para retraer la barra lateral -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <!-- End of Sidebar -->
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar / Barra Superior con Botón Modo Oscuro -->
+                <nav class="navbar navbar-expand navbar-light topbar mb-4 static-top shadow d-flex justify-content-end px-4">
+                    <button id="themeToggle" class="btn btn-link rounded-circle mr-3 border-0" title="Cambiar Tema">
+                        <i id="themeIcon" class="fas fa-moon text-gray-600 font-size-18"></i>
+                    </button>
+                </nav>
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid pt-2">
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 font-weight-bold">Estadísticas y Balances</h1>
+                        <button class="btn btn-primary shadow-sm" onclick="window.print()">
+                            <i class="fas fa-download fa-sm text-white-50 mr-1"></i> Imprimir Reporte
+                        </button>
+                    </div>
+
+                    <!-- Tarjetas Metricas KPI -->
+                    <div class="row">
+
+                        <!-- Balance de Saldos Pendientes (Entregadas no pagadas) -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-danger shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                                Saldos Impagos (Entregados)
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$845,000</div>
+                                            <div class="text-xs text-muted mt-1">6 Órdenes con saldo</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-exclamation-circle fa-2x text-danger"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Prendas Producidas en el Mes -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Prendas (Mes Actual)
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">1,850 Unids</div>
+                                            <div class="text-xs text-success mt-1"><i class="fas fa-arrow-up"></i> +14% vs mes anterior</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-tshirt fa-2x text-info"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total Egresos (Sueldos, Modistas, Gastos) -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Egresos Totales (Mes)
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$2,450,000</div>
+                                            <div class="text-xs text-muted mt-1">Sueldos + Modistas + Gastos</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-wallet fa-2x text-warning"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cobrado en el Mes -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Total Cobrado (Mes)
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$4,120,000</div>
+                                            <div class="text-xs text-muted mt-1">Ingresos efectivos</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-money-bill-wave fa-2x text-success"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Gráficos Fila 1: Facturado vs Cobrado + Sueldos/Gastos -->
+                    <div class="row">
+
+                        <!-- Balance: Facturado vs Cobrado -->
+                        <div class="col-xl-8 col-lg-7">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-between">
+                                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-invoice-dollar mr-1"></i> Balance: Facturado vs. Cobrado (Evolución Mensual)</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-area" style="position: relative; height:320px;">
+                                        <canvas id="chartFacturadoVsCobrado"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Balance: Sueldos, Modistas y Gastos -->
+                        <div class="col-xl-4 col-lg-5">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-calculator mr-1"></i> Desglose de Egresos</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-pie pt-2 pb-2" style="position: relative; height:240px;">
+                                        <canvas id="chartGastos"></canvas>
+                                    </div>
+                                    <div class="mt-3 text-center small">
+                                        <span class="mr-2"><i class="fas fa-circle text-primary"></i> Sueldos Empleados</span>
+                                        <span class="mr-2"><i class="fas fa-circle text-info"></i> Modistas/Talleres</span>
+                                        <span class="mr-2"><i class="fas fa-circle text-warning"></i> Gastos Operativos</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Gráficos Fila 2: Balance de Prendas por Mes -->
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-boxes mr-1"></i> Balance de Producción: Prendas Producidas por Mes</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-bar" style="position: relative; height:280px;">
+                                        <canvas id="chartPrendasMes"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Detalle: Ordenes Entregadas con Saldo Pendiente -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold text-danger"><i class="fas fa-exclamation-triangle mr-1"></i> Detalle de Órdenes Entregadas con Saldo Pendiente</h6>
+                            <span class="badge badge-danger px-3 py-2">Cobro Requerido</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTableSaldos" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>N° Orden</th>
+                                            <th>Cliente</th>
+                                            <th>Fecha Entrega</th>
+                                            <th>Total Pedido</th>
+                                            <th>Monto Pagado</th>
+                                            <th>Saldo Impago</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>#PED-1042</td>
+                                            <td>Club Atlético Rafaela</td>
+                                            <td>12/07/2026</td>
+                                            <td>$450,000</td>
+                                            <td>$200,000</td>
+                                            <td class="font-weight-bold text-danger">$250,000</td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-success" title="Reclamar por WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                                                <button class="btn btn-sm btn-info" title="Registrar Pago"><i class="fas fa-dollar-sign"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>#PED-1038</td>
+                                            <td>Gimnasio Impacto</td>
+                                            <td>08/07/2026</td>
+                                            <td>$320,000</td>
+                                            <td>$150,000</td>
+                                            <td class="font-weight-bold text-danger">$170,000</td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-success" title="Reclamar por WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                                                <button class="btn btn-sm btn-info" title="Registrar Pago"><i class="fas fa-dollar-sign"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>#PED-1025</td>
+                                            <td>Deportivo San Martín</td>
+                                            <td>02/07/2026</td>
+                                            <td>$600,000</td>
+                                            <td>$400,000</td>
+                                            <td class="font-weight-bold text-danger">$200,000</td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-success" title="Reclamar por WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                                                <button class="btn btn-sm btn-info" title="Registrar Pago"><i class="fas fa-dollar-sign"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>#PED-1011</td>
+                                            <td>Colegio San José</td>
+                                            <td>25/06/2026</td>
+                                            <td>$280,000</td>
+                                            <td>$150,000</td>
+                                            <td class="font-weight-bold text-danger">$130,000</td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-success" title="Reclamar por WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                                                <button class="btn btn-sm btn-info" title="Registrar Pago"><i class="fas fa-dollar-sign"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>#PED-0995</td>
+                                            <td>Estudio Padel Fit</td>
+                                            <td>18/06/2026</td>
+                                            <td>$190,000</td>
+                                            <td>$125,000</td>
+                                            <td class="font-weight-bold text-danger">$65,000</td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-success" title="Reclamar por WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                                                <button class="btn btn-sm btn-info" title="Registrar Pago"><i class="fas fa-dollar-sign"></i></button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- /.container-fluid -->
+
+            </div>
+            <!-- End of Main Content -->
+            <!-- Footer -->
+            <footer class="sticky-footer">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; BARSAC OMS 2026</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Scripts Base -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- Plugins DataTables -->
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <!-- Plugin Chart.js -->
+    <script src="vendor/chart.js/Chart.min.js"></script>
+
+    <!-- Script Modo Oscuro / Claro -->
+    <script>
+        const toggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        // Cargar tema guardado
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+
+        if (currentTheme === 'dark') {
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+        }
+
+        // Toggle al hacer clic
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                let theme = document.documentElement.getAttribute('data-theme');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                }
+            });
+        }
+
+        // Inicializar DataTable de Saldos
+        $(document).ready(function () {
+            $('#dataTableSaldos').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+                }
+            });
+        });
+
+        // Configuración Global Chart.js
+        Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+        Chart.defaults.global.defaultFontColor = '#858796';
+
+        // 1. Gráfico: Facturado vs Cobrado
+        var ctxFact = document.getElementById("chartFacturadoVsCobrado");
+        if (ctxFact) {
+            new Chart(ctxFact, {
+                type: 'line',
+                data: {
+                    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul"],
+                    datasets: [
+                        {
+                            label: "Total Facturado ($)",
+                            lineTension: 0.3,
+                            backgroundColor: "rgba(78, 115, 223, 0.05)",
+                            borderColor: "#4e73df",
+                            pointRadius: 3,
+                            pointBackgroundColor: "#4e73df",
+                            data: [2800000, 3200000, 3900000, 4100000, 4500000, 4800000, 4965000],
+                        },
+                        {
+                            label: "Total Cobrado ($)",
+                            lineTension: 0.3,
+                            backgroundColor: "rgba(28, 200, 138, 0.05)",
+                            borderColor: "#1cc88a",
+                            pointRadius: 3,
+                            pointBackgroundColor: "#1cc88a",
+                            data: [2500000, 3000000, 3500000, 3800000, 4100000, 4200000, 4120000],
+                        }
+                    ],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        xAxes: [{ gridLines: { display: false } }],
+                        yAxes: [{ ticks: { maxTicksLimit: 6 } }]
+                    },
+                    legend: { display: true }
+                }
+            });
+        }
+
+        // 2. Gráfico: Desglose Egresos (Sueldos, Modistas, Gastos)
+        var ctxGastos = document.getElementById("chartGastos");
+        if (ctxGastos) {
+            new Chart(ctxGastos, {
+                type: 'doughnut',
+                data: {
+                    labels: ["Sueldos Empleados", "Modistas / Talleres", "Gastos Operativos"],
+                    datasets: [{
+                        data: [1200000, 850000, 400000],
+                        backgroundColor: ['#4e73df', '#36b9cc', '#f6c23e'],
+                        hoverBackgroundColor: ['#2e59d9', '#2c9caf', '#dda20a'],
+                        hoverBorderColor: "rgba(234, 236, 244, 1)",
+                    }],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    cutoutPercentage: 70,
+                }
+            });
+        }
+
+        // 3. Gráfico: Balance de Prendas por Mes
+        var ctxPrendas = document.getElementById("chartPrendasMes");
+        if (ctxPrendas) {
+            new Chart(ctxPrendas, {
+                type: 'bar',
+                data: {
+                    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul"],
+                    datasets: [{
+                        label: "Prendas Producidas",
+                        backgroundColor: "#36b9cc",
+                        hoverBackgroundColor: "#2c9caf",
+                        data: [950, 1100, 1400, 1350, 1600, 1620, 1850],
+                    }],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        xAxes: [{ gridLines: { display: false } }],
+                        yAxes: [{ ticks: { min: 0, maxTicksLimit: 6 } }]
+                    },
+                    legend: { display: false }
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>

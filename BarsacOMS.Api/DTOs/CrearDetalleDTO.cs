@@ -2,11 +2,11 @@
 {
     public class CrearDetalleDTO
     {
-        public string Tela { get; set; }
-        public string Producto { get; set; }
+        public int ProductoId { get; set; }
         public string Talle { get; set; }
-        public int Numero { get; set; }
-        public string Nombre { get; set; }
-        public string Imagen { get; set; }
+        public int Cantidad { get; set; }
+
+        // AGREGÁ ESTA LÍNEA
+        public decimal Precio { get; set; }
     }
 }
