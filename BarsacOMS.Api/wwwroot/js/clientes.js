@@ -1,5 +1,4 @@
 ﻿// @ts-nocheck
-
 let clienteEditandoId = null;
 
 $(document).ready(function () {
@@ -85,12 +84,8 @@ function editarCliente(id) {
 // GUARDAR
 // =======================
 function guardarCliente() {
-    // 1. Asignamos 0 si es nuevo para que el int de .NET no falle
-    let idCliente = clienteEditandoId ? clienteEditandoId : 0;
-
-    // 2. Armamos el objeto plano, con camelCase (listaPrecios)
+    // 1. Armamos el objeto base
     let clienteData = {
-        id: idCliente,
         nombre: $("#nombre").val(),
         disciplina: $("#disciplina").val(),
         telefono: $("#telefono").val(),
@@ -101,7 +96,9 @@ function guardarCliente() {
     let url = "https://barsac-oms-api-production.up.railway.app/api/Cliente";
     let method = "POST";
 
+    // 2. Si estamos editando, agregamos el ID y cambiamos el método a PUT
     if (clienteEditandoId) {
+        clienteData.id = clienteEditandoId;
         url = `https://barsac-oms-api-production.up.railway.app/api/Cliente/${clienteEditandoId}`;
         method = "PUT";
     }
@@ -109,11 +106,11 @@ function guardarCliente() {
     fetch(url, {
         method: method,
         headers: { "Content-Type": "application/json" },
-        // 3. Enviamos el objeto directo, sin el wrapper
         body: JSON.stringify(clienteData)
     })
         .then(res => {
             if (res.ok) {
+                clienteEditandoId = null; // Reseteamos la variable para evitar solapamientos
                 $("#modalCliente").modal("hide");
                 cargarClientes();
             } else {
@@ -135,7 +132,7 @@ function eliminarCliente(id) {
             if (res.ok) {
                 cargarClientes();
             } else {
-                alert("Error");
+                alert("Error al eliminar cliente");
             }
         });
 }
