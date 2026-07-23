@@ -33,6 +33,7 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Telefono).HasColumnName("telefono");
                 entity.Property(e => e.Solicitante).HasColumnName("solicitante");
                 entity.Property(e => e.ListaPrecios).HasColumnName("lista_precios");
+                entity.Property(e => e.Localidad).HasColumnName("localidad");
             });
 
             //PAGOS
