@@ -1,5 +1,5 @@
-﻿const API_MATERIA_PRIMA = 'https://localhost:7196/api/materiaprima';
-const API_PROVEEDORES = 'https://localhost:7196/api/proveedor';
+﻿const API_MATERIA_PRIMA = 'https://barsac-oms-api-production.up.railway.app/api/materiaprima';
+const API_PROVEEDORES = 'https://barsac-oms-api-production.up.railway.app/api/proveedor';
 let telaEditandoId = null;
 
 $(document).ready(function () {

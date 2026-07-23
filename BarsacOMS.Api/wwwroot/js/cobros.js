@@ -20,7 +20,7 @@ function buscarDatosPedido() {
 
     if (!ordenId || ordenId <= 0) return;
 
-    fetch(`https://localhost:7196/api/Orden/${ordenId}`)
+    fetch(`https://barsac-oms-api-production.up.railway.app/api/Orden/${ordenId}`)
         .then(res => {
             if (!res.ok) throw new Error("Orden no encontrada");
             return res.json();
@@ -37,7 +37,7 @@ function buscarDatosPedido() {
 }
 
 function cargarCobros() {
-    fetch("https://localhost:7196/api/Cobros")
+    fetch("https://barsac-oms-api-production.up.railway.app/api/Cobros")
         .then(res => res.json())
         .then(data => {
             if ($.fn.dataTable.isDataTable('#dataTableCobros')) {
@@ -101,7 +101,7 @@ function formatearMedioPago(medio) {
 }
 
 function editarCobro(id) {
-    fetch(`https://localhost:7196/api/Cobros/${id}`)
+    fetch(`https://barsac-oms-api-production.up.railway.app/api/Cobros/${id}`)
         .then(res => {
             if (!res.ok) throw new Error("No se pudo obtener el cobro");
             return res.json();
@@ -139,7 +139,7 @@ function guardarCobro() {
     };
 
     const isEdit = id > 0;
-    const url = isEdit ? `https://localhost:7196/api/Cobros/${id}` : "https://localhost:7196/api/Cobros";
+    const url = isEdit ? `https://barsac-oms-api-production.up.railway.app/api/Cobros/${id}` : "https://barsac-oms-api-production.up.railway.app/api/Cobros";
     const method = isEdit ? "PUT" : "POST";
 
     fetch(url, {
@@ -163,7 +163,7 @@ function guardarCobro() {
 function eliminarCobro(id) {
     if (!confirm("¿Eliminar este cobro? Esto reajustará el saldo del pedido.")) return;
 
-    fetch(`https://localhost:7196/api/Cobros/${id}`, { method: "DELETE" })
+    fetch(`https://barsac-oms-api-production.up.railway.app/api/Cobros/${id}`, { method: "DELETE" })
         .then(res => {
             if (res.ok) cargarCobros();
         });

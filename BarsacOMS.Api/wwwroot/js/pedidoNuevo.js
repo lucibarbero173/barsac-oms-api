@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // Cargar lista de clientes
 async function cargarClientesSelect() {
     try {
-        const res = await fetch("https://localhost:7196/api/cliente");
+        const res = await fetch("https://barsac-oms-api-production.up.railway.app/api/cliente");
         if (!res.ok) return;
         const clientes = await res.json();
 
@@ -97,7 +97,7 @@ async function cargarDatosCliente() {
     }
 
     try {
-        const res = await fetch(`https://localhost:7196/api/cliente/${id}`);
+        const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/cliente/${id}`);
         if (!res.ok) return;
         const c = await res.json();
 
@@ -117,7 +117,7 @@ async function cargarDatosCliente() {
 // Cargar productos en variable global
 async function cargarProductosGlobal() {
     try {
-        const res = await fetch("https://localhost:7196/api/producto");
+        const res = await fetch("https://barsac-oms-api-production.up.railway.app/api/producto");
         if (res.ok) {
             productosGlobal = await res.json();
         }
@@ -201,7 +201,7 @@ async function actualizarPrecio(element) {
     }
 
     try {
-        const res = await fetch(`https://localhost:7196/api/producto/precio?productoId=${productoId}&talle=${talle}&tipoPago=${tipoPagoBackend}`);
+        const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/producto/precio?productoId=${productoId}&talle=${talle}&tipoPago=${tipoPagoBackend}`);
         if (res.ok) {
             const data = await res.json();
             fila.querySelector(".precio").value = data.precio !== undefined ? data.precio : 0;
@@ -253,7 +253,7 @@ function calcularTotales() {
 // Cargar orden para editar
 async function cargarOrdenParaEditar(id) {
     try {
-        const response = await fetch(`https://localhost:7196/api/orden/${id}`);
+        const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/orden/${id}`);
         if (!response.ok) {
             const err = await response.text();
             alert("Error al obtener el pedido: " + err);
@@ -364,8 +364,8 @@ async function guardarPedido() {
         };
 
         const url = idOrdenEdicion
-            ? `https://localhost:7196/api/orden/${idOrdenEdicion}`
-            : "https://localhost:7196/api/orden";
+            ? `https://barsac-oms-api-production.up.railway.app/api/orden/${idOrdenEdicion}`
+            : "https://barsac-oms-api-production.up.railway.app/api/orden";
 
         const metodo = idOrdenEdicion ? "PUT" : "POST";
 

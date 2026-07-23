@@ -1,4 +1,4 @@
-﻿const API_URL = 'https://localhost:7196/api/proveedor';
+﻿const API_URL = 'https://barsac-oms-api-production.up.railway.app/api/proveedor';
 
 $(document).ready(function () {
     // Inicializar DataTables básico vacío con autoWidth en false para respetar el HTML

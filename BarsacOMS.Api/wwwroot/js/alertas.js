@@ -6,7 +6,7 @@ let dataTableInstance = null;
 
 async function cargarTablaAlertas() {
     try {
-        const response = await fetch("https://localhost:7196/api/orden");
+        const response = await fetch("https://barsac-oms-api-production.up.railway.app/api/orden");
         if (!response.ok) return;
 
         const ordenes = await response.json();
@@ -117,7 +117,7 @@ async function marcarComoEntregado(id) {
         const ESTADO_ENTREGADO = 3;
 
         // Enviamos Content-Type para evitar el error 415
-        const res = await fetch(`https://localhost:7196/api/orden/${id}/estado?nuevoEstado=${ESTADO_ENTREGADO}`, {
+        const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/orden/${id}/estado?nuevoEstado=${ESTADO_ENTREGADO}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -147,7 +147,7 @@ function obtenerBadgeEstado(estado) {
 
 async function verDetallePedido(id) {
     try {
-        const res = await fetch(`https://localhost:7196/api/orden/${id}`);
+        const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/orden/${id}`);
         if (!res.ok) return;
 
         const o = await res.json();

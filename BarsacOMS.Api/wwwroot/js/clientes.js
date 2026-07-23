@@ -10,7 +10,7 @@ $(document).ready(function () {
 // CARGAR TABLA
 // =======================
 function cargarClientes() {
-    fetch("https://localhost:7196/api/Cliente")
+    fetch("https://barsac-oms-api-production.up.railway.app/api/Cliente")
         .then(res => res.json())
         .then(clientes => {
             if ($.fn.dataTable.isDataTable('#dataTable')) {
@@ -67,7 +67,7 @@ function editarCliente(id) {
     clienteEditandoId = id;
     $("#modalCliente").modal("show");
 
-    fetch(`https://localhost:7196/api/Cliente/${id}`)
+    fetch(`https://barsac-oms-api-production.up.railway.app/api/Cliente/${id}`)
         .then(res => res.json())
         .then(c => {
             $("#nombre").val(c.nombre);
@@ -98,11 +98,11 @@ function guardarCliente() {
         listaPrecios: $("#listaPrecios").val()
     };
 
-    let url = "https://localhost:7196/api/Cliente";
+    let url = "https://barsac-oms-api-production.up.railway.app/api/Cliente";
     let method = "POST";
 
     if (clienteEditandoId) {
-        url = `https://localhost:7196/api/Cliente/${clienteEditandoId}`;
+        url = `https://barsac-oms-api-production.up.railway.app/api/Cliente/${clienteEditandoId}`;
         method = "PUT";
     }
 
@@ -128,7 +128,7 @@ function guardarCliente() {
 function eliminarCliente(id) {
     if (!confirm("¿Eliminar cliente?")) return;
 
-    fetch(`https://localhost:7196/api/Cliente/${id}`, {
+    fetch(`https://barsac-oms-api-production.up.railway.app/api/Cliente/${id}`, {
         method: "DELETE"
     })
         .then(res => {

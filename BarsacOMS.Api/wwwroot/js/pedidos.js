@@ -30,7 +30,7 @@ $(document).ready(function () {
 // CARGAR ORDENES
 // =================
 function cargarOrdenes() {
-    fetch("https://localhost:7196/api/Orden")
+    fetch("https://barsac-oms-api-production.up.railway.app/api/Orden")
         .then(res => res.json())
         .then(data => {
             if ($.fn.dataTable.isDataTable('#dataTable')) {
@@ -92,7 +92,7 @@ function formatearEstado(estado) {
 
 async function verOrden(id) {
     try {
-        const response = await fetch(`https://localhost:7196/api/orden/${id}`);
+        const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/orden/${id}`);
         if (!response.ok) throw new Error("No se pudo obtener los datos del pedido");
 
         const orden = await response.json();
@@ -169,7 +169,7 @@ function editarOrden(id) {
 function eliminarOrden(id) {
     if (!confirm("¿Eliminar orden?")) return;
 
-    fetch(`https://localhost:7196/api/Orden/${id}`, {
+    fetch(`https://barsac-oms-api-production.up.railway.app/api/Orden/${id}`, {
         method: "DELETE"
     })
         .then(res => {

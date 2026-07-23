@@ -6,7 +6,7 @@ $(document).ready(function () {
 
 async function cargarPagos() {
     try {
-        const res = await fetch("https://localhost:7196/api/pago");
+        const res = await fetch("https://barsac-oms-api-production.up.railway.app/api/pago");
         if (!res.ok) return;
         const pagos = await res.json();
 
@@ -75,7 +75,7 @@ function abrirModalNuevoPago() {
 
 async function editarPago(id) {
     try {
-        const res = await fetch(`https://localhost:7196/api/pago/${id}`);
+        const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/pago/${id}`);
         if (!res.ok) {
             alert("No se pudo obtener el pago seleccionado.");
             return;
@@ -140,7 +140,7 @@ async function guardarPago() {
     }
 
     try {
-        const url = id > 0 ? `https://localhost:7196/api/pago/${id}` : "https://localhost:7196/api/pago";
+        const url = id > 0 ? `https://barsac-oms-api-production.up.railway.app/api/pago/${id}` : "https://barsac-oms-api-production.up.railway.app/api/pago";
         const method = id > 0 ? "PUT" : "POST";
 
         const res = await fetch(url, {
@@ -163,7 +163,7 @@ async function guardarPago() {
 async function eliminarPago(id) {
     if (!confirm("¿Está seguro de eliminar este registro de pago?")) return;
     try {
-        const res = await fetch(`https://localhost:7196/api/pago/${id}`, { method: "DELETE" });
+        const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/pago/${id}`, { method: "DELETE" });
         if (res.ok) cargarPagos();
     } catch (e) {
         console.error("Error al eliminar pago:", e);

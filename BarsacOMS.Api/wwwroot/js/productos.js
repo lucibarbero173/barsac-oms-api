@@ -1,4 +1,4 @@
-﻿const API_URL = 'https://localhost:7196/api/producto';
+﻿const API_URL = 'https://barsac-oms-api-production.up.railway.app/api/producto';
 
 $(document).ready(function () {
     // Inicializar DataTables básico vacío
