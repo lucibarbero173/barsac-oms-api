@@ -29,6 +29,7 @@ function cargarClientes() {
                         <td>${c.telefono}</td>
                         <td>${c.solicitante}</td>
                         <td>${c.listaPrecios}</td>
+                        <td>${c.localidad}</td>
                         <td class="text-center">
                             <button class="btn btn-primary btn-sm mr-1" onclick="editarCliente(${id})" title="Editar">
                                 <i class="fas fa-edit"></i>
@@ -55,6 +56,7 @@ function nuevoCliente() {
     $("#telefono").val("");
     $("#solicitante").val("");
     $("#listaPrecios").val("GENERAL");
+    $("#localidad").val("");
     $("#modalCliente").modal("show");
 }
 
@@ -74,6 +76,7 @@ function editarCliente(id) {
             $("#telefono").val(c.telefono);
             $("#solicitante").val(c.solicitante);
             $("#listaPrecios").val(c.listaPrecios);
+            $("#localidad").val(c.localidad);
         })
         .catch(err => {
             console.error("ERROR FETCH:", err);
@@ -90,7 +93,8 @@ function guardarCliente() {
         disciplina: $("#disciplina").val(),
         telefono: $("#telefono").val(),
         solicitante: $("#solicitante").val(),
-        listaPrecios: $("#listaPrecios").val()
+        listaPrecios: $("#listaPrecios").val(),
+        localidad: $("#localidad").val()
     };
 
     let url = "https://barsac-oms-api-production.up.railway.app/api/Cliente";

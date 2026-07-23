@@ -11,6 +11,8 @@ namespace BarsacOMS.Api.Models
         public string Solicitante { get; set; }
         public string ListaPrecios { get; set; }
 
+        public string Localidad { get; set; }
+
         [JsonIgnore]
         public List<OrdenTrabajo>? Ordenes { get; set; } = new();
     }
