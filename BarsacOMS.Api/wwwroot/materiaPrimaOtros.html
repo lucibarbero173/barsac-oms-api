@@ -54,11 +54,56 @@
 
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
-                <nav class="navbar navbar-expand navbar-light topbar mb-4 static-top shadow d-flex justify-content-end px-4">
-                    <button id="themeToggle" class="btn btn-link rounded-circle mr-3 border-0" title="Cambiar Tema">
-                        <i id="themeIcon" class="fas fa-moon text-gray-600 font-size-18"></i>
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+                    <!-- Botón para ocultar/mostrar sidebar en celulares -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
                     </button>
+
+                    <!-- Lado derecho -->
+                    <ul class="navbar-nav ml-auto align-items-center">
+
+                        <!-- Botón Modo Oscuro / Claro -->
+                        <li class="nav-item">
+                            <button id="themeToggle" class="btn btn-link rounded-circle mr-3 border-0" title="Cambiar Tema">
+                                <i id="themeIcon" class="fas fa-moon text-gray-600 font-size-18"></i>
+                            </button>
+                        </li>
+
+                        <div class="topbar-divider d-none d-sm-block"></div>
+
+                        <!-- Info de Usuario -->
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small font-weight-bold" id="lblNombreUsuario">
+                                    Usuario
+                                </span>
+                                <div class="img-profile rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </a>
+
+                            <!-- Menú desplegable -->
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="perfil.html">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Mi Perfil
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" id="btnLogout">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Cerrar Sesión
+                                </a>
+                            </div>
+                        </li>
+
+                    </ul>
+
                 </nav>
+                <!-- End of Topbar -->
 
                 <div class="container-fluid pt-2">
                     <h1 class="h3 mb-4 font-weight-bold">Materia Prima - Otros</h1>
@@ -153,21 +198,6 @@
     <script src="vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
     <script src="js/materiaPrimaOtros.js"></script>
-    <script>
-        const toggleBtn = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', currentTheme);
-        if (currentTheme === 'dark' && themeIcon) themeIcon.classList.replace('fa-moon', 'fa-sun');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                let theme = document.documentElement.getAttribute('data-theme');
-                let newTheme = theme === 'dark' ? 'light' : 'dark';
-                document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                if (themeIcon) themeIcon.classList.toggle('fa-sun', newTheme === 'dark');
-            });
-        }
-    </script>
+    <script src="js/app.js"></script>
 </body>
 </html>
