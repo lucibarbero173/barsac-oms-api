@@ -3,69 +3,72 @@ using BarsacOMS.Api.Models;
 using BarsacOMS.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
-[ApiController]
-[Route("api/[controller]")]
-public class OrdenController : ControllerBase
+namespace BarsacOMS.Api.Controllers
 {
-    private readonly IOrdenService _ordenService;
-
-    public OrdenController(IOrdenService ordenService)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class OrdenController : ControllerBase
     {
-        _ordenService = ordenService;
-    }
+        private readonly IOrdenService _ordenService;
 
-    [HttpPost]
-    public async Task<IActionResult> CrearOrden([FromBody] CrearOrdenDTO dto)
-    {
-        try
+        public OrdenController(IOrdenService ordenService)
         {
-            var orden = await _ordenService.CrearOrdenAsync(dto);
+            _ordenService = ordenService;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearOrden([FromBody] CrearOrdenDTO dto)
+        {
+            try
+            {
+                var orden = await _ordenService.CrearOrdenAsync(dto);
+                return Ok(orden);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditarOrden(int id, [FromBody] CrearOrdenDTO dto)
+        {
+            try
+            {
+                var orden = await _ordenService.EditarOrdenAsync(id, dto);
+                if (orden == null) return NotFound("La orden no existe");
+
+                return Ok(orden);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetOrden(int id)
+        {
+            var orden = await _ordenService.ObtenerOrdenPorIdAsync(id);
+            if (orden == null) return NotFound();
+
             return Ok(orden);
         }
-        catch (InvalidOperationException ex)
+
+        [HttpGet]
+        public async Task<IActionResult> GetOrdenes()
         {
-            return BadRequest(ex.Message);
+            var ordenes = await _ordenService.ObtenerOrdenesAsync();
+            return Ok(ordenes);
         }
-    }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> EditarOrden(int id, [FromBody] CrearOrdenDTO dto)
-    {
-        try
+        [HttpPut("{id}/estado")]
+        public async Task<IActionResult> CambiarEstado(int id, [FromBody] EstadoOrden nuevoEstado)
         {
-            var orden = await _ordenService.EditarOrdenAsync(id, dto);
-            if (orden == null) return NotFound("La orden no existe");
+            var exito = await _ordenService.CambiarEstadoAsync(id, nuevoEstado);
+            if (!exito) return NotFound();
 
-            return Ok(orden);
+            return Ok();
         }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetOrden(int id)
-    {
-        var orden = await _ordenService.ObtenerOrdenPorIdAsync(id);
-        if (orden == null) return NotFound();
-
-        return Ok(orden);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetOrdenes()
-    {
-        var ordenes = await _ordenService.ObtenerOrdenesAsync();
-        return Ok(ordenes);
-    }
-
-    [HttpPut("{id}/estado")]
-    public async Task<IActionResult> CambiarEstado(int id, [FromBody] EstadoOrden nuevoEstado)
-    {
-        var exito = await _ordenService.CambiarEstadoAsync(id, nuevoEstado);
-        if (!exito) return NotFound();
-
-        return Ok();
     }
 }

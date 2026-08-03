@@ -3,6 +3,8 @@ using BarsacOMS.Api.DTOs;
 using BarsacOMS.Api.Models;
 using BarsacOMS.Api.Services;
 
+namespace BarsacOMS.Api.Controllers
+{
     [ApiController]
     [Route("api/[controller]")]
     public class PagoController : ControllerBase
@@ -58,3 +60,5 @@ using BarsacOMS.Api.Services;
             return NoContent();
         }
     }
+
+}

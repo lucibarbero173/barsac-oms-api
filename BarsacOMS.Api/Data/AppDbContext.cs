@@ -18,6 +18,8 @@ namespace BarsacOMS.Api.Data
         public DbSet<Cobro> Cobros { get; set; }
         public DbSet<Pago> Pagos { get; set; }
 
+        public DbSet<Usuario> Usuarios { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -4,7 +4,10 @@ using BarsacOMS.Api.Data;
 using BarsacOMS.Api.Models;
 using BarsacOMS.Api.Services;
 
-[Route("api/[controller]")]
+
+namespace BarsacOMS.Api.Controllers
+{
+    [Route("api/[controller]")]
     [ApiController]
     public class CobrosController : ControllerBase
     {
@@ -58,3 +61,5 @@ using BarsacOMS.Api.Services;
             return NoContent();
         }
     }
+
+}

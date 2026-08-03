@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Barsac² - Registrar Usuario</title>
+
+    <!-- Custom fonts -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles -->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/custom-theme.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Banner Curvo Superior estilo Geckoboard */
+        .hero-banner {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: white;
+            padding: 50px 20px 120px 20px;
+            text-align: center;
+            border-bottom-left-radius: 50% 30px;
+            border-bottom-right-radius: 50% 30px;
+        }
+
+        /* Contenedor Flotante */
+        .register-container {
+            margin-top: -80px;
+            margin-bottom: 40px;
+        }
+
+        .card-register {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Input Group estilizado con Icono de Color */
+        .input-group-custom {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon-badge {
+            position: absolute;
+            left: 10px;
+            z-index: 10;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #36b9cc; /* Color cyan destacado */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .form-control-custom {
+            padding-left: 55px !important;
+            height: 50px;
+            border-radius: 8px !important;
+            border: 1px solid #d1d3e2;
+            font-size: 15px;
+        }
+
+            .form-control-custom:focus {
+                border-color: #4e73df;
+                box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+            }
+
+        .btn-register-action {
+            height: 48px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            background-color: #1cc88a; /* Verde destacado */
+            border: none;
+        }
+
+            .btn-register-action:hover {
+                background-color: #17a673;
+            }
+    </style>
+</head>
+
+<body>
+
+    <!-- Hero Banner (Cabecera Superior) -->
+    <div class="hero-banner">
+        <h1 class="font-weight-bold">Bienvenido</h1>
+        <p class="lead mb-0">Completá los datos para registrar un usuario en la plataforma.</p>
+    </div>
+
+    <!-- Contenedor del Formulario -->
+    <div class="container register-container">
+        <div class="row justify-content-center">
+            <div class="col-xl-5 col-lg-6 col-md-8">
+
+                <div class="card card-register">
+                    <div class="card-body p-4 p-sm-5">
+
+                        <form id="formRegister">
+
+                            <!-- Campo Nombre Completo -->
+                            <div class="form-group mb-4">
+                                <div class="input-group-custom">
+                                    <div class="input-icon-badge">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <input type="text" class="form-control form-control-custom" id="regNombre" placeholder="Nombre completo" required>
+                                </div>
+                            </div>
+
+                            <!-- Campo Email -->
+                            <div class="form-group mb-4">
+                                <div class="input-group-custom">
+                                    <div class="input-icon-badge">
+                                        <i class="fas fa-envelope"></i>
+                                    </div>
+                                    <input type="email" class="form-control form-control-custom" id="regEmail" placeholder="Correo electrónico" required>
+                                </div>
+                            </div>
+
+                            <!-- Campo Contraseña -->
+                            <div class="form-group mb-4">
+                                <div class="input-group-custom">
+                                    <div class="input-icon-badge">
+                                        <i class="fas fa-key"></i>
+                                    </div>
+                                    <input type="password" class="form-control form-control-custom" id="regPassword" placeholder="Contraseña (mín. 6 caracteres)" minlength="6" required>
+                                </div>
+                            </div>
+
+                            <!-- Mensaje de Respuesta (Éxito / Error) -->
+                            <div id="mensajeFeedback" class="alert d-none text-center font-weight-bold" role="alert"></div>
+
+                            <!-- Botón Registrar -->
+                            <button type="submit" id="btnSubmitRegister" class="btn btn-success btn-block btn-register-action mt-4">
+                                Registrar Usuario
+                            </button>
+
+                        </form>
+
+                    </div>
+                </div>
+
+                <!-- Footer de Navegación -->
+                <div class="text-center mt-4">
+                    <small class="text-muted">¿Ya tenés una cuenta? <a href="login.html" class="font-weight-bold text-primary">Iniciar sesión</a></small>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Scripts Base -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- JS de la vista -->
+    <script src="js/register.js"></script>
+
+</body>
+
+</html>

@@ -159,11 +159,11 @@ async function verOrden(id) {
 }
 
 function nuevoPedido() {
-    window.location.href = "nuevopedido.html";
+    window.location.href = "nuevoPedido.html";
 }
 
 function editarOrden(id) {
-    window.location.href = "nuevopedido.html?id=" + id;
+    window.location.href = "nuevoPedido.html?id=" + id;
 }
 
 function eliminarOrden(id) {

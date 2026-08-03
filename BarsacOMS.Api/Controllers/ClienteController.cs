@@ -3,66 +3,69 @@ using Microsoft.EntityFrameworkCore;
 using BarsacOMS.Api.Data;
 using BarsacOMS.Api.Models;
 
-[ApiController]
-[Route("api/[controller]")]
-public class ClienteController : ControllerBase
+namespace BarsacOMS.Api.Controllers
 {
-    private readonly AppDbContext _context;
-
-    public ClienteController(AppDbContext context)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ClienteController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context;
 
-    [HttpGet]
-    public async Task<IActionResult> Get()
-    {
-        var clientes = await _context.Clientes.ToListAsync();
-        return Ok(clientes);
-    }
+        public ClienteController(AppDbContext context)
+        {
+            _context = context;
+        }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
-    {
-        var cliente = await _context.Clientes.FindAsync(id);
+        [HttpGet]
+        public async Task<IActionResult> Get()
+        {
+            var clientes = await _context.Clientes.ToListAsync();
+            return Ok(clientes);
+        }
 
-        if (cliente == null)
-            return NotFound();
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var cliente = await _context.Clientes.FindAsync(id);
 
-        return Ok(cliente);
-    }
+            if (cliente == null)
+                return NotFound();
 
-    [HttpPost]
-    public async Task<IActionResult> Create(Cliente cliente)
-    {
-        _context.Clientes.Add(cliente);
-        await _context.SaveChangesAsync();
-        return Ok(cliente);
-    }
+            return Ok(cliente);
+        }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, Cliente cliente)
-    {
-        if (id != cliente.Id)
-            return BadRequest();
+        [HttpPost]
+        public async Task<IActionResult> Create(Cliente cliente)
+        {
+            _context.Clientes.Add(cliente);
+            await _context.SaveChangesAsync();
+            return Ok(cliente);
+        }
 
-        _context.Entry(cliente).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, Cliente cliente)
+        {
+            if (id != cliente.Id)
+                return BadRequest();
 
-        return Ok(cliente);
-    }
+            _context.Entry(cliente).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var cliente = await _context.Clientes.FindAsync(id);
+            return Ok(cliente);
+        }
 
-        if (cliente == null)
-            return NotFound();
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var cliente = await _context.Clientes.FindAsync(id);
 
-        _context.Clientes.Remove(cliente);
-        await _context.SaveChangesAsync();
+            if (cliente == null)
+                return NotFound();
 
-        return Ok();
+            _context.Clientes.Remove(cliente);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
     }
 }
