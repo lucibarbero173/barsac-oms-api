@@ -3,6 +3,15 @@ let clienteEditandoId = null;
 
 $(document).ready(function () {
     cargarClientes();
+
+    // Vinculación explícita por ID en jQuery por seguridad
+    $("#btnNuevoCliente").on("click", function () {
+        nuevoCliente();
+    });
+
+    $("#btnGuardarCliente").on("click", function () {
+        guardarCliente();
+    });
 });
 
 // =======================
