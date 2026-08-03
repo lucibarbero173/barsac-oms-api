@@ -26,33 +26,37 @@
 
         const data = await response.json();
 
-        // 1. Evaluamos éxito (sea con E mayúscula o e minúscula)
+        // 🔍 IMPRIMIMOS EN CONSOLA PARA VER QUÉ DEVUELVE EL BACKEND
+        console.log("STATUS HTTP:", response.status);
+        console.log("RESPONSE OK?:", response.ok);
+        console.log("RESPUESTA JSON COMPLETA:", data);
+
         const esExitoso = response.ok && (data.exito === true || data.Exito === true);
 
         if (esExitoso) {
-            // 2. Extraemos el token y el usuario
             const token = data.token || data.Token;
             const usuario = data.usuario || data.Usuario;
+
+            console.log("TOKEN RECIBIDO:", token);
 
             if (token) {
                 localStorage.setItem('token', token);
             }
 
             if (usuario) {
-                const nombre = usuario.nombre || usuario.Nombre || '';
-                localStorage.setItem('usuarioNombre', nombre);
+                localStorage.setItem('usuarioNombre', usuario.nombre || usuario.Nombre || '');
             }
 
-            // 3. Redirigimos
+            console.log("Redirigiendo a index.html...");
             window.location.replace('index.html');
         } else {
-            // Si no fue exitoso, mostramos el mensaje de error
+            console.log("FALLÓ LA CONDICIÓN DEL IF");
             feedback.classList.remove('d-none');
             feedback.classList.add('alert-danger');
-            feedback.textContent = data.mensaje || data.Mensaje || 'Credenciales inválidas o sin permisos de administrador.';
+            feedback.textContent = data.mensaje || data.Mensaje || 'Error al iniciar sesión';
         }
     } catch (error) {
-        console.error('Error en Login:', error);
+        console.error('Error atrapado en catch:', error);
         feedback.classList.remove('d-none');
         feedback.classList.add('alert-danger');
         feedback.textContent = 'Ocurrió un problema de conexión con el servidor.';
