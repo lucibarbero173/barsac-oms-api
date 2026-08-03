@@ -26,11 +26,11 @@
 
         const data = await response.json();
 
-        // Chequeamos Exito tanto en mayúscula como minúscula
-        const esExitoso = response.ok && (data.exito || data.Exito);
+        // 1. Evaluamos éxito (sea con E mayúscula o e minúscula)
+        const esExitoso = response.ok && (data.exito === true || data.Exito === true);
 
         if (esExitoso) {
-            // Extraer token
+            // 2. Extraemos el token y el usuario
             const token = data.token || data.Token;
             const usuario = data.usuario || data.Usuario;
 
@@ -38,18 +38,21 @@
                 localStorage.setItem('token', token);
             }
 
-            if (usuario && (usuario.nombre || usuario.Nombre)) {
-                localStorage.setItem('usuarioNombre', usuario.nombre || usuario.Nombre);
+            if (usuario) {
+                const nombre = usuario.nombre || usuario.Nombre || '';
+                localStorage.setItem('usuarioNombre', nombre);
             }
 
-            // Redirigir
-            window.location.href = 'index.html';
+            // 3. Redirigimos
+            window.location.replace('index.html');
         } else {
+            // Si no fue exitoso, mostramos el mensaje de error
             feedback.classList.remove('d-none');
             feedback.classList.add('alert-danger');
             feedback.textContent = data.mensaje || data.Mensaje || 'Credenciales inválidas o sin permisos de administrador.';
         }
     } catch (error) {
+        console.error('Error en Login:', error);
         feedback.classList.remove('d-none');
         feedback.classList.add('alert-danger');
         feedback.textContent = 'Ocurrió un problema de conexión con el servidor.';
