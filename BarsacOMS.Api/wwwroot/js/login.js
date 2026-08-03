@@ -26,21 +26,28 @@
 
         const data = await response.json();
 
-        if (response.ok && data.exito) {
-            // Guardamos el token JWT que envió el backend
-            localStorage.setItem('token', data.token);
+        // Chequeamos Exito tanto en mayúscula como minúscula
+        const esExitoso = response.ok && (data.exito || data.Exito);
 
-            // Guardamos el nombre del usuario si viene disponible
-            if (data.usuario && data.usuario.nombre) {
-                localStorage.setItem('usuarioNombre', data.usuario.nombre);
+        if (esExitoso) {
+            // Extraer token
+            const token = data.token || data.Token;
+            const usuario = data.usuario || data.Usuario;
+
+            if (token) {
+                localStorage.setItem('token', token);
             }
 
-            // Redirigir al inicio/dashboard
+            if (usuario && (usuario.nombre || usuario.Nombre)) {
+                localStorage.setItem('usuarioNombre', usuario.nombre || usuario.Nombre);
+            }
+
+            // Redirigir
             window.location.href = 'index.html';
         } else {
             feedback.classList.remove('d-none');
             feedback.classList.add('alert-danger');
-            feedback.textContent = data.mensaje || 'Credenciales inválidas o sin permisos de administrador.';
+            feedback.textContent = data.mensaje || data.Mensaje || 'Credenciales inválidas o sin permisos de administrador.';
         }
     } catch (error) {
         feedback.classList.remove('d-none');
