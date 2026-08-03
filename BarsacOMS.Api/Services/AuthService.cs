@@ -44,5 +44,29 @@ namespace BarsacOMS.Api.Services
 
             return (true, "Usuario registrado correctamente.");
         }
+
+        public async Task<ResultadoLoginDto> LoginAsync(LoginDto dto)
+        {
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.ToLower() && u.Activo);
+
+            if (usuario == null || !BCrypt.Net.BCrypt.Verify(dto.Password, usuario.PasswordHash))
+            {
+                return new ResultadoLoginDto { Exito = false, Mensaje = "Credenciales incorrectas." };
+            }
+
+            if (usuario.Rol != "admin")
+            {
+                return new ResultadoLoginDto { Exito = false, Mensaje = "Acceso denegado. Se requieren permisos de administrador." };
+            }
+
+            // Por ahora enviamos ok. Más adelante cuando configuremos JWT, acá generamos el token.
+            return new ResultadoLoginDto
+            {
+                Exito = true,
+                Mensaje = "Login exitoso",
+                Usuario = usuario
+            };
+        }
     }
 }

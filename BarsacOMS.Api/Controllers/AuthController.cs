@@ -33,5 +33,23 @@ namespace BarsacOMS.Api.Controllers
 
             return Ok(new { mensaje = resultado.Mensaje });
         }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var resultado = await _authService.LoginAsync(dto);
+
+            if (!resultado.Exito)
+            {
+                return Unauthorized(new { mensaje = resultado.Mensaje });
+            }
+
+            return Ok(new { mensaje = resultado.Mensaje });
+        }
     }
 }

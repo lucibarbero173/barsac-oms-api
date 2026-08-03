@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Barsac² - Iniciar Sesión</title>
+
+    <!-- Custom fonts -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles -->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/custom-theme.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: white;
+            padding: 50px 20px 120px 20px;
+            text-align: center;
+            border-bottom-left-radius: 50% 30px;
+            border-bottom-right-radius: 50% 30px;
+        }
+
+        .login-container {
+            margin-top: -80px;
+            margin-bottom: 40px;
+        }
+
+        .card-login {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group-custom {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon-badge {
+            position: absolute;
+            left: 10px;
+            z-index: 10;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #4e73df;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .form-control-custom {
+            padding-left: 55px !important;
+            height: 50px;
+            border-radius: 8px !important;
+            border: 1px solid #d1d3e2;
+            font-size: 15px;
+        }
+
+            .form-control-custom:focus {
+                border-color: #4e73df;
+                box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+            }
+
+        .btn-login-action {
+            height: 48px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            background-color: #4e73df;
+            border: none;
+        }
+
+            .btn-login-action:hover {
+                background-color: #2e59d9;
+            }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero-banner">
+        <h1 class="font-weight-bold">Barsac<sup>2</sup></h1>
+        <p class="lead mb-0">Ingresá tus datos para acceder al sistema.</p>
+    </div>
+
+    <div class="container login-container">
+        <div class="row justify-content-center">
+            <div class="col-xl-5 col-lg-6 col-md-8">
+
+                <div class="card card-login">
+                    <div class="card-body p-4 p-sm-5">
+
+                        <form id="formLogin">
+
+                            <!-- Email -->
+                            <div class="form-group mb-4">
+                                <div class="input-group-custom">
+                                    <div class="input-icon-badge">
+                                        <i class="fas fa-envelope"></i>
+                                    </div>
+                                    <input type="email" class="form-control form-control-custom" id="loginEmail" placeholder="Correo electrónico" required>
+                                </div>
+                            </div>
+
+                            <!-- Contraseña -->
+                            <div class="form-group mb-4">
+                                <div class="input-group-custom">
+                                    <div class="input-icon-badge">
+                                        <i class="fas fa-key"></i>
+                                    </div>
+                                    <input type="password" class="form-control form-control-custom" id="loginPassword" placeholder="Contraseña" required>
+                                </div>
+                            </div>
+
+                            <!-- Feedback -->
+                            <div id="mensajeFeedback" class="alert d-none text-center font-weight-bold" role="alert"></div>
+
+                            <!-- Botón Iniciar Sesión -->
+                            <button type="submit" id="btnSubmitLogin" class="btn btn-primary btn-block btn-login-action mt-4">
+                                Iniciar Sesión
+                            </button>
+
+                        </form>
+
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <small class="text-muted">¿No tenés cuenta? <a href="Register.html" class="font-weight-bold text-primary">Registrarse</a></small>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <script src="js/login.js"></script>
+
+</body>
+
+</html>
