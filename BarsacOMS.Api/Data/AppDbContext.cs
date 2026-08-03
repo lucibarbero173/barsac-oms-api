@@ -177,6 +177,22 @@ namespace BarsacOMS.Api.Data
             });
 
             // =====================
+            // USUARIOS
+            // =====================
+            modelBuilder.Entity<Usuario>(entity =>
+            {
+                entity.ToTable("usuarios");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Nombre).HasColumnName("nombre");
+                entity.Property(e => e.Email).HasColumnName("email");
+                entity.Property(e => e.PasswordHash).HasColumnName("password_hash");
+                entity.Property(e => e.Rol).HasColumnName("rol");
+                entity.Property(e => e.Activo).HasColumnName("activo");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            });
+
+            // =====================
             // PRECIO PRODUCTO
             // =====================
             modelBuilder.Entity<PrecioProducto>(entity =>
