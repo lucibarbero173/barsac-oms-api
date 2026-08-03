@@ -10,5 +10,6 @@ namespace BarsacOMS.Api.DTOs
 
         [Required(ErrorMessage = "La contraseña es obligatoria")]
         public string Password { get; set; } = string.Empty;
+
     }
 }

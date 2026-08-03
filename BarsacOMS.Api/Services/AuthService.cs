@@ -1,18 +1,24 @@
-﻿using BarsacOMS.Api.Data;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using BarsacOMS.Api.Data;
 using BarsacOMS.Api.DTOs;
 using BarsacOMS.Api.Models;
 using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace BarsacOMS.Api.Services
 {
     public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public AuthService(AppDbContext context)
+        public AuthService(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         public async Task<(bool Exito, string Mensaje)> RegistrarUsuarioAsync(RegisterDto dto)
@@ -60,13 +66,43 @@ namespace BarsacOMS.Api.Services
                 return new ResultadoLoginDto { Exito = false, Mensaje = "Acceso denegado. Se requieren permisos de administrador." };
             }
 
-            // Por ahora enviamos ok. Más adelante cuando configuremos JWT, acá generamos el token.
+            // Generamos el token JWT
+            string tokenGenerado = GenerarJwtToken(usuario);
+
             return new ResultadoLoginDto
             {
                 Exito = true,
                 Mensaje = "Login exitoso",
-                Usuario = usuario
+                Usuario = usuario,
+                Token = tokenGenerado // Asegúrate de tener la propiedad Token en ResultadoLoginDto
             };
+        }
+
+        private string GenerarJwtToken(Usuario usuario)
+        {
+            // Toma la clave desde appsettings.json o usa el valor por defecto configurado en Program.cs
+            var jwtKey = _configuration["Jwt:SecretKey"] ?? "ClaveSecretaSuperSeguraParaBarsacOMS2026!";
+            var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                new Claim(ClaimTypes.Email, usuario.Email),
+                new Claim(ClaimTypes.Name, usuario.Nombre),
+                new Claim(ClaimTypes.Role, usuario.Rol)
+            };
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(8), // Duración de la sesión
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
         }
     }
 }

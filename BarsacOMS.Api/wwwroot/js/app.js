@@ -1,11 +1,10 @@
 ﻿// js/app.js - Lógica Global (Topbar, Tema y Sesión)
-
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Cargar Nombre de Usuario en la Topbar
-    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const usuarioNombre = localStorage.getItem('usuarioNombre');
     const lblNombre = document.getElementById('lblNombreUsuario');
-    if (lblNombre && usuario.nombre) {
-        lblNombre.textContent = usuario.nombre;
+    if (lblNombre && usuarioNombre) {
+        lblNombre.textContent = usuarioNombre;
     }
 
     // 2. Manejo de Cierre de Sesión
@@ -13,7 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnLogout) {
         btnLogout.addEventListener('click', (e) => {
             e.preventDefault();
-            localStorage.clear();
+
+            // Eliminamos las credenciales pero preservamos el tema si se desea
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuarioNombre');
+            localStorage.removeItem('usuarioLogueado');
+
+            // Redirigimos al login
             window.location.href = 'login.html';
         });
     }

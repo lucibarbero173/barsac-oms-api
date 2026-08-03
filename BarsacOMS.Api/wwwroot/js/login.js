@@ -26,9 +26,14 @@
 
         const data = await response.json();
 
-        if (response.ok) {
-            // Guardar indicador de sesión activa
-            localStorage.setItem('usuarioLogueado', 'true');
+        if (response.ok && data.exito) {
+            // Guardamos el token JWT que envió el backend
+            localStorage.setItem('token', data.token);
+
+            // Guardamos el nombre del usuario si viene disponible
+            if (data.usuario && data.usuario.nombre) {
+                localStorage.setItem('usuarioNombre', data.usuario.nombre);
+            }
 
             // Redirigir al inicio/dashboard
             window.location.href = 'index.html';

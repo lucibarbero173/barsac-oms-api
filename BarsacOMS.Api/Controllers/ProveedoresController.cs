@@ -1,10 +1,12 @@
 ﻿using BarsacOMS.Api.Data;
 using BarsacOMS.Api.Models; // Asegurate de que coincida con tu namespace de modelos
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarsacOMS.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ProveedorController : ControllerBase
