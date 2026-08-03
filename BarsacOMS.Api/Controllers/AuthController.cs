@@ -46,10 +46,10 @@ namespace BarsacOMS.Api.Controllers
 
             if (!resultado.Exito)
             {
-                return Unauthorized(new { mensaje = resultado.Mensaje });
+                return Unauthorized(resultado); // Devuelve todo el DTO con Exito = false
             }
 
-            return Ok(new { mensaje = resultado.Mensaje });
+            return Ok(resultado); // Devuelve Exito = true, Mensaje, Token y Usuario
         }
     }
 }
