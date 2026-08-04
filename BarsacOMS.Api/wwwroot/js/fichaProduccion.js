@@ -24,7 +24,7 @@ $(document).ready(function () {
 // Cargar listado de órdenes reales para el <select>
 async function cargarOrdenesParaSelect() {
     try {
-        const response = await fetch('/api/ordenes');
+        const response = await fetch('/api/Orden');
         if (!response.ok) throw new Error('Error al obtener las órdenes');
 
         ordenesDisponibles = await response.json();
@@ -53,7 +53,8 @@ function cargarDatosOrdenSeleccionada(ordenId) {
         // Si la orden viene con sus detalles mapeados, se cargan automáticamente
         if (orden.detalles && Array.isArray(orden.detalles)) {
             orden.detalles.forEach(d => {
-                agregarFilaPrendaModal(d.cantidad || 1, d.producto || '', d.talle || '', null, '');
+                const nombreProducto = d.producto ? (d.producto.nombre || d.producto) : `Producto ID: ${d.productoId || ''}`;
+                agregarFilaPrendaModal(d.cantidad || 1, nombreProducto, d.talle || '', null, '');
             });
         }
     } else {
