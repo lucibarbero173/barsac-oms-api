@@ -220,10 +220,9 @@ async function guardarFicha() {
 
     const idFichaExistente = $('#fichaId').val();
 
-    // Se incluye ordenId y la navegación orden para cumplir con el validador del backend C#
+    // Se envía solo ordenId para evitar errores con Entity Framework
     const payload = {
         ordenId: ordenId,
-        orden: { id: ordenId },
         modista: modista || 'Sin asignar',
         items: items
     };
