@@ -41,7 +41,7 @@ async function cargarOrdenesParaSelect() {
 
 // Cargar automáticamente los datos de la orden seleccionada en los inputs del modal
 function cargarDatosOrdenSeleccionada(ordenId) {
-    const orden = ordenesDisponibles.find(o => o.id === ordenId);
+    const orden = ordenesDisponibles.find(o => o.id === parseInt(ordenId));
     const $body = $('#modalDetalleBody');
     $body.empty();
 
@@ -61,6 +61,13 @@ function cargarDatosOrdenSeleccionada(ordenId) {
         $('#inputCliente').val('');
         $('#inputFechaPedido').val('');
         $('#inputFechaEntrega').val('');
+    }
+}
+
+// Alias para evitar el ReferenceError del inline onchange en HTML
+function cargarDatosPedidoSeleccionado(val) {
+    if (val) {
+        cargarDatosOrdenSeleccionada(parseInt(val));
     }
 }
 
@@ -131,11 +138,12 @@ function abrirModalGenerarFicha() {
 // Agregar fila dinámica a la tabla del modal
 function agregarFilaPrendaModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false) {
     const filaId = Date.now() + Math.random().toString(36).substring(2, 5);
+    const cantVal = (cantidades !== null && cantidades !== undefined && !isNaN(cantidades)) ? cantidades : 1;
 
     const tr = `
         <tr id="fila-${filaId}">
             <td>
-                <input type="number" class="form-control form-control-sm input-cantidades text-center" value="${cantidades}" min="1">
+                <input type="number" class="form-control form-control-sm input-cantidades text-center" value="${cantVal}" min="1">
             </td>
             <td>
                 <input type="text" class="form-control form-control-sm input-producto" value="${producto}" placeholder="Ej: Camiseta">
@@ -194,12 +202,13 @@ async function guardarFicha() {
     $('#modalDetalleBody tr').each(function () {
         const row = $(this);
         const valNumero = row.find('.input-numero').val();
+        const parsedCant = parseInt(row.find('.input-cantidades').val());
 
         items.push({
-            cantidades: parseInt(row.find('.input-cantidades').val()) || 1,
-            producto: row.find('.input-producto').val(),
-            talle: row.find('.input-talle').val(),
-            numero: valNumero !== "" ? parseInt(valNumero) : null,
+            cantidades: (!isNaN(parsedCant) && parsedCant > 0) ? parsedCant : 1,
+            producto: row.find('.input-producto').val() || '',
+            talle: row.find('.input-talle').val() || '',
+            numero: valNumero !== "" && !isNaN(parseInt(valNumero)) ? parseInt(valNumero) : null,
             nombre: row.find('.input-nombre').val() || null,
             archivo: row.find('.chk-arch').is(':checked'),
             impresion: row.find('.chk-imp').is(':checked'),
@@ -211,8 +220,10 @@ async function guardarFicha() {
 
     const idFichaExistente = $('#fichaId').val();
 
+    // Se incluye ordenId y la navegación orden para cumplir con el validador del backend C#
     const payload = {
         ordenId: ordenId,
+        orden: { id: ordenId },
         modista: modista || 'Sin asignar',
         items: items
     };
@@ -234,7 +245,11 @@ async function guardarFicha() {
             });
         }
 
-        if (!response.ok) throw new Error('Error al guardar la ficha de producción.');
+        if (!response.ok) {
+            const errDetail = await response.text();
+            console.error('Detalle error API:', errDetail);
+            throw new Error('Error al guardar la ficha de producción.');
+        }
 
         $('#modalFichaProduccion').modal('hide');
         await cargarTablaFichas();
