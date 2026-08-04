@@ -17,12 +17,49 @@ namespace BarsacOMS.Api.Data
         public DbSet<MateriaPrima> MateriasPrimas { get; set; }
         public DbSet<Cobro> Cobros { get; set; }
         public DbSet<Pago> Pagos { get; set; }
-
+        public DbSet<FichaProduccion> FichasProduccion { get; set; }
+        public DbSet<DetalleFichaProduccion> DetallesFichaProduccion { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<FichaProduccion>(entity =>
+            {
+                entity.ToTable("ficha_produccion");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.OrdenId).HasColumnName("orden_id");
+                entity.Property(e => e.Modista).HasColumnName("modista");
+
+                entity.HasOne(e => e.Orden)
+                      .WithMany()
+                      .HasForeignKey(e => e.OrdenId);
+
+                // Mapeo explícito de la relación con DetalleFichaProduccion
+                entity.HasMany(e => e.Items)
+                      .WithOne()
+                      .HasForeignKey(e => e.FichaProduccionId);
+            });
+
+            modelBuilder.Entity<DetalleFichaProduccion>(entity =>
+            {
+                entity.ToTable("detalle_ficha_produccion");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.FichaProduccionId).HasColumnName("ficha_produccion_id");
+                entity.Property(e => e.Producto).HasColumnName("producto");
+                entity.Property(e => e.Cantidades).HasColumnName("cantidades");
+                entity.Property(e => e.Talle).HasColumnName("talle");
+                entity.Property(e => e.Numero).HasColumnName("numero");
+                entity.Property(e => e.Nombre).HasColumnName("nombre");
+
+                entity.Property(e => e.Archivo).HasColumnName("archivo");
+                entity.Property(e => e.Impresion).HasColumnName("impresion");
+                entity.Property(e => e.Calandra).HasColumnName("calandra");
+                entity.Property(e => e.Corte).HasColumnName("corte");
+                entity.Property(e => e.Entregado).HasColumnName("entregado");
+                entity.Property(e => e.FechaEntrega).HasColumnName("fecha_entrega");
+            });
 
             // CLIENTE   
             modelBuilder.Entity<Cliente>(entity =>

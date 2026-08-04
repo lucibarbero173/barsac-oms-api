@@ -1,6 +1,5 @@
-﻿// Variable global para simular datos o interactuar con la API C#
-let fichasProduccion = [];
-let pedidosDisponibles = [];
+﻿let fichasProduccion = [];
+let ordenesDisponibles = [];
 
 $(document).ready(function () {
     // Inicializar DataTable
@@ -11,62 +10,109 @@ $(document).ready(function () {
         order: [[0, 'desc']]
     });
 
-    // Cargar datos iniciales
-    cargarPedidosParaSelect();
+    // Cargar datos reales desde la API
+    cargarOrdenesParaSelect();
     cargarTablaFichas();
+
+    // Event listener al cambiar la orden en el select
+    $('#selectPedido').on('change', function () {
+        const ordenId = parseInt($(this).val());
+        cargarDatosOrdenSeleccionada(ordenId);
+    });
 });
 
-// Mock de pedidos para simular la vinculación
-function cargarPedidosParaSelect() {
-    pedidosDisponibles = [
-        {
-            idOrden: 101,
-            cliente: "Club Atlético Rafaela",
-            fechaPedido: "2026-08-01",
-            fechaEntrega: "2026-08-15",
-            prendas: [
-                { cantidades: 1, producto: "Camiseta Titular", talle: "L", numero: 10, nombre: "Pérez" },
-                { cantidades: 1, producto: "Camiseta Titular", talle: "M", numero: 9, nombre: "Gómez" },
-                { cantidades: 2, producto: "Short Deportivo", talle: "L", numero: null, nombre: "" }
-            ]
-        },
-        {
-            idOrden: 102,
-            cliente: "Deportivo Central",
-            fechaPedido: "2026-08-02",
-            fechaEntrega: "2026-08-18",
-            prendas: [
-                { cantidades: 5, producto: "Chomba de Presentación", talle: "XL", numero: null, nombre: "DT López" }
-            ]
-        }
-    ];
+// Cargar listado de órdenes reales para el <select>
+async function cargarOrdenesParaSelect() {
+    try {
+        const response = await fetch('/api/ordenes');
+        if (!response.ok) throw new Error('Error al obtener las órdenes');
 
-    const $select = $('#selectPedido');
-    $select.html('<option value="">-- Seleccionar --</option>');
+        ordenesDisponibles = await response.json();
+        const $select = $('#selectPedido');
+        $select.html('<option value="">-- Seleccionar --</option>');
 
-    pedidosDisponibles.forEach(pedido => {
-        $select.append(`<option value="${pedido.idOrden}">Pedido #${pedido.idOrden} - ${pedido.cliente}</option>`);
-    });
+        ordenesDisponibles.forEach(orden => {
+            $select.append(`<option value="${orden.id}">Pedido #${orden.id} - ${orden.nombreCliente || 'Sin Cliente'}</option>`);
+        });
+    } catch (error) {
+        console.error('Error al cargar órdenes:', error);
+    }
 }
 
-// Cargar automáticamente las prendas del pedido al seleccionarlo
-function cargarDatosPedidoSeleccionado(idOrden) {
-    const pedido = pedidosDisponibles.find(p => p.idOrden == idOrden);
+// Cargar automáticamente los datos de la orden seleccionada en los inputs del modal
+function cargarDatosOrdenSeleccionada(ordenId) {
+    const orden = ordenesDisponibles.find(o => o.id === ordenId);
     const $body = $('#modalDetalleBody');
     $body.empty();
 
-    if (pedido) {
-        $('#inputCliente').val(pedido.cliente);
-        $('#inputFechaPedido').val(pedido.fechaPedido);
-        $('#inputFechaEntrega').val(pedido.fechaEntrega);
+    if (orden) {
+        $('#inputCliente').val(orden.nombreCliente || '');
+        $('#inputFechaPedido').val(orden.fechaPedido ? orden.fechaPedido.split('T')[0] : '');
+        $('#inputFechaEntrega').val(orden.fechaEntrega ? orden.fechaEntrega.split('T')[0] : '');
 
-        pedido.prendas.forEach(p => {
-            agregarFilaPrendaModal(p.cantidades, p.producto, p.talle, p.numero, p.nombre);
-        });
+        // Si la orden viene con sus detalles mapeados, se cargan automáticamente
+        if (orden.detalles && Array.isArray(orden.detalles)) {
+            orden.detalles.forEach(d => {
+                agregarFilaPrendaModal(d.cantidad || 1, d.producto || '', d.talle || '', null, '');
+            });
+        }
     } else {
         $('#inputCliente').val('');
         $('#inputFechaPedido').val('');
         $('#inputFechaEntrega').val('');
+    }
+}
+
+// Cargar la tabla principal desde la API
+async function cargarTablaFichas() {
+    try {
+        const response = await fetch('/api/FichaProduccion');
+        if (!response.ok) throw new Error('Error al obtener fichas de producción');
+
+        fichasProduccion = await response.json();
+        const table = $('#dataTableFichas').DataTable();
+        table.clear();
+
+        fichasProduccion.forEach(ficha => {
+            const items = ficha.items || [];
+            const totalPrendas = items.length;
+            const entregadas = items.filter(p => p.entregado).length;
+
+            let badgeEstado = '<span class="badge badge-secondary">Pendiente</span>';
+            if (totalPrendas > 0 && entregadas === totalPrendas) {
+                badgeEstado = '<span class="badge badge-success">Completado</span>';
+            } else if (entregadas > 0) {
+                badgeEstado = `<span class="badge badge-warning">En Proceso (${entregadas}/${totalPrendas})</span>`;
+            }
+
+            const clienteNombre = ficha.orden ? ficha.orden.nombreCliente : '-';
+            const fechaPedido = ficha.orden ? (ficha.orden.fechaPedido ? ficha.orden.fechaPedido.split('T')[0] : '-') : '-';
+            const fechaEntrega = ficha.orden ? (ficha.orden.fechaEntrega ? ficha.orden.fechaEntrega.split('T')[0] : '-') : '-';
+
+            const acciones = `
+                <button class="btn btn-info btn-circle btn-sm mr-1" onclick="verFicha(${ficha.id})" title="Ver / Imprimir">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-warning btn-circle btn-sm mr-1" onclick="editarFicha(${ficha.id})" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+            `;
+
+            table.row.add([
+                `#${ficha.id}`,
+                `#${ficha.ordenId}`,
+                clienteNombre,
+                ficha.modista || 'Sin asignar',
+                fechaPedido,
+                fechaEntrega,
+                badgeEstado,
+                `<div class="text-center">${acciones}</div>`
+            ]);
+        });
+
+        table.draw();
+    } catch (error) {
+        console.error('Error al cargar la tabla de fichas:', error);
     }
 }
 
@@ -133,26 +179,22 @@ function eliminarFilaPrenda(filaId) {
     $(`#fila-${filaId}`).remove();
 }
 
-// Guardar (Crear o Editar) la Ficha
-function guardarFicha() {
-    const idPedido = $('#selectPedido').val();
-    const cliente = $('#inputCliente').val();
+// Guardar (POST o PUT) hacia el Backend C#
+async function guardarFicha() {
+    const ordenId = parseInt($('#selectPedido').val());
     const modista = $('#selectModista').val();
-    const fechaPedido = $('#inputFechaPedido').val();
-    const fechaEntrega = $('#inputFechaEntrega').val();
 
-    if (!idPedido) {
-        alert('Por favor selecciona un pedido.');
+    if (!ordenId) {
+        alert('Por favor selecciona una orden de trabajo.');
         return;
     }
 
-    // Mapear objetos coincidiendo con el modelo C# DetalleFichaProduccion
-    const prendas = [];
+    const items = [];
     $('#modalDetalleBody tr').each(function () {
         const row = $(this);
         const valNumero = row.find('.input-numero').val();
 
-        prendas.push({
+        items.push({
             cantidades: parseInt(row.find('.input-cantidades').val()) || 1,
             producto: row.find('.input-producto').val(),
             talle: row.find('.input-talle').val(),
@@ -168,99 +210,58 @@ function guardarFicha() {
 
     const idFichaExistente = $('#fichaId').val();
 
-    if (idFichaExistente) {
-        // Editar
-        const index = fichasProduccion.findIndex(f => f.idFicha == idFichaExistente);
-        if (index !== -1) {
-            fichasProduccion[index] = {
-                idFicha: parseInt(idFichaExistente),
-                fichaProduccionId: parseInt(idFichaExistente),
-                idOrden: idPedido,
-                cliente,
-                modista,
-                fechaPedido,
-                fechaEntrega,
-                prendas
-            };
+    const payload = {
+        ordenId: ordenId,
+        modista: modista || 'Sin asignar',
+        items: items
+    };
+
+    try {
+        let response;
+        if (idFichaExistente) {
+            payload.id = parseInt(idFichaExistente);
+            response = await fetch(`/api/FichaProduccion/${idFichaExistente}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } else {
+            response = await fetch('/api/FichaProduccion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
         }
-    } else {
-        // Crear
-        const nuevoId = fichasProduccion.length + 1001;
-        const nuevaFicha = {
-            idFicha: nuevoId,
-            fichaProduccionId: nuevoId,
-            idOrden: idPedido,
-            cliente,
-            modista: modista || 'Sin asignar',
-            fechaPedido,
-            fechaEntrega,
-            prendas
-        };
-        fichasProduccion.push(nuevaFicha);
+
+        if (!response.ok) throw new Error('Error al guardar la ficha de producción.');
+
+        $('#modalFichaProduccion').modal('hide');
+        await cargarTablaFichas();
+    } catch (error) {
+        console.error('Error al guardar ficha:', error);
+        alert('Ocurrió un error al intentar guardar la ficha.');
     }
-
-    $('#modalFichaProduccion').modal('hide');
-    cargarTablaFichas();
-}
-
-// Renderizar tabla principal
-function cargarTablaFichas() {
-    const table = $('#dataTableFichas').DataTable();
-    table.clear();
-
-    fichasProduccion.forEach(ficha => {
-        const totalPrendas = ficha.prendas.length;
-        const entregadas = ficha.prendas.filter(p => p.entregado).length;
-
-        let badgeEstado = '<span class="badge badge-secondary">Pendiente</span>';
-        if (totalPrendas > 0 && entregadas === totalPrendas) {
-            badgeEstado = '<span class="badge badge-success">Completado</span>';
-        } else if (entregadas > 0) {
-            badgeEstado = `<span class="badge badge-warning">En Proceso (${entregadas}/${totalPrendas})</span>`;
-        }
-
-        const acciones = `
-            <button class="btn btn-info btn-circle btn-sm mr-1" onclick="verFicha(${ficha.idFicha})" title="Ver / Imprimir">
-                <i class="fas fa-eye"></i>
-            </button>
-            <button class="btn btn-warning btn-circle btn-sm mr-1" onclick="editarFicha(${ficha.idFicha})" title="Editar">
-                <i class="fas fa-edit"></i>
-            </button>
-        `;
-
-        table.row.add([
-            `#${ficha.idFicha}`,
-            `#${ficha.idOrden}`,
-            ficha.cliente,
-            ficha.modista,
-            ficha.fechaPedido,
-            ficha.fechaEntrega,
-            badgeEstado,
-            `<div class="text-center">${acciones}</div>`
-        ]);
-    });
-
-    table.draw();
 }
 
 // Abrir Modal de Edición
 function editarFicha(idFicha) {
-    const ficha = fichasProduccion.find(f => f.idFicha === idFicha);
+    const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
 
-    $('#fichaId').val(ficha.idFicha);
-    $('#modalFichaTitulo').text(`Editar Ficha de Producción #${ficha.idFicha}`);
+    $('#fichaId').val(ficha.id);
+    $('#modalFichaTitulo').text(`Editar Ficha de Producción #${ficha.id}`);
 
-    $('#selectPedido').val(ficha.idOrden).prop('disabled', true);
-    $('#inputCliente').val(ficha.cliente);
+    $('#selectPedido').val(ficha.ordenId).prop('disabled', true);
+    $('#inputCliente').val(ficha.orden ? ficha.orden.nombreCliente : '');
     $('#selectModista').val(ficha.modista);
-    $('#inputFechaPedido').val(ficha.fechaPedido);
-    $('#inputFechaEntrega').val(ficha.fechaEntrega);
+    $('#inputFechaPedido').val(ficha.orden && ficha.orden.fechaPedido ? ficha.orden.fechaPedido.split('T')[0] : '');
+    $('#inputFechaEntrega').val(ficha.orden && ficha.orden.fechaEntrega ? ficha.orden.fechaEntrega.split('T')[0] : '');
 
     const $body = $('#modalDetalleBody');
     $body.empty();
 
-    ficha.prendas.forEach(p => {
+    const items = ficha.items || [];
+    items.forEach(p => {
         agregarFilaPrendaModal(p.cantidades, p.producto, p.talle, p.numero, p.nombre, p.archivo, p.impresion, p.calandra, p.corte, p.entregado);
     });
 
@@ -269,19 +270,20 @@ function editarFicha(idFicha) {
 
 // Abrir Modal de Previsualización
 function verFicha(idFicha) {
-    const ficha = fichasProduccion.find(f => f.idFicha === idFicha);
+    const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
 
-    $('#viewIdFicha').text(ficha.idFicha);
-    $('#viewNumOrden').text(`#${ficha.idOrden}`);
-    $('#viewCliente').text(ficha.cliente);
+    $('#viewIdFicha').text(ficha.id);
+    $('#viewNumOrden').text(`#${ficha.ordenId}`);
+    $('#viewCliente').text(ficha.orden ? ficha.orden.nombreCliente : '-');
     $('#viewModista').text(ficha.modista || 'Sin asignar');
-    $('#viewFechaEntrega').text(ficha.fechaEntrega || '-');
+    $('#viewFechaEntrega').text(ficha.orden && ficha.orden.fechaEntrega ? ficha.orden.fechaEntrega.split('T')[0] : '-');
 
     const $tbody = $('#viewTablaDetalleBody');
     $tbody.empty();
 
-    ficha.prendas.forEach(p => {
+    const items = ficha.items || [];
+    items.forEach(p => {
         const checkIcon = '<i class="fas fa-check text-success"></i>';
         const timesIcon = '<i class="fas fa-times text-muted"></i>';
 

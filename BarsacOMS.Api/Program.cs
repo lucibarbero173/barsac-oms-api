@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
 var builder = WebApplication.CreateBuilder(args);
 
 // CONFIGURACIÓN DE BASE DE DATOS
@@ -19,7 +18,8 @@ builder.Services.AddScoped<IOrdenService, OrdenService>();
 builder.Services.AddScoped<IProductoService, ProductoService>();
 builder.Services.AddScoped<ICobroService, CobroService>();
 builder.Services.AddScoped<IPagoService, PagoService>();
-builder.Services.AddScoped<IAuthService, AuthService>(); // Reg. de Auth
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IFichaProduccionService, FichaProduccionService>(); // <-- REGISTRADO
 
 // CONFIGURACIÓN DE AUTENTICACIÓN JWT
 var jwtKey = builder.Configuration["Jwt:SecretKey"] ?? "ClaveSecretaSuperSeguraParaBarsacOMS2026!";
@@ -38,9 +38,9 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-        ValidateIssuer = false,   // Podés cambiarlo a true si definís Issuer en appsettings
-        ValidateAudience = false, // Podés cambiarlo a true si definís Audience en appsettings
-        ValidateLifetime = true,  // Expira el token automáticamente
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
 });
@@ -71,17 +71,14 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// app.UseHttpsRedirection(); // Comentado para evitar inconvenientes con el proxy de Railway
-
 app.UseCors("AllowReact");
 
-// MIDDLEWARES DE AUTENTICACIÓN Y AUTORIZACIÓN (¡El orden importa!)
-app.UseAuthentication(); // <-- 1° Identifica quién es el usuario
-app.UseAuthorization();  // <-- 2° Verifica permisos
+// MIDDLEWARES DE AUTENTICACIÓN Y AUTORIZACIÓN
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
-
 app.MapControllers();
 
 app.Run();
