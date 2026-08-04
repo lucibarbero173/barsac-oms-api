@@ -104,6 +104,9 @@ async function cargarTablaFichas() {
                 <button class="btn btn-warning btn-circle btn-sm mr-1" onclick="editarFicha(${ficha.id})" title="Editar">
                     <i class="fas fa-edit"></i>
                 </button>
+                <button class="btn btn-success btn-circle btn-sm" onclick="abrirModalEntrega(${ficha.id})" title="Registrar Entregas">
+                    <i class="fas fa-boxes"></i>
+                </button>
             `;
 
             table.row.add([
