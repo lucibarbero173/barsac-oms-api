@@ -408,3 +408,116 @@
         [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(0.8);
         }
+
+/* =========================================================
+   PARCHE AISLADO PARA EL MODAL (No afecta otras páginas)
+   ========================================================= */
+
+/* --- MODO CLARO (Por defecto o cuando no es Dark) --- */
+:root:not([data-theme="dark"]) .modal-custom-theme .modal-body .card,
+[data-theme="light"] .modal-custom-theme .modal-body .card {
+    background-color: #f8f9fc !important;
+    border: 1px solid #e3e6f0 !important;
+}
+
+:root:not([data-theme="dark"]) .modal-custom-theme .modal-body .form-control,
+:root:not([data-theme="dark"]) .modal-custom-theme .modal-body select.form-control,
+:root:not([data-theme="dark"]) .modal-custom-theme .modal-body .custom-select,
+[data-theme="light"] .modal-custom-theme .modal-body .form-control,
+[data-theme="light"] .modal-custom-theme .modal-body select.form-control,
+[data-theme="light"] .modal-custom-theme .modal-body .custom-select {
+    background-color: #f4f5f8 !important;
+    border: 1px solid #d1d5db !important;
+    color: #333333 !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+    box-shadow: none !important;
+}
+
+    :root:not([data-theme="dark"]) .modal-custom-theme .modal-body .form-control:focus,
+    :root:not([data-theme="dark"]) .modal-custom-theme .modal-body select.form-control:focus,
+    :root:not([data-theme="dark"]) .modal-custom-theme .modal-body .custom-select:focus,
+    [data-theme="light"] .modal-custom-theme .modal-body .form-control:focus {
+        background-color: #ffffff !important;
+        border-color: #224abe !important;
+        box-shadow: 0 0 0 0.2rem rgba(34, 74, 190, 0.15) !important;
+    }
+
+:root:not([data-theme="dark"]) .modal-custom-theme .modal-body label,
+[data-theme="light"] .modal-custom-theme .modal-body label {
+    color: #4a5568 !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+}
+
+
+/* --- MODO OSCURO --- */
+[data-theme="dark"] .modal-custom-theme .modal-content {
+    background-color: #1e1e24 !important;
+    border: 1px solid #3a3a42 !important;
+    color: #e0e0e0 !important;
+    border-radius: 12px !important;
+}
+
+[data-theme="dark"] .modal-custom-theme .modal-header,
+[data-theme="dark"] .modal-custom-theme .modal-footer {
+    border-color: #3a3a42 !important;
+}
+
+    [data-theme="dark"] .modal-custom-theme .modal-header .close {
+        color: #ffffff !important;
+        opacity: 0.8;
+    }
+
+[data-theme="dark"] .modal-custom-theme .modal-body .card {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .modal-custom-theme .modal-body label {
+    color: #a0a5b5 !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+}
+
+/* Fuerza el fondo oscuro sobre los inputs en el modal */
+[data-theme="dark"] .modal-custom-theme .modal-body .form-control,
+[data-theme="dark"] .modal-custom-theme .modal-body select.form-control,
+[data-theme="dark"] .modal-custom-theme .modal-body .custom-select,
+[data-theme="dark"] .modal-custom-theme input[type="text"],
+[data-theme="dark"] .modal-custom-theme input[type="number"],
+[data-theme="dark"] .modal-custom-theme input[type="date"] {
+    background-color: #2b2c34 !important;
+    border: 1px solid #3f404a !important;
+    color: #e1e1e6 !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+    box-shadow: none !important;
+}
+
+    [data-theme="dark"] .modal-custom-theme .modal-body .form-control:focus,
+    [data-theme="dark"] .modal-custom-theme .modal-body select.form-control:focus,
+    [data-theme="dark"] .modal-custom-theme .modal-body .custom-select:focus {
+        background-color: #32333d !important;
+        border-color: #17a2b8 !important;
+        box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25) !important;
+        color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .modal-custom-theme .modal-body .form-control::placeholder {
+        color: #8f92a1 !important;
+        opacity: 1;
+    }
+
+/* Arreglo de texto recortado en inputs/selects pequeños */
+.modal-custom-theme .form-control-sm {
+    height: auto !important;
+    min-height: calc(1.5em + 0.5rem + 2px) !important;
+    line-height: 1.5 !important;
+    padding-top: 0.375rem !important;
+    padding-bottom: 0.375rem !important;
+}

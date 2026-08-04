@@ -1,0 +1,376 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <!-- Protección de sesión inmediata -->
+    <script src="js/auth-guard.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Barsac² - Fichas de Producción</title>
+
+    <!-- Custom fonts for this template -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this page -->
+    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+
+    <!-- TU CSS PERSONALIZADO -->
+    <link href="css/custom-theme.css" rel="stylesheet">
+
+
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+                <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-laugh-wink"></i></div>
+                <div class="sidebar-brand-text mx-3">Barsac<sup>2</sup></div>
+            </a>
+            <hr class="sidebar-divider my-0">
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Compras</div>
+            <li class="nav-item"><a class="nav-link" href="proveedores.html"><i class="fas fa-fw fa-truck"></i><span>Proveedores</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="pagos.html"><i class="fas fa-fw fa-file-invoice-dollar"></i><span>Pagos</span></a></li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMateria" aria-expanded="false" aria-controls="collapseMateria">
+                    <i class="fas fa-fw fa-box"></i><span>Materia Prima</span>
+                </a>
+                <div id="collapseMateria" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="materiaPrimaTela.html">Telas</a>
+                        <a class="collapse-item" href="materiaPrimaPapel.html">Papel</a>
+                        <a class="collapse-item" href="materiaPrimaInsumo.html">Insumos DTF</a>
+                        <a class="collapse-item" href="materiaPrimaMerceria.html">Merceria</a>
+                        <a class="collapse-item" href="materiaPrimaOtros.html">Otros</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="productos.html"><i class="fas fa-fw fa-box"></i><span>Productos</span></a></li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Gestion</div>
+            <li class="nav-item"><a class="nav-link" href="clientes.html"><i class="fas fa-fw fa-users"></i><span>Clientes</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="pedidos.html"><i class="fas fa-fw fa-table"></i><span>Pedidos</span></a></li>
+            <li class="nav-item active"><a class="nav-link" href="fichaProduccion.html"><i class="fas fa-fw fa-cut"></i><span>Fichas Producción</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="cobros.html"><i class="fas fa-fw fa-hand-holding-usd"></i><span>Cobros</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="estadisticas.html"><i class="fas fa-fw fa-chart-bar"></i><span>Estadisticas</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="alertas.html"><i class="fas fa-fw fa-bell"></i><span>Alertas</span></a></li>
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <!-- End of Sidebar -->
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <ul class="navbar-nav ml-auto align-items-center">
+                        <li class="nav-item">
+                            <button id="themeToggle" class="btn btn-link rounded-circle mr-3 border-0" title="Cambiar Tema">
+                                <i id="themeIcon" class="fas fa-moon text-gray-600 font-size-18"></i>
+                            </button>
+                        </li>
+
+                        <div class="topbar-divider d-none d-sm-block"></div>
+
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small font-weight-bold" id="lblNombreUsuario">Usuario</span>
+                                <div class="img-profile rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </a>
+
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="perfil.html">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Mi Perfil
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" id="btnLogout">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Cerrar Sesión
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- End of Topbar -->
+                <!-- Begin Page Content -->
+                <div class="container-fluid pt-2">
+
+                    <!-- Page Heading -->
+                    <h1 class="h3 mb-4 font-weight-bold">Fichas de Producción</h1>
+
+                    <!-- Tabla General de Fichas de Producción -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Listado de Fichas de Producción</h6>
+                            <button class="btn btn-success" onclick="abrirModalGenerarFicha()">
+                                <i class="fas fa-plus mr-1"></i> Generar Ficha de Producción
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTableFichas" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 8%;">N° Ficha</th>
+                                            <th style="width: 8%;">N° Orden</th>
+                                            <th style="width: 25%;">Cliente</th>
+                                            <th style="width: 12%;">Modista</th>
+                                            <th style="width: 12%;">Fecha Pedido</th>
+                                            <th style="width: 12%;">Fecha Entrega</th>
+                                            <th style="width: 8%;">Estado</th>
+                                            <th style="width: 15%;" class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="fichasBody">
+                                        <!-- Se puebla dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- /.container-fluid -->
+
+            </div>
+            <!-- End of Main Content -->
+            <!-- Footer -->
+            <footer class="sticky-footer">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; BARSAC OMS 2026</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- MODAL GENERAR / EDITAR FICHA DE PRODUCCIÓN -->
+    <div class="modal fade modal-custom-theme" id="modalFichaProduccion" tabindex="-1" role="dialog" aria-labelledby="modalFichaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content">
+
+                <!-- Header Modal -->
+                <div class="modal-header py-3">
+                    <h5 class="modal-title font-weight-bold" id="modalFichaLabel">
+                        <i class="fas fa-cut mr-2 text-primary"></i> <span id="modalFichaTitulo">Generar Ficha de Producción</span>
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <!-- Body Modal -->
+                <div class="modal-body px-4 py-3">
+                    <form id="formFichaProduccion">
+                        <input type="hidden" id="fichaId">
+
+                        <!-- Datos Generales -->
+                        <div class="card p-3 mb-3 shadow-sm bg-light">
+                            <div class="row">
+                                <div class="col-md-3 form-group mb-2">
+                                    <label class="font-weight-bold small text-muted">Seleccionar Pedido / N° Orden</label>
+                                    <select id="selectPedido" class="form-control form-control-sm" required onchange="cargarDatosPedidoSeleccionado(this.value)">
+                                        <option value="">-- Seleccionar --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 form-group mb-2">
+                                    <label class="font-weight-bold small text-muted">Cliente</label>
+                                    <input type="text" id="inputCliente" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="col-md-3 form-group mb-2">
+                                    <label class="font-weight-bold small text-muted">Fecha Pedido</label>
+                                    <input type="date" id="inputFechaPedido" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="col-md-3 form-group mb-2">
+                                    <label class="font-weight-bold small text-muted">Fecha Entrega</label>
+                                    <input type="date" id="inputFechaEntrega" class="form-control form-control-sm" readonly>
+                                </div>
+                            </div>
+                            <div class="row mt-2 align-items-center">
+                                <div class="col-md-4 form-group mb-0">
+                                    <label for="selectModista" class="font-weight-bold text-warning small">
+                                        <i class="fas fa-cut mr-1"></i> Modista Asignada
+                                    </label>
+                                    <select id="selectModista" class="form-control form-control-sm">
+                                        <option value="">-- Sin asignar --</option>
+                                        <option value="Ale">Ale</option>
+                                        <option value="Tere">Tere</option>
+                                        <option value="Vero">Vero</option>
+                                        <option value="Loli">Loli</option>
+                                        <option value="Beti">Beti</option>
+                                        <option value="Sarita">Sarita</option>
+                                        <option value="Vicki">Vicki</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalle y Avance de Taller -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="font-weight-bold text-primary m-0">Desglose de Prendas y Taller</h6>
+                            <button type="button" class="btn btn-success btn-sm" onclick="agregarFilaPrendaModal()">
+                                <i class="fas fa-plus mr-1"></i> Agregar Prenda
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm text-center align-middle" width="100%">
+                                <thead class="bg-white">
+                                    <tr>
+                                        <th style="width: 8%;">Cant.</th>
+                                        <th style="width: 22%;">Producto</th>
+                                        <th style="width: 8%;">Talle</th>
+                                        <th style="width: 8%;">Número</th>
+                                        <th style="width: 18%;">Nombre</th>
+                                        <th style="width: 5%;">Arch.</th>
+                                        <th style="width: 5%;">Imp.</th>
+                                        <th style="width: 5%;">Cal.</th>
+                                        <th style="width: 5%;">Corte</th>
+                                        <th style="width: 11%;" class="bg-warning text-dark">Entregado</th>
+                                        <th style="width: 5%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modalDetalleBody">
+                                    <!-- Filas cargadas dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer Modal -->
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success btn-sm px-4" onclick="guardarFicha()">
+                        <i class="fas fa-save mr-1"></i> Guardar Ficha
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VER DETALLE DE FICHA / IMPRIMIR (SOLO LECTURA) -->
+    <div class="modal fade modal-custom-theme" id="modalVerFicha" tabindex="-1" role="dialog" aria-labelledby="modalVerFichaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content">
+
+                <div class="modal-header py-3">
+                    <h5 class="modal-title font-weight-bold" id="modalVerFichaLabel">
+                        <i class="fas fa-eye mr-2 text-info"></i> Detalle de Ficha de Producción #<span id="viewIdFicha"></span>
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body px-4 py-3" id="contenidoImprimible">
+                    <!-- Resumen del Pedido -->
+                    <div class="card p-3 mb-3 shadow-sm border-left-info">
+                        <div class="row">
+                            <div class="col-md-2 mb-2">
+                                <small class="text-muted d-block">N° Orden</small>
+                                <strong id="viewNumOrden" class="text-primary font-weight-bold"></strong>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block">Cliente</small>
+                                <strong id="viewCliente" class="font-weight-bold"></strong>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <small class="text-muted d-block">Modista Asignada</small>
+                                <strong id="viewModista" class="text-warning font-weight-bold"></strong>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <small class="text-muted d-block">Fecha Entrega</small>
+                                <strong id="viewFechaEntrega" class="text-danger font-weight-bold"></strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Estados de Producción -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm text-center align-middle">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th style="width: 8%;">Cant.</th>
+                                    <th>Producto</th>
+                                    <th style="width: 8%;">Talle</th>
+                                    <th style="width: 8%;">Número</th>
+                                    <th style="width: 18%;">Nombre</th>
+                                    <th style="width: 7%;">Archivo</th>
+                                    <th style="width: 7%;">Impresión</th>
+                                    <th style="width: 7%;">Calandra</th>
+                                    <th style="width: 7%;">Corte</th>
+                                    <th style="width: 10%;">Entregado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="viewTablaDetalleBody">
+                                <!-- Se puebla por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-info btn-sm px-3" onclick="imprimirFichaDesdeModal()">
+                        <i class="fas fa-print mr-1"></i> Imprimir Hoja
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Cerrar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Base -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- Plugins DataTables -->
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <!-- JS de la vista -->
+    <script src="js/fichaProduccion.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
