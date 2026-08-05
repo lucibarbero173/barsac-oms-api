@@ -27,10 +27,18 @@ namespace BarsacOMS.Api.Controllers
         [HttpPost("ficha/{fichaId}")]
         public async Task<IActionResult> RegistrarEntrega(int fichaId, [FromBody] List<EntregaParcial> entregas)
         {
-            var resultado = await _service.RegistrarEntregaParcialAsync(fichaId, entregas);
-            if (!resultado) return NotFound(new { message = "Ficha de producción no encontrada" });
+            try
+            {
+                var resultado = await _service.RegistrarEntregaParcialAsync(fichaId, entregas);
+                if (!resultado) return NotFound(new { message = "Ficha de producción no encontrada" });
 
-            return Ok(new { message = "Entrega parcial registrada exitosamente" });
+                return Ok(new { message = "Entrega parcial registrada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                // Esto mostrará el error exacto en la respuesta HTTP
+                return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message, stack = ex.StackTrace });
+            }
         }
     }
 }
