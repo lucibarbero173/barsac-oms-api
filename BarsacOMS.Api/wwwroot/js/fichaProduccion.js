@@ -285,8 +285,7 @@ function editarFicha(idFicha) {
     $('#modalFichaProduccion').modal('show');
 }
 
-// Abrir Modal de Previsualización (con historial y faltantes)
-// Abrir Modal de Previsualización (con historial unificado y estado Parcial)
+// Abrir Modal de Previsualización (con fecha al lado y estado correcto)
 function verFicha(idFicha) {
     const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
@@ -324,72 +323,95 @@ function verFicha(idFicha) {
     $('.seccion-entrega-dinamica').remove();
     let htmlDinamico = '';
 
-    // 1. SECCIÓN UNIFICADA DE ENTREGA PARCIAL
     if (entregasParciales.length > 0) {
-        let rowsEntregas = '';
+        // Agrupamos las entregas exactamente por fecha
+        const gruposPorFecha = {};
         entregasParciales.forEach(entrega => {
-            // Buscamos el ítem original para comparar si se entregó completo o parcial
-            const itemOriginal = itemsOriginales.find(i =>
-                i.producto === entrega.producto &&
-                (i.talle || '') === (entrega.talle || '')
-            );
-
-            const cantOriginal = itemOriginal ? itemOriginal.cantidades : entrega.cantidades;
-
-            // Calculamos el total acumulado para este producto/talle hasta el momento
-            const acumuladoTotal = entregasParciales
-                .filter(e => e.producto === entrega.producto && (e.talle || '') === (entrega.talle || ''))
-                .reduce((sum, e) => sum + e.cantidades, 0);
-
-            let estadoBadge = '<span class="badge badge-success">Entregada</span>';
-            if (acumuladoTotal < cantOriginal) {
-                estadoBadge = '<span class="badge badge-warning">Parcial</span>';
+            const fechaStr = entrega.fechaEntrega ? entrega.fechaEntrega.split('T')[0] : 'Sin fecha';
+            if (!gruposPorFecha[fechaStr]) {
+                gruposPorFecha[fechaStr] = [];
             }
-
-            rowsEntregas += `
-                <tr>
-                    <td class="font-weight-bold">${entrega.cantidades}</td>
-                    <td class="text-left">${entrega.producto}</td>
-                    <td>${entrega.talle || '-'}</td>
-                    <td>${entrega.numero || '-'}</td>
-                    <td>${entrega.nombre || '-'}</td>
-                    <td>${itemOriginal && itemOriginal.archivo ? checkIcon : timesIcon}</td>
-                    <td>${itemOriginal && itemOriginal.impresion ? checkIcon : timesIcon}</td>
-                    <td>${itemOriginal && itemOriginal.calandra ? checkIcon : timesIcon}</td>
-                    <td>${itemOriginal && itemOriginal.corte ? checkIcon : timesIcon}</td>
-                    <td>${estadoBadge}</td>
-                </tr>
-            `;
+            gruposPorFecha[fechaStr].push(entrega);
         });
 
-        htmlDinamico += `
-            <div class="card my-3 border-warning seccion-entrega-dinamica">
-                <div class="card-header bg-warning text-dark font-weight-bold">
-                    Entrega Parcial
+        Object.keys(gruposPorFecha).forEach(fecha => {
+            const entregasDelDia = gruposPorFecha[fecha];
+            let rowsEntregas = '';
+
+            entregasDelDia.forEach(entrega => {
+                const itemOriginal = itemsOriginales.find(i =>
+                    i.producto === entrega.producto &&
+                    (i.talle || '') === (entrega.talle || '')
+                );
+
+                const cantOriginal = itemOriginal ? itemOriginal.cantidades : entrega.cantidades;
+
+                // Calculamos cuánto se ha entregado de este producto/talle en total hasta ahora
+                const acumuladoTotal = entregasParciales
+                    .filter(e => e.producto === entrega.producto && (e.talle || '') === (entrega.talle || ''))
+                    .reduce((sum, e) => sum + e.cantidades, 0);
+
+                // Si lo entregado en este registro cubre o si el acumulado llega al original, definimos el estado
+                let estadoBadge = '<span class="badge badge-success">Entregada</span>';
+                if (entrega.cantidades < cantOriginal && acumuladoTotal < cantOriginal) {
+                    estadoBadge = '<span class="badge badge-warning">Parcial</span>';
+                }
+
+                rowsEntregas += `
+                    <tr>
+                        <td class="font-weight-bold">${entrega.cantidades}</td>
+                        <td class="text-left">${entrega.producto}</td>
+                        <td>${entrega.talle || '-'}</td>
+                        <td>${entrega.numero || '-'}</td>
+                        <td>${entrega.nombre || '-'}</td>
+                        <td>${itemOriginal && itemOriginal.archivo ? checkIcon : timesIcon}</td>
+                        <td>${itemOriginal && itemOriginal.impresion ? checkIcon : timesIcon}</td>
+                        <td>${itemOriginal && itemOriginal.calandra ? checkIcon : timesIcon}</td>
+                        <td>${itemOriginal && itemOriginal.corte ? checkIcon : timesIcon}</td>
+                        <td>${estadoBadge}</td>
+                    </tr>
+                `;
+            });
+
+            // Formatear la fecha para que quede hermosa al lado del título (ej: 05/08/2026)
+            let fechaFormateada = fecha;
+            if (fecha !== 'Sin fecha') {
+                const partes = fecha.split('-');
+                if (partes.length === 3) {
+                    fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                }
+            }
+
+            htmlDinamico += `
+                <div class="card my-3 border-warning seccion-entrega-dinamica">
+                    <div class="card-header bg-warning text-dark font-weight-bold d-flex justify-content-between align-items-center">
+                        <span>Entrega Parcial</span>
+                        <span class="badge badge-dark px-2 py-1" style="font-size: 0.9rem;">${fechaFormateada}</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0 text-center">
+                            <thead>
+                                <tr>
+                                    <th>Cant.</th>
+                                    <th>Producto</th>
+                                    <th>Talle</th>
+                                    <th>Número</th>
+                                    <th>Nombre</th>
+                                    <th>Archivo</th>
+                                    <th>Impresión</th>
+                                    <th>Calandra</th>
+                                    <th>Corte</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsEntregas}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0 text-center">
-                        <thead>
-                            <tr>
-                                <th>Cant.</th>
-                                <th>Producto</th>
-                                <th>Talle</th>
-                                <th>Número</th>
-                                <th>Nombre</th>
-                                <th>Archivo</th>
-                                <th>Impresión</th>
-                                <th>Calandra</th>
-                                <th>Corte</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rowsEntregas}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
+            `;
+        });
     }
 
     // 2. SECCIÓN DE FALTA ENTREGAR
