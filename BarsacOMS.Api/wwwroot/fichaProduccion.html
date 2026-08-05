@@ -286,74 +286,51 @@
         </div>
     </div>
 
-    <!-- MODAL VER DETALLE DE FICHA / IMPRIMIR (SOLO LECTURA) -->
-    <div class="modal fade modal-custom-theme" id="modalVerFicha" tabindex="-1" role="dialog" aria-labelledby="modalVerFichaLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+    <!-- Modal de Registro de Entrega Parcial -->
+    <div class="modal fade modal-custom-theme" id="modalEntregaParcial" tabindex="-1" role="dialog" aria-labelledby="modalEntregaParcialLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
-
-                <div class="modal-header py-3">
-                    <h5 class="modal-title font-weight-bold" id="modalVerFichaLabel">
-                        <i class="fas fa-eye mr-2 text-info"></i> Detalle de Ficha de Producción #<span id="viewIdFicha"></span>
+                <div class="modal-header bg-success text-white py-3">
+                    <h5 class="modal-title font-weight-bold" id="modalEntregaParcialLabel">
+                        <i class="fas fa-boxes mr-1"></i> Registrar Entrega Parcial - Ficha #<span id="entregaIdFicha"></span>
                     </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-
-                <div class="modal-body px-4 py-3" id="contenidoImprimible">
-                    <!-- Resumen del Pedido -->
-                    <div class="card p-3 mb-3 shadow-sm border-left-info">
-                        <div class="row">
-                            <div class="col-md-2 mb-2">
-                                <small class="text-muted d-block">N° Orden</small>
-                                <strong id="viewNumOrden" class="text-primary font-weight-bold"></strong>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <small class="text-muted d-block">Cliente</small>
-                                <strong id="viewCliente" class="font-weight-bold"></strong>
-                            </div>
-                            <div class="col-md-3 mb-2">
-                                <small class="text-muted d-block">Modista Asignada</small>
-                                <strong id="viewModista" class="text-warning font-weight-bold"></strong>
-                            </div>
-                            <div class="col-md-3 mb-2">
-                                <small class="text-muted d-block">Fecha Entrega</small>
-                                <strong id="viewFechaEntrega" class="text-danger font-weight-bold"></strong>
-                            </div>
+                <div class="modal-body px-4 py-3">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>N° Orden:</strong> <span id="entregaNumOrden"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Cliente:</strong> <span id="entregaCliente"></span>
                         </div>
                     </div>
 
-                    <!-- Tabla de Estados de Producción -->
                     <div class="table-responsive">
-                        <table class="table table-bordered table-sm text-center align-middle">
-                            <thead class="thead-light">
+                        <table class="table table-bordered table-sm text-center" width="100%" cellspacing="0">
+                            <thead class="bg-light">
                                 <tr>
-                                    <th style="width: 8%;">Cant.</th>
+                                    <th style="width: 15%;">Cant. a Entregar</th>
+                                    <th>Pendiente / Original</th>
                                     <th>Producto</th>
-                                    <th style="width: 8%;">Talle</th>
-                                    <th style="width: 8%;">Número</th>
-                                    <th style="width: 18%;">Nombre</th>
-                                    <th style="width: 7%;">Archivo</th>
-                                    <th style="width: 7%;">Impresión</th>
-                                    <th style="width: 7%;">Calandra</th>
-                                    <th style="width: 7%;">Corte</th>
-                                    <th style="width: 10%;">Entregado</th>
+                                    <th>Talle</th>
+                                    <th>Número</th>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
                                 </tr>
                             </thead>
-                            <tbody id="viewTablaDetalleBody">
-                                <!-- Se puebla por JS -->
+                            <tbody id="tablaEntregaParcialBody">
+                                <!-- Se llena dinámicamente con JS -->
                             </tbody>
                         </table>
                     </div>
                 </div>
-
                 <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-info btn-sm px-3" onclick="imprimirFichaDesdeModal()">
-                        <i class="fas fa-print mr-1"></i> Imprimir Hoja
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success btn-sm px-4" onclick="guardarEntregaParcial()">Guardar Entrega Parcial</button>
                 </div>
-
             </div>
         </div>
     </div>
