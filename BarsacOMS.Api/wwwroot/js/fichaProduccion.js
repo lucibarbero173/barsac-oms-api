@@ -223,7 +223,6 @@ async function guardarFicha() {
 
     const idFichaExistente = $('#fichaId').val();
 
-    // Se envía solo ordenId para evitar errores con Entity Framework
     const payload = {
         ordenId: ordenId,
         modista: modista || 'Sin asignar',
@@ -286,7 +285,7 @@ function editarFicha(idFicha) {
     $('#modalFichaProduccion').modal('show');
 }
 
-// Abrir Modal de Previsualización (con historial de entregas parciales y faltantes)
+// Abrir Modal de Previsualización (con historial y faltantes)
 function verFicha(idFicha) {
     const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
@@ -297,10 +296,6 @@ function verFicha(idFicha) {
     $('#viewModista').text(ficha.modista || 'Sin asignar');
     $('#viewFechaEntrega').text(ficha.orden && ficha.orden.fechaEntrega ? ficha.orden.fechaEntrega.split('T')[0] : '-');
 
-    // Seleccionamos el contenedor principal donde está el detalle (puedes ajustar el ID según tu HTML o usar un contenedor general en el body del modal)
-    const $container = $('#contenidoImprimible'); // O el selector del contenedor dentro de tu modal #modalVerFicha
-
-    // 1. Renderizar tabla superior (Items Originales)
     const itemsOriginales = ficha.items || [];
     let htmlOriginal = '';
     const checkIcon = '<i class="fas fa-check text-success"></i>';
@@ -322,23 +317,13 @@ function verFicha(idFicha) {
             </tr>
         `;
     });
-    $('#viewTablaDetalleBody').html(htmlOriginal); // Tu tabla principal del modal
+    $('#viewTablaDetalleBody').html(htmlOriginal);
 
-    // 2. Renderizar Entregas Parciales e historial (Secciones amarillas de la imagen)
-    // Nota: Esto asume que el backend te devuelve un array de entregas agrupadas por fecha o lote, 
-    // o puedes adaptar la estructura según cómo guardes el historial.
     const entregasParciales = ficha.entregasParciales || [];
-
-    // Limpiamos dinámicos previos si los hubiera y generamos las secciones de entregas y lo que falta
     $('.seccion-entrega-dinamica').remove();
-
-    // Agrupar entregas por fecha o ID de entrega si aplica, o mostrarlas cronológicamente
-    // Aquí construimos el HTML dinámico para inyectarlo debajo de la tabla principal:
     let htmlDinamico = '';
 
-    // Simulamos las secciones de Entregas Parciales si existen
     if (entregasParciales.length > 0) {
-        // Ejemplo de estructura iterando las entregas parciales guardadas
         entregasParciales.forEach((entrega, idx) => {
             const fechaEntregaStr = entrega.fechaEntrega ? entrega.fechaEntrega.split('T')[0] : '';
             htmlDinamico += `
@@ -375,8 +360,6 @@ function verFicha(idFicha) {
         });
     }
 
-    // 3. Calcular lo que "Falta Entregar" (Apartado rojo de la imagen)
-    // Calculamos el remanente restando lo original menos la suma de entregas parciales por producto/talle
     let pendientesCalculados = [];
     itemsOriginales.forEach(item => {
         const entregadoTotalItem = entregasParciales
@@ -392,7 +375,6 @@ function verFicha(idFicha) {
         }
     });
 
-    // Si todavía falta entregar algo, mostramos el apartado rojo
     if (pendientesCalculados.length > 0) {
         let rowsFaltantes = '';
         pendientesCalculados.forEach(p => {
@@ -442,14 +424,12 @@ function verFicha(idFicha) {
         `;
     }
 
-    // Inyectamos las secciones dinámicas debajo de la tabla principal en el modal
     $('#viewTablaDetalleBody').closest('.table-responsive').after(htmlDinamico);
-
     $('#modalVerFicha').modal('show');
 }
 
 // ==========================================
-// NUEVO: FUNCIONALIDAD DE ENTREGAS PARCIALES
+// FUNCIONALIDAD DE ENTREGAS PARCIALES
 // ==========================================
 
 let fichaActualEntregaId = null;
@@ -473,19 +453,17 @@ function abrirModalEntrega(idFicha) {
     if (items.length === 0) {
         $tbody.append(`<tr><td colspan="7" class="text-center text-muted">No hay items en esta ficha.</td></tr>`);
     } else {
-        items.forEach((p, index) => {
-            // Calcular cuánto ya se entregó de este producto/talle en entregas anteriores
+        items.forEach((p) => {
             const entregadoAnterior = entregasParciales
                 .filter(e => e.producto === p.producto && e.talle === p.talle)
                 .reduce((sum, e) => sum + e.cantidades, 0);
 
             const pendiente = (p.cantidades || 1) - entregadoAnterior;
 
-            // Si ya está totalmente entregado, podemos deshabilitarlo o mostrarlo en 0
-            if (pendiente <= 0) return; // Opcional: ocultar o mostrar deshabilitado si ya está completo
+            if (pendiente <= 0) return;
 
             $tbody.append(`
-                <tr data-item-id="${p.id || 0}">
+                <tr data-producto="${p.producto}" data-talle="${p.talle || ''}">
                     <td class="align-middle">
                         <input type="number" class="form-control form-control-sm input-cant-entregar text-center font-weight-bold text-success" 
                                value="${pendiente}" min="0" max="${pendiente}">
@@ -508,108 +486,59 @@ function abrirModalEntrega(idFicha) {
     $('#modalEntregaParcial').modal('show');
 }
 
-// 2. Guardar las cantidades parciales ingresadas hacia la API
+// 2. Guardar Actualización de Entregas Parciales
 async function guardarEntregaParcial() {
     if (!fichaActualEntregaId) return;
 
-    const itemsEntregados = [];
+    const ficha = fichasProduccion.find(f => f.id === fichaActualEntregaId);
+    if (!ficha) return;
 
     $('#tablaEntregaParcialBody tr').each(function () {
         const row = $(this);
-        const itemId = row.data('item-id');
+        const producto = row.data('producto');
+        const talle = row.data('talle');
         const inputCant = row.find('.input-cant-entregar');
 
-        if (inputCant.length && itemId) {
-            const cantidadAEntregar = parseInt(inputCant.val()) || 0;
+        if (inputCant.length) {
+            const cantidadIngresada = parseInt(inputCant.val()) || 0;
 
-            // Solo enviamos si el usuario decidió entregar una cantidad mayor a 0
-            if (cantidadAEntregar > 0) {
-                itemsEntregados.push({
-                    id: itemId,
-                    cantidades: cantidadAEntregar
-                });
+            const itemEncontrado = ficha.items.find(i => i.producto === producto && (i.talle || '') === String(talle));
+            if (itemEncontrado) {
+                if (cantidadIngresada >= itemEncontrado.cantidades) {
+                    itemEncontrado.entregado = true;
+                } else if (cantidadIngresada > 0) {
+                    itemEncontrado.entregado = false;
+                }
             }
         }
     });
 
-    if (itemsEntregados.length === 0) {
-        alert('Por favor, ingresa al menos una cantidad mayor a 0 para registrar la entrega.');
-        return;
-    }
-
     const payload = {
-        fichaProduccionId: fichaActualEntregaId,
-        itemsEntregados: itemsEntregados
+        id: ficha.id,
+        ordenId: ficha.ordenId,
+        modista: ficha.modista,
+        items: ficha.items
     };
 
     try {
-        const response = await fetch(`/api/FichaProduccion/${fichaActualEntregaId}/entrega-parcial`, {
-            method: 'POST',
+        const response = await fetch(`/api/FichaProduccion/${ficha.id}`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
             const errText = await response.text();
-            console.error('Error al registrar entrega parcial:', errText);
-            throw new Error('No se pudo registrar la entrega parcial.');
+            console.error('Error al actualizar la ficha:', errText);
+            throw new Error('No se pudo registrar la entrega.');
         }
 
         $('#modalEntregaParcial').modal('hide');
         await cargarTablaFichas();
-        alert('Entrega parcial registrada correctamente.');
+        alert('Entrega registrada correctamente.');
     } catch (error) {
         console.error('Error:', error);
-        alert('Ocurrió un error al guardar la entrega parcial.');
-    }
-}
-
-// 2. Guardar las Entregas Parciales seleccionadas hacia la API
-async function guardarEntregaParcial() {
-    if (!fichaActualEntregaId) return;
-
-    const entregasSeleccionadas = [];
-
-    $('#tablaEntregaParcialBody tr').each(function () {
-        const row = $(this);
-        const chk = row.find('.chk-item-entrega');
-
-        if (chk.length) {
-            const itemId = chk.data('item-id');
-            const isChecked = chk.is(':checked');
-
-            // Recolectamos el estado de cada item o enviamos los IDs que se marcaron como entregados
-            entregasSeleccionadas.push({
-                id: itemId,
-                entregado: isChecked
-            });
-        }
-    });
-
-    const payload = {
-        fichaProduccionId: fichaActualEntregaId,
-        itemsEntregados: entregasSeleccionadas
-    };
-
-    try {
-        const response = await fetch(`/api/FichaProduccion/${fichaActualEntregaId}/entrega-parcial`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            const errText = await response.text();
-            console.error('Error al registrar entrega parcial:', errText);
-            throw new Error('No se pudo registrar la entrega parcial.');
-        }
-
-        $('#modalEntregaParcial').modal('hide');
-        await cargarTablaFichas(); // Recarga la tabla principal para actualizar los estados/badges
-        alert('Entregas registradas correctamente.');
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Ocurrió un error al guardar la entrega parcial.');
+        alert('Ocurrió un error al guardar la entrega.');
     }
 }
 
