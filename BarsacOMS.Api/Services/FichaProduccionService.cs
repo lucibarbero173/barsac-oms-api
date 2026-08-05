@@ -13,19 +13,21 @@ namespace BarsacOMS.Api.Services
             _context = context;
         }
 
-        public async Task<List<FichaProduccion>> GetAllAsync()
+        public async Task<IEnumerable<FichaProduccion>> GetAllAsync()
         {
             return await _context.FichasProduccion
                 .Include(f => f.Orden)
                 .Include(f => f.Items)
+                .Include(f => f.EntregasParciales) // <--- ¡Esta línea es la clave!
                 .ToListAsync();
         }
 
-        public async Task<FichaProduccion?> GetByIdAsync(int id)
+        public async Task<FichaProduccion> GetByIdAsync(int id)
         {
             return await _context.FichasProduccion
                 .Include(f => f.Orden)
                 .Include(f => f.Items)
+                .Include(f => f.EntregasParciales) // <--- ¡Y aquí también!
                 .FirstOrDefaultAsync(f => f.Id == id);
         }
 
