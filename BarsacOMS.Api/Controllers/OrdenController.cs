@@ -73,4 +73,20 @@ namespace BarsacOMS.Api.Controllers
             return Ok();
         }
     }
-}
+
+    [HttpDelete("{id}")]
+        public async Task<IActionResult> EliminarOrden(int id)
+        {
+            try
+            {
+                var exito = await _ordenService.EliminarOrdenAsync(id); // O el método que use tu servicio para borrar
+                if (!exito) return NotFound("La orden no existe");
+
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+    }

@@ -10,5 +10,7 @@ namespace BarsacOMS.Api.Services
         Task<OrdenTrabajo?> ObtenerOrdenPorIdAsync(int id);
         Task<IEnumerable<OrdenListDTO>> ObtenerOrdenesAsync();
         Task<bool> CambiarEstadoAsync(int id, EstadoOrden nuevoEstado);
+        Task<bool> EliminarOrdenAsync(int id);
+
     }
 }
