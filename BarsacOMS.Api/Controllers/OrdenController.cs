@@ -72,9 +72,8 @@ namespace BarsacOMS.Api.Controllers
 
             return Ok();
         }
-    }
 
-    [HttpDelete("{id}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> EliminarOrden(int id)
         {
             try
@@ -90,3 +89,5 @@ namespace BarsacOMS.Api.Controllers
             }
         }
     }
+
+}
