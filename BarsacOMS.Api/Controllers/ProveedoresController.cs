@@ -1,8 +1,7 @@
-﻿using BarsacOMS.Api.Data;
-using BarsacOMS.Api.Models; // Asegurate de que coincida con tu namespace de modelos
+﻿using BarsacOMS.Api.Models;
+using BarsacOMS.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace BarsacOMS.Api.Controllers
 {
@@ -11,96 +10,49 @@ namespace BarsacOMS.Api.Controllers
     [ApiController]
     public class ProveedorController : ControllerBase
     {
-        private readonly AppDbContext _context; // Reemplazá por el nombre real de tu DbContext
+        private readonly IProveedorService _proveedorService;
 
-        public ProveedorController(AppDbContext context)
+        public ProveedorController(IProveedorService proveedorService)
         {
-            _context = context;
+            _proveedorService = proveedorService;
         }
 
-        // 1. GET: api/Proveedor
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Proveedor>>> GetProveedores()
         {
-            // Traemos la lista básica ordenada por nombre
-            return await _context.Proveedores
-                .OrderBy(p => p.Nombre)
-                .ToListAsync();
+            var proveedores = await _proveedorService.ObtenerProveedoresAsync();
+            return Ok(proveedores);
         }
 
-        // 2. GET: api/Proveedor/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Proveedor>> GetProveedor(int id)
         {
-            var proveedor = await _context.Proveedores.FindAsync(id);
-
-            if (proveedor == null)
-            {
-                return NotFound();
-            }
-
-            return proveedor;
+            var proveedor = await _proveedorService.ObtenerProveedorPorIdAsync(id);
+            if (proveedor == null) return NotFound();
+            return Ok(proveedor);
         }
 
-        // 3. POST: api/Proveedor
         [HttpPost]
         public async Task<ActionResult<Proveedor>> PostProveedor([FromBody] Proveedor proveedor)
         {
-            _context.Proveedores.Add(proveedor);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetProveedor), new { id = proveedor.Id }, proveedor);
+            var nuevoProveedor = await _proveedorService.CrearProveedorAsync(proveedor);
+            return CreatedAtAction(nameof(GetProveedor), new { id = nuevoProveedor.Id }, nuevoProveedor);
         }
 
-        // 4. PUT: api/Proveedor/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProveedor(int id, [FromBody] Proveedor proveedor)
         {
-            if (id != proveedor.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(proveedor).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProveedorExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            var resultado = await _proveedorService.ActualizarProveedorAsync(id, proveedor);
+            if (!resultado) return BadRequest();
             return NoContent();
         }
 
-        // 5. DELETE: api/Proveedor/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProveedor(int id)
         {
-            var proveedor = await _context.Proveedores.FindAsync(id);
-            if (proveedor == null)
-            {
-                return NotFound();
-            }
-
-            _context.Proveedores.Remove(proveedor);
-            await _context.SaveChangesAsync();
-
+            var resultado = await _proveedorService.EliminarProveedorAsync(id);
+            if (!resultado) return NotFound();
             return NoContent();
-        }
-
-        private bool ProveedorExists(int id)
-        {
-            return _context.Proveedores.Any(e => e.Id == id);
         }
     }
 }

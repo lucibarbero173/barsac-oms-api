@@ -17,7 +17,6 @@ namespace BarsacOMS.Api.Models
         public int Id { get; set; }
         public string Nombre { get; set; } = string.Empty;
 
-        // 🔥 AGREGÁ ESTA LÍNEA ACÁ ARRIBA:
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public TipoProveedor Tipo { get; set; }
 
