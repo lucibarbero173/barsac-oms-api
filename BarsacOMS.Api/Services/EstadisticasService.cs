@@ -20,14 +20,13 @@ namespace BarsacOMS.Api.Services
             var mesActual = hoy.Month;
             var anioActual = hoy.Year;
 
-            // 1. SALDOS IMPAGOS DE PEDIDOS ENTREGADOS
-            // Filtrados por Estado == Entregado (3) y Saldo > 0
+            // 1. SALDOS IMPAGOS DE PEDIDOS ENTREGADOS (Protegido contra nulos)
             var ordenesImpagasQuery = _context.Ordenes
                 .Include(o => o.Cliente)
                 .Include(o => o.Detalles)
                 .Where(o => o.Saldo > 0 && o.Estado == EstadoOrden.Entregado);
 
-            var totalSaldoImpago = await ordenesImpagasQuery.SumAsync(o => o.Saldo);
+            var totalSaldoImpago = await ordenesImpagasQuery.SumAsync(o => (decimal?)o.Saldo) ?? 0;
             var cantOrdenesSaldo = await ordenesImpagasQuery.CountAsync();
 
             var listadoSaldosImpagos = await ordenesImpagasQuery
@@ -36,7 +35,7 @@ namespace BarsacOMS.Api.Services
                 {
                     NumeroOrden = o.Id.ToString(),
                     ClienteNombre = o.Cliente != null ? o.Cliente.Nombre : (o.NombreCliente ?? "Sin Cliente"),
-                    FechaEntrega = o.FechaEntrega.ToString("dd/MM/yyyy"),
+                    FechaEntrega = o.FechaEntrega != null ? o.FechaEntrega.ToString("dd/MM/yyyy") : "-",
                     Total = o.ImporteTotal,
                     MontoPagado = o.ImporteTotal - o.Saldo,
                     SaldoPendiente = o.Saldo,
@@ -49,22 +48,31 @@ namespace BarsacOMS.Api.Services
                 .Where(c => c.FechaCobro.Month == mesActual && c.FechaCobro.Year == anioActual)
                 .SumAsync(c => (decimal?)c.Importe) ?? 0;
 
-            // 3. EGRESOS EN EL MES (Sueldos, Modistas, Proveedores / Otros)
-            var pagosMes = await _context.Pagos
-                .Where(p => (p.FechaPago != null && p.FechaPago.Value.Month == mesActual && p.FechaPago.Value.Year == anioActual) ||
-                            (p.FechaPago == null && p.FechaFactura.Month == mesActual && p.FechaFactura.Year == anioActual))
-                .ToListAsync();
+            // 3. EGRESOS EN EL MES (Evaluado de forma segura en memoria para evitar errores de traducción SQL con nulos)
+            var pagosList = await _context.Pagos.ToListAsync();
+            var pagosMes = pagosList.Where(p =>
+                (p.FechaPago != null && p.FechaPago.Value.Month == mesActual && p.FechaPago.Value.Year == anioActual) ||
+                (p.FechaPago == null && p.FechaFactura.Month == mesActual && p.FechaFactura.Year == anioActual)
+            ).ToList();
 
-            var egresosSueldos = pagosMes.Where(p => (p.Concepto != null && p.Concepto.Contains("Sueldo", StringComparison.OrdinalIgnoreCase)) || (p.Proveedor != null && p.Proveedor.Contains("Sueldo", StringComparison.OrdinalIgnoreCase))).Sum(p => p.Importe);
-            var egresosModistas = pagosMes.Where(p => (p.Concepto != null && p.Concepto.Contains("Modista", StringComparison.OrdinalIgnoreCase)) || (p.Proveedor != null && p.Proveedor.Contains("Modista", StringComparison.OrdinalIgnoreCase))).Sum(p => p.Importe);
+            var egresosSueldos = pagosMes
+                .Where(p => (!string.IsNullOrEmpty(p.Concepto) && p.Concepto.Contains("Sueldo", StringComparison.OrdinalIgnoreCase)) ||
+                            (!string.IsNullOrEmpty(p.Proveedor) && p.Proveedor.Contains("Sueldo", StringComparison.OrdinalIgnoreCase)))
+                .Sum(p => p.Importe);
 
-            // Todo lo demás entra en Proveedores / Gastos Generales ("Otros")
-            var egresosOtros = pagosMes.Where(p =>
-                (p.Concepto == null || (!p.Concepto.Contains("Sueldo", StringComparison.OrdinalIgnoreCase) && !p.Concepto.Contains("Modista", StringComparison.OrdinalIgnoreCase))) &&
-                (p.Proveedor == null || (!p.Proveedor.Contains("Sueldo", StringComparison.OrdinalIgnoreCase) && !p.Proveedor.Contains("Modista", StringComparison.OrdinalIgnoreCase)))
-            ).Sum(p => p.Importe);
+            var egresosModistas = pagosMes
+                .Where(p => (!string.IsNullOrEmpty(p.Concepto) && p.Concepto.Contains("Modista", StringComparison.OrdinalIgnoreCase)) ||
+                            (!string.IsNullOrEmpty(p.Proveedor) && p.Proveedor.Contains("Modista", StringComparison.OrdinalIgnoreCase)))
+                .Sum(p => p.Importe);
 
-            // 4. PRENDAS PRODUCIDAS EN EL MES (Conteo basado en los detalles de las órdenes del mes actual)
+            var egresosOtros = pagosMes
+                .Where(p =>
+                    (string.IsNullOrEmpty(p.Concepto) || (!p.Concepto.Contains("Sueldo", StringComparison.OrdinalIgnoreCase) && !p.Concepto.Contains("Modista", StringComparison.OrdinalIgnoreCase))) &&
+                    (string.IsNullOrEmpty(p.Proveedor) || (!p.Proveedor.Contains("Sueldo", StringComparison.OrdinalIgnoreCase) && !p.Proveedor.Contains("Modista", StringComparison.OrdinalIgnoreCase)))
+                )
+                .Sum(p => p.Importe);
+
+            // 4. PRENDAS PRODUCIDAS EN EL MES
             var ordenesMes = await _context.Ordenes
                 .Include(o => o.Detalles)
                 .Where(o => o.FechaPedido.Month == mesActual && o.FechaPedido.Year == anioActual)
@@ -85,8 +93,11 @@ namespace BarsacOMS.Api.Services
 
             foreach (var group in ordenesAnio.GroupBy(o => o.FechaPedido.Month))
             {
-                facturadoMensual[group.Key - 1] = group.Sum(o => o.ImporteTotal);
-                prendasMensual[group.Key - 1] = group.SelectMany(o => o.Detalles).Sum(d => d.Cantidad);
+                if (group.Key >= 1 && group.Key <= 12)
+                {
+                    facturadoMensual[group.Key - 1] = group.Sum(o => o.ImporteTotal);
+                    prendasMensual[group.Key - 1] = group.SelectMany(o => o.Detalles).Sum(d => d.Cantidad);
+                }
             }
 
             var cobrosAnio = await _context.Cobros
@@ -95,7 +106,10 @@ namespace BarsacOMS.Api.Services
 
             foreach (var group in cobrosAnio.GroupBy(c => c.FechaCobro.Month))
             {
-                cobradoMensual[group.Key - 1] = group.Sum(c => c.Importe);
+                if (group.Key >= 1 && group.Key <= 12)
+                {
+                    cobradoMensual[group.Key - 1] = group.Sum(c => c.Importe);
+                }
             }
 
             return new DashboardEstadisticasDto

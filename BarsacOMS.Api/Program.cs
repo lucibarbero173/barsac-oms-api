@@ -19,7 +19,8 @@ builder.Services.AddScoped<IProductoService, ProductoService>();
 builder.Services.AddScoped<ICobroService, CobroService>();
 builder.Services.AddScoped<IPagoService, PagoService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IFichaProduccionService, FichaProduccionService>(); // <-- REGISTRADO
+builder.Services.AddScoped<IFichaProduccionService, FichaProduccionService>(); 
+builder.Services.AddScoped<IEstadisticasService, EstadisticasService>();
 
 // CONFIGURACIÓN DE AUTENTICACIÓN JWT
 var jwtKey = builder.Configuration["Jwt:SecretKey"] ?? "ClaveSecretaSuperSeguraParaBarsacOMS2026!";
