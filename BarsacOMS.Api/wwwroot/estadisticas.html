@@ -155,8 +155,8 @@
                                             <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                                                 Saldos Impagos (Entregados)
                                             </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$845,000</div>
-                                            <div class="text-xs text-muted mt-1">6 Órdenes con saldo</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="kpiSaldosImpagos">$0</div>
+                                            <div class="text-xs text-muted mt-1" id="kpiCantSaldos">0 Órdenes con saldo</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-exclamation-circle fa-2x text-danger"></i>
@@ -175,8 +175,8 @@
                                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                                 Prendas (Mes Actual)
                                             </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">1,850 Unids</div>
-                                            <div class="text-xs text-success mt-1"><i class="fas fa-arrow-up"></i> +14% vs mes anterior</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="kpiPrendasMes">0 Unids</div>
+                                            <div class="text-xs text-success mt-1" id="kpiTendenciaPrendas"><i class="fas fa-arrow-up"></i> - vs mes anterior</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-tshirt fa-2x text-info"></i>
@@ -195,7 +195,7 @@
                                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                                 Egresos Totales (Mes)
                                             </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$2,450,000</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="kpiEgresosTotales">$0</div>
                                             <div class="text-xs text-muted mt-1">Sueldos + Modistas + Gastos</div>
                                         </div>
                                         <div class="col-auto">
@@ -215,7 +215,7 @@
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                                 Total Cobrado (Mes)
                                             </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$4,120,000</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="kpiTotalCobrado">$0</div>
                                             <div class="text-xs text-muted mt-1">Ingresos efectivos</div>
                                         </div>
                                         <div class="col-auto">
@@ -298,31 +298,8 @@
                                             <th class="text-center">Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>#PED-1042</td>
-                                            <td>Club Atlético Rafaela</td>
-                                            <td>12/07/2026</td>
-                                            <td>$450,000</td>
-                                            <td>$200,000</td>
-                                            <td class="font-weight-bold text-danger">$250,000</td>
-                                            <td class="text-center">
-                                                <button class="btn btn-sm btn-success" title="Reclamar por WhatsApp"><i class="fab fa-whatsapp"></i></button>
-                                                <button class="btn btn-sm btn-info" title="Registrar Pago"><i class="fas fa-dollar-sign"></i></button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>#PED-1038</td>
-                                            <td>Gimnasio Impacto</td>
-                                            <td>08/07/2026</td>
-                                            <td>$320,000</td>
-                                            <td>$150,000</td>
-                                            <td class="font-weight-bold text-danger">$170,000</td>
-                                            <td class="text-center">
-                                                <button class="btn btn-sm btn-success" title="Reclamar por WhatsApp"><i class="fab fa-whatsapp"></i></button>
-                                                <button class="btn btn-sm btn-info" title="Registrar Pago"><i class="fas fa-dollar-sign"></i></button>
-                                            </td>
-                                        </tr>
+                                    <tbody id="dataTableSaldosBody">
+                                        <!-- Las filas se cargarán dinámicamente desde JavaScript -->
                                     </tbody>
                                 </table>
                             </div>
@@ -366,127 +343,10 @@
 
     <!-- Plugin Chart.js -->
     <script src="vendor/chart.js/Chart.min.js"></script>
+
+    <!-- Scripts Generales y Específicos del Módulo -->
     <script src="js/app.js"></script>
-
-    <!-- Script Modo Oscuro / Toggle y Gráficos -->
-    <script>
-        const toggleBtn = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                let theme = document.documentElement.getAttribute('data-theme');
-                if (theme === 'dark') {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    localStorage.setItem('theme', 'light');
-                    themeIcon.classList.replace('fa-sun', 'fa-moon');
-                } else {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('theme', 'dark');
-                    themeIcon.classList.replace('fa-moon', 'fa-sun');
-                }
-            });
-        }
-
-        // Inicializar DataTable de Saldos
-        $(document).ready(function () {
-            $('#dataTableSaldos').DataTable({
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
-                }
-            });
-        });
-
-        // Configuración Global Chart.js
-        Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
-        Chart.defaults.global.defaultFontColor = '#858796';
-
-        // 1. Gráfico: Facturado vs Cobrado
-        var ctxFact = document.getElementById("chartFacturadoVsCobrado");
-        if (ctxFact) {
-            new Chart(ctxFact, {
-                type: 'line',
-                data: {
-                    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul"],
-                    datasets: [
-                        {
-                            label: "Total Facturado ($)",
-                            lineTension: 0.3,
-                            backgroundColor: "rgba(78, 115, 223, 0.05)",
-                            borderColor: "#4e73df",
-                            pointRadius: 3,
-                            pointBackgroundColor: "#4e73df",
-                            data: [2800000, 3200000, 3900000, 4100000, 4500000, 4800000, 4965000],
-                        },
-                        {
-                            label: "Total Cobrado ($)",
-                            lineTension: 0.3,
-                            backgroundColor: "rgba(28, 200, 138, 0.05)",
-                            borderColor: "#1cc88a",
-                            pointRadius: 3,
-                            pointBackgroundColor: "#1cc88a",
-                            data: [2500000, 3000000, 3500000, 3800000, 4100000, 4200000, 4120000],
-                        }
-                    ],
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    scales: {
-                        xAxes: [{ gridLines: { display: false } }],
-                        yAxes: [{ ticks: { maxTicksLimit: 6 } }]
-                    },
-                    legend: { display: true }
-                }
-            });
-        }
-
-        // 2. Gráfico: Desglose Egresos
-        var ctxGastos = document.getElementById("chartGastos");
-        if (ctxGastos) {
-            new Chart(ctxGastos, {
-                type: 'doughnut',
-                data: {
-                    labels: ["Sueldos Empleados", "Modistas / Talleres", "Gastos Operativos"],
-                    datasets: [{
-                        data: [1200000, 850000, 400000],
-                        backgroundColor: ['#4e73df', '#36b9cc', '#f6c23e'],
-                        hoverBackgroundColor: ['#2e59d9', '#2c9caf', '#dda20a'],
-                        hoverBorderColor: "rgba(234, 236, 244, 1)",
-                    }],
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    legend: { display: false },
-                    cutoutPercentage: 70,
-                }
-            });
-        }
-
-        // 3. Gráfico: Balance de Prendas por Mes
-        var ctxPrendas = document.getElementById("chartPrendasMes");
-        if (ctxPrendas) {
-            new Chart(ctxPrendas, {
-                type: 'bar',
-                data: {
-                    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul"],
-                    datasets: [{
-                        label: "Prendas Producidas",
-                        backgroundColor: "#36b9cc",
-                        hoverBackgroundColor: "#2c9caf",
-                        data: [950, 1100, 1400, 1350, 1600, 1620, 1850],
-                    }],
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    scales: {
-                        xAxes: [{ gridLines: { display: false } }],
-                        yAxes: [{ ticks: { min: 0, maxTicksLimit: 6 } }]
-                    },
-                    legend: { display: false }
-                }
-            });
-        }
-    </script>
+    <script src="js/estadisticas.js"></script>
 
 </body>
 

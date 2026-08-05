@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using BarsacOMS.Api.Data;
 using BarsacOMS.Api.DTOs;
+using BarsacOMS.Api.Models;
 
 namespace BarsacOMS.Api.Services
 {
@@ -19,10 +20,12 @@ namespace BarsacOMS.Api.Services
             var mesActual = hoy.Month;
             var anioActual = hoy.Year;
 
-            // 1. SALDOS IMPAGOS (Órdenes con saldo pendiente)
+            // 1. SALDOS IMPAGOS DE PEDIDOS ENTREGADOS
+            // Filtrados por Estado == Entregado (3) y Saldo > 0
             var ordenesImpagasQuery = _context.Ordenes
                 .Include(o => o.Cliente)
-                .Where(o => o.Saldo > 0);
+                .Include(o => o.Detalles)
+                .Where(o => o.Saldo > 0 && o.Estado == EstadoOrden.Entregado);
 
             var totalSaldoImpago = await ordenesImpagasQuery.SumAsync(o => o.Saldo);
             var cantOrdenesSaldo = await ordenesImpagasQuery.CountAsync();
@@ -41,30 +44,33 @@ namespace BarsacOMS.Api.Services
                 })
                 .ToListAsync();
 
-            // 2. COBRADO EN EL MES
+            // 2. COBRADO EN EL MES (Ingresos reales)
             var totalCobradoMes = await _context.Cobros
                 .Where(c => c.FechaCobro.Month == mesActual && c.FechaCobro.Year == anioActual)
                 .SumAsync(c => (decimal?)c.Importe) ?? 0;
 
-            // 3. EGRESOS EN EL MES (Utilizando MesPago o evaluando FechaPago / FechaFactura según tu modelo Pago)
+            // 3. EGRESOS EN EL MES (Sueldos, Modistas, Proveedores / Otros)
             var pagosMes = await _context.Pagos
                 .Where(p => (p.FechaPago != null && p.FechaPago.Value.Month == mesActual && p.FechaPago.Value.Year == anioActual) ||
                             (p.FechaPago == null && p.FechaFactura.Month == mesActual && p.FechaFactura.Year == anioActual))
                 .ToListAsync();
 
-            var egresosSueldos = pagosMes.Where(p => (p.Concepto != null && p.Concepto.Contains("Sueldo")) || (p.Proveedor != null && p.Proveedor.Contains("Sueldo"))).Sum(p => p.Importe);
-            var egresosModistas = pagosMes.Where(p => (p.Concepto != null && p.Concepto.Contains("Modista")) || (p.Proveedor != null && p.Proveedor.Contains("Modista"))).Sum(p => p.Importe);
+            var egresosSueldos = pagosMes.Where(p => (p.Concepto != null && p.Concepto.Contains("Sueldo", StringComparison.OrdinalIgnoreCase)) || (p.Proveedor != null && p.Proveedor.Contains("Sueldo", StringComparison.OrdinalIgnoreCase))).Sum(p => p.Importe);
+            var egresosModistas = pagosMes.Where(p => (p.Concepto != null && p.Concepto.Contains("Modista", StringComparison.OrdinalIgnoreCase)) || (p.Proveedor != null && p.Proveedor.Contains("Modista", StringComparison.OrdinalIgnoreCase))).Sum(p => p.Importe);
+
+            // Todo lo demás entra en Proveedores / Gastos Generales ("Otros")
             var egresosOtros = pagosMes.Where(p =>
-                (p.Concepto == null || (!p.Concepto.Contains("Sueldo") && !p.Concepto.Contains("Modista"))) &&
-                (p.Proveedor == null || (!p.Proveedor.Contains("Sueldo") && !p.Proveedor.Contains("Modista")))
+                (p.Concepto == null || (!p.Concepto.Contains("Sueldo", StringComparison.OrdinalIgnoreCase) && !p.Concepto.Contains("Modista", StringComparison.OrdinalIgnoreCase))) &&
+                (p.Proveedor == null || (!p.Proveedor.Contains("Sueldo", StringComparison.OrdinalIgnoreCase) && !p.Proveedor.Contains("Modista", StringComparison.OrdinalIgnoreCase)))
             ).Sum(p => p.Importe);
 
-            // 4. PRENDAS PRODUCIDAS EN EL MES
-            var detallesMes = await _context.DetallesFichaProduccion
-                .Where(i => i.FechaEntrega != null && i.FechaEntrega.Value.Month == mesActual && i.FechaEntrega.Value.Year == anioActual)
+            // 4. PRENDAS PRODUCIDAS EN EL MES (Conteo basado en los detalles de las órdenes del mes actual)
+            var ordenesMes = await _context.Ordenes
+                .Include(o => o.Detalles)
+                .Where(o => o.FechaPedido.Month == mesActual && o.FechaPedido.Year == anioActual)
                 .ToListAsync();
 
-            int prendasMes = detallesMes.Sum(i => i.Cantidades);
+            int prendasMes = ordenesMes.SelectMany(o => o.Detalles).Sum(d => d.Cantidad);
 
             // 5. CÁLCULOS ANUALES PARA GRÁFICOS
             var mesesNom = new[] { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" };
@@ -73,12 +79,14 @@ namespace BarsacOMS.Api.Services
             var prendasMensual = new int[12];
 
             var ordenesAnio = await _context.Ordenes
+                .Include(o => o.Detalles)
                 .Where(o => o.FechaPedido.Year == anioActual)
                 .ToListAsync();
 
             foreach (var group in ordenesAnio.GroupBy(o => o.FechaPedido.Month))
             {
                 facturadoMensual[group.Key - 1] = group.Sum(o => o.ImporteTotal);
+                prendasMensual[group.Key - 1] = group.SelectMany(o => o.Detalles).Sum(d => d.Cantidad);
             }
 
             var cobrosAnio = await _context.Cobros
@@ -88,15 +96,6 @@ namespace BarsacOMS.Api.Services
             foreach (var group in cobrosAnio.GroupBy(c => c.FechaCobro.Month))
             {
                 cobradoMensual[group.Key - 1] = group.Sum(c => c.Importe);
-            }
-
-            var detallesAnio = await _context.DetallesFichaProduccion
-                .Where(i => i.FechaEntrega != null && i.FechaEntrega.Value.Year == anioActual)
-                .ToListAsync();
-
-            foreach (var group in detallesAnio.GroupBy(i => i.FechaEntrega!.Value.Month))
-            {
-                prendasMensual[group.Key - 1] = group.Sum(i => i.Cantidades);
             }
 
             return new DashboardEstadisticasDto

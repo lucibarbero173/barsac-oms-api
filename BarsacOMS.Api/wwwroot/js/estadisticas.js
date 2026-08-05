@@ -1,137 +1,182 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener("DOMContentLoaded", function () {
     cargarEstadisticas();
 });
 
-function formatMoneda(monto) {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(monto);
-}
-
 async function cargarEstadisticas() {
     try {
-        const response = await fetch('/api/estadisticas/dashboard');
+        const token = localStorage.getItem("token"); // O el nombre que uses para tu JWT
+        const response = await fetch('/api/Estadisticas/dashboard', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+            throw new Error("Error al obtener los datos de estadísticas.");
         }
 
         const data = await response.json();
 
-        // 1. Métricas KPI
-        document.getElementById('kpiSaldosImpagos').textContent = formatMoneda(data.kpis.totalSaldoImpago);
-        document.getElementById('kpiCantOrdenesSaldo').textContent = `${data.kpis.cantOrdenesSaldo} Órdenes con saldo`;
+        // 1. Renderizar KPIs
+        renderizarKpis(data.kpis);
 
-        document.getElementById('kpiPrendasMes').textContent = `${data.kpis.prendasMes.toLocaleString()} Unids`;
-        document.getElementById('kpiEgresosMes').textContent = formatMoneda(data.kpis.totalEgresosMes);
-        document.getElementById('kpiCobradoMes').textContent = formatMoneda(data.kpis.totalCobradoMes);
+        // 2. Renderizar Tabla de Saldos Impagos
+        renderizarTablaSaldos(data.saldosImpagos);
 
-        // 2. Tabla de Saldos Impagos
-        renderTablaSaldos(data.saldosImpagos);
-
-        // 3. Gráficos Chart.js
-        renderGraficoFacturadoVsCobrado(data.graficos.facturadoVsCobrado);
-        renderGraficoGastos(data.graficos.distribucionGastos);
-        renderGraficoPrendas(data.graficos.prendasPorMes);
+        // 3. Renderizar Gráficos
+        renderizarGraficoFacturadoVsCobrado(data.graficos.facturadoVsCobrado);
+        renderizarGraficoGastos(data.graficos.distribucionGastos);
+        renderizarGraficoPrendas(data.graficos.prendasPorMes);
 
     } catch (error) {
-        console.error('Error al obtener datos del servidor:', error);
+        console.error("Error:", error);
+        alert("No se pudieron cargar las estadísticas del sistema.");
     }
 }
 
-function renderTablaSaldos(ordenes) {
-    const tbody = document.getElementById('tbodySaldos');
-    if (!tbody) return;
+function renderizarKpis(kpis) {
+    document.getElementById("kpiSaldosImpagos").innerText = `$${kpis.totalSaldoImpago.toLocaleString()}`;
+    document.getElementById("kpiCantSaldos").innerText = `${kpis.cantOrdenesSaldo} Órdenes con saldo`;
+    document.getElementById("kpiPrendasMes").innerText = `${kpis.prendasMes} Unids`;
+    document.getElementById("kpiEgresosTotales").innerText = `$${kpis.totalEgresosMes.toLocaleString()}`;
+    document.getElementById("kpiTotalCobrado").innerText = `$${kpis.totalCobradoMes.toLocaleString()}`;
+}
 
-    tbody.innerHTML = '';
+function renderizarTablaSaldos(saldos) {
+    const tbody = document.getElementById("dataTableSaldosBody");
+    tbody.innerHTML = "";
 
-    ordenes.forEach(ord => {
-        const tr = document.createElement('tr');
+    if (!saldos || saldos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No hay órdenes entregadas con saldo pendiente.</td></tr>`;
+        return;
+    }
+
+    saldos.forEach(item => {
+        const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>#${ord.numeroOrden}</td>
-            <td>${ord.clienteNombre}</td>
-            <td>${ord.fechaEntrega}</td>
-            <td>${formatMoneda(ord.total)}</td>
-            <td>${formatMoneda(ord.montoPagado)}</td>
-            <td class="font-weight-bold text-danger">${formatMoneda(ord.saldoPendiente)}</td>
+            <td><strong>#${item.numeroOrden}</strong></td>
+            <td>${item.clienteNombre}</td>
+            <td>${item.fechaEntrega}</td>
+            <td>$${item.total.toLocaleString()}</td>
+            <td class="text-success">$${item.montoPagado.toLocaleString()}</td>
+            <td class="text-danger font-weight-bold">$${item.saldoPendiente.toLocaleString()}</td>
             <td class="text-center">
-                <a href="https://wa.me/${ord.telefono}?text=Hola%20${encodeURIComponent(ord.clienteNombre)},%20te%20contactamos%20de%20Barsac%20por%20el%20saldo%20pendiente%20de%20${formatMoneda(ord.saldoPendiente)}" 
-                   target="_blank" class="btn btn-sm btn-success" title="Reclamar por WhatsApp">
-                   <i class="fab fa-whatsapp"></i>
+                <a href="pedidos.html?id=${item.numeroOrden}" class="btn btn-sm btn-primary" title="Ver Pedido">
+                    <i class="fas fa-eye"></i>
                 </a>
             </td>
         `;
         tbody.appendChild(tr);
     });
 
+    // Si usas DataTable de Bootstrap, puedes reinicializarla de forma segura
     if ($.fn.DataTable.isDataTable('#dataTableSaldos')) {
         $('#dataTableSaldos').DataTable().destroy();
     }
-
     $('#dataTableSaldos').DataTable({
-        "language": { "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json" }
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+        }
     });
 }
 
-function renderGraficoFacturadoVsCobrado(datos) {
-    const ctx = document.getElementById("chartFacturadoVsCobrado");
-    if (!ctx) return;
-
+function renderizarGraficoFacturadoVsCobrado(data) {
+    const ctx = document.getElementById("chartFacturadoVsCobrado").getContext("2d");
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: datos.meses,
+            labels: data.meses,
             datasets: [
                 {
-                    label: "Facturado ($)",
+                    label: "Facturado",
                     lineTension: 0.3,
                     backgroundColor: "rgba(78, 115, 223, 0.05)",
-                    borderColor: "#4e73df",
-                    data: datos.facturado
+                    borderColor: "rgba(78, 115, 223, 1)",
+                    pointRadius: 3,
+                    pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                    pointBorderColor: "rgba(78, 115, 223, 1)",
+                    data: data.facturado,
                 },
                 {
-                    label: "Cobrado ($)",
+                    label: "Cobrado",
                     lineTension: 0.3,
                     backgroundColor: "rgba(28, 200, 138, 0.05)",
-                    borderColor: "#1cc88a",
-                    data: datos.cobrado
+                    borderColor: "rgba(28, 200, 138, 1)",
+                    pointRadius: 3,
+                    pointBackgroundColor: "rgba(28, 200, 138, 1)",
+                    pointBorderColor: "rgba(28, 200, 138, 1)",
+                    data: data.cobrado,
                 }
-            ]
+            ],
         },
-        options: { maintainAspectRatio: false }
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function (value) { return '$' + value.toLocaleString(); }
+                    }
+                }]
+            }
+        }
     });
 }
 
-function renderGraficoGastos(gastos) {
-    const ctx = document.getElementById("chartGastos");
-    if (!ctx) return;
-
+function renderizarGraficoGastos(gastos) {
+    const ctx = document.getElementById("chartGastos").getContext("2d");
     new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ["Sueldos", "Modistas", "Otros Gastos"],
+            labels: ["Sueldos", "Modistas", "Gastos/Proveedores"],
             datasets: [{
                 data: [gastos.sueldos, gastos.modistas, gastos.otros],
                 backgroundColor: ['#4e73df', '#36b9cc', '#f6c23e'],
-                hoverBackgroundColor: ['#2e59d9', '#2c9caf', '#dda20a']
-            }]
+                hoverBackgroundColor: ['#2e59d9', '#2c9faf', '#dda20a'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
         },
-        options: { maintainAspectRatio: false, cutoutPercentage: 70 }
+        options: {
+            maintainAspectRatio: false,
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, chart) {
+                        var dataset = chart.datasets[tooltipItem.datasetIndex];
+                        var currentValue = dataset.data[tooltipItem.index];
+                        return ' $' + currentValue.toLocaleString();
+                    }
+                }
+            }
+        },
     });
 }
 
-function renderGraficoPrendas(datosPrendas) {
-    const ctx = document.getElementById("chartPrendasMes");
-    if (!ctx) return;
-
+function renderizarGraficoPrendas(data) {
+    const ctx = document.getElementById("chartPrendasMes").getContext("2d");
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: datosPrendas.meses,
+            labels: data.meses,
             datasets: [{
                 label: "Prendas Producidas",
-                backgroundColor: "#36b9cc",
-                data: datosPrendas.cantidades
-            }]
+                backgroundColor: "#4e73df",
+                hoverBackgroundColor: "#2e59d9",
+                borderColor: "#4e73df",
+                data: data.cantidades,
+            }],
         },
-        options: { maintainAspectRatio: false }
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        precision: 0
+                    }
+                }]
+            }
+        }
     });
 }
