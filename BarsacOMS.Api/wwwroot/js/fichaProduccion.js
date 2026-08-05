@@ -490,9 +490,9 @@ function abrirModalEntrega(idFicha) {
 async function guardarEntregaParcial() {
     if (!fichaActualEntregaId) return;
 
-    const ficha = fichasProduccion.find(f => f.id === fichaActualEntregaId);
-    if (!ficha) return;
+    const entregasNuevas = [];
 
+    // Recorremos las filas del modal de entrega parcial
     $('#tablaEntregaParcialBody tr').each(function () {
         const row = $(this);
         const producto = row.data('producto');
@@ -502,34 +502,40 @@ async function guardarEntregaParcial() {
         if (inputCant.length) {
             const cantidadIngresada = parseInt(inputCant.val()) || 0;
 
-            const itemEncontrado = ficha.items.find(i => i.producto === producto && (i.talle || '') === String(talle));
-            if (itemEncontrado) {
-                if (cantidadIngresada >= itemEncontrado.cantidades) {
-                    itemEncontrado.entregado = true;
-                } else if (cantidadIngresada > 0) {
-                    itemEncontrado.entregado = false;
-                }
+            if (cantidadIngresada > 0) {
+                // Buscamos los datos extra (número, nombre) de la prenda original si es necesario
+                const ficha = fichasProduccion.find(f => f.id === fichaActualEntregaId);
+                const itemOriginal = ficha.items.find(i => i.producto === producto && (i.talle || '') === String(talle));
+
+                entregasNuevas.push({
+                    fichaProduccionId: fichaActualEntregaId,
+                    producto: producto,
+                    cantidades: cantidadIngresada,
+                    talle: talle || '',
+                    numero: itemOriginal ? itemOriginal.numero : null,
+                    nombre: itemOriginal ? itemOriginal.nombre : null,
+                    estadoItem: "Entregada"
+                });
             }
         }
     });
 
-    const payload = {
-        id: ficha.id,
-        ordenId: ficha.ordenId,
-        modista: ficha.modista,
-        items: ficha.items
-    };
+    if (entregasNuevas.length === 0) {
+        alert('Por favor ingresa al menos una cantidad a entregar.');
+        return;
+    }
 
     try {
-        const response = await fetch(`/api/FichaProduccion/${ficha.id}`, {
-            method: 'PUT',
+        // Llamamos al endpoint POST /api/EntregaParcial/ficha/{fichaId} que creamos en el Backend
+        const response = await fetch(`/api/EntregaParcial/ficha/${fichaActualEntregaId}`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(entregasNuevas)
         });
 
         if (!response.ok) {
             const errText = await response.text();
-            console.error('Error al actualizar la ficha:', errText);
+            console.error('Error al registrar entrega parcial:', errText);
             throw new Error('No se pudo registrar la entrega.');
         }
 
