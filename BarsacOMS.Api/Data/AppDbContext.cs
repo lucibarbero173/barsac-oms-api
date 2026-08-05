@@ -74,7 +74,7 @@ namespace BarsacOMS.Api.Data
             {
                 entity.ToTable("EntregaParcial");
 
-                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Id).HasColumnName("Id");
                 entity.Property(e => e.FichaProduccionId).HasColumnName("FichaProduccionId");
                 entity.Property(e => e.Producto).HasColumnName("Producto");
                 entity.Property(e => e.Cantidades).HasColumnName("Cantidades");
