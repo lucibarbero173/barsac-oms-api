@@ -75,14 +75,14 @@ namespace BarsacOMS.Api.Data
                 entity.ToTable("EntregaParcial");
 
                 entity.Property(e => e.Id).HasColumnName("id");
-                entity.Property(e => e.FichaProduccionId).HasColumnName("ficha_produccion_id");
-                entity.Property(e => e.Producto).HasColumnName("producto");
-                entity.Property(e => e.Cantidades).HasColumnName("cantidades");
-                entity.Property(e => e.Talle).HasColumnName("talle");
-                entity.Property(e => e.Numero).HasColumnName("numero");
-                entity.Property(e => e.Nombre).HasColumnName("nombre");
-                entity.Property(e => e.EstadoItem).HasColumnName("estado_item");
-                entity.Property(e => e.FechaEntrega).HasColumnName("fecha_entrega");
+                entity.Property(e => e.FichaProduccionId).HasColumnName("FichaProduccionId");
+                entity.Property(e => e.Producto).HasColumnName("Producto");
+                entity.Property(e => e.Cantidades).HasColumnName("Cantidades");
+                entity.Property(e => e.Talle).HasColumnName("Talle");
+                entity.Property(e => e.Numero).HasColumnName("Numero");
+                entity.Property(e => e.Nombre).HasColumnName("Nombre");
+                entity.Property(e => e.EstadoItem).HasColumnName("EstadoItem");
+                entity.Property(e => e.FechaEntrega).HasColumnName("FechaEntrega");
             });
 
             // CLIENTE   
