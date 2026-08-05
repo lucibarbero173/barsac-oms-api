@@ -162,6 +162,19 @@ namespace BarsacOMS.Api.Services
             });
         }
 
+        public async Task<bool> EliminarOrdenAsync(int id)
+        {
+            var orden = await _context.Ordenes
+                .Include(o => o.Detalles) // Si tienes detalles asociados
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (orden == null) return false;
+
+            _context.Ordenes.Remove(orden);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> CambiarEstadoAsync(int id, EstadoOrden nuevoEstado)
         {
             var orden = await _context.Ordenes.FindAsync(id);
