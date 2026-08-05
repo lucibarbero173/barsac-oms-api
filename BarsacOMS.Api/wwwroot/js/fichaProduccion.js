@@ -286,6 +286,7 @@ function editarFicha(idFicha) {
 }
 
 // Abrir Modal de Previsualización (con historial y faltantes)
+// Abrir Modal de Previsualización (con historial unificado y estado Parcial)
 function verFicha(idFicha) {
     const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
@@ -323,47 +324,79 @@ function verFicha(idFicha) {
     $('.seccion-entrega-dinamica').remove();
     let htmlDinamico = '';
 
+    // 1. SECCIÓN UNIFICADA DE ENTREGA PARCIAL
     if (entregasParciales.length > 0) {
-        entregasParciales.forEach((entrega, idx) => {
-            const fechaEntregaStr = entrega.fechaEntrega ? entrega.fechaEntrega.split('T')[0] : '';
-            htmlDinamico += `
-                <div class="card my-3 border-warning seccion-entrega-dinamica">
-                    <div class="card-header bg-warning text-dark font-weight-bold">
-                        Entrega Parcial ${idx + 1} - ${fechaEntregaStr}
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-sm mb-0 text-center">
-                            <thead>
-                                <tr>
-                                    <th>Cant.</th>
-                                    <th>Producto</th>
-                                    <th>Talle</th>
-                                    <th>Número</th>
-                                    <th>Nombre</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>${entrega.cantidades}</td>
-                                    <td>${entrega.producto}</td>
-                                    <td>${entrega.talle || '-'}</td>
-                                    <td>${entrega.numero || '-'}</td>
-                                    <td>${entrega.nombre || '-'}</td>
-                                    <td><span class="badge badge-success">Entregada</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        let rowsEntregas = '';
+        entregasParciales.forEach(entrega => {
+            // Buscamos el ítem original para comparar si se entregó completo o parcial
+            const itemOriginal = itemsOriginales.find(i =>
+                i.producto === entrega.producto &&
+                (i.talle || '') === (entrega.talle || '')
+            );
+
+            const cantOriginal = itemOriginal ? itemOriginal.cantidades : entrega.cantidades;
+
+            // Calculamos el total acumulado para este producto/talle hasta el momento
+            const acumuladoTotal = entregasParciales
+                .filter(e => e.producto === entrega.producto && (e.talle || '') === (entrega.talle || ''))
+                .reduce((sum, e) => sum + e.cantidades, 0);
+
+            let estadoBadge = '<span class="badge badge-success">Entregada</span>';
+            if (acumuladoTotal < cantOriginal) {
+                estadoBadge = '<span class="badge badge-warning">Parcial</span>';
+            }
+
+            rowsEntregas += `
+                <tr>
+                    <td class="font-weight-bold">${entrega.cantidades}</td>
+                    <td class="text-left">${entrega.producto}</td>
+                    <td>${entrega.talle || '-'}</td>
+                    <td>${entrega.numero || '-'}</td>
+                    <td>${entrega.nombre || '-'}</td>
+                    <td>${itemOriginal && itemOriginal.archivo ? checkIcon : timesIcon}</td>
+                    <td>${itemOriginal && itemOriginal.impresion ? checkIcon : timesIcon}</td>
+                    <td>${itemOriginal && itemOriginal.calandra ? checkIcon : timesIcon}</td>
+                    <td>${itemOriginal && itemOriginal.corte ? checkIcon : timesIcon}</td>
+                    <td>${estadoBadge}</td>
+                </tr>
             `;
         });
+
+        htmlDinamico += `
+            <div class="card my-3 border-warning seccion-entrega-dinamica">
+                <div class="card-header bg-warning text-dark font-weight-bold">
+                    Entrega Parcial
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0 text-center">
+                        <thead>
+                            <tr>
+                                <th>Cant.</th>
+                                <th>Producto</th>
+                                <th>Talle</th>
+                                <th>Número</th>
+                                <th>Nombre</th>
+                                <th>Archivo</th>
+                                <th>Impresión</th>
+                                <th>Calandra</th>
+                                <th>Corte</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsEntregas}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
     }
 
+    // 2. SECCIÓN DE FALTA ENTREGAR
     let pendientesCalculados = [];
     itemsOriginales.forEach(item => {
         const entregadoTotalItem = entregasParciales
-            .filter(e => e.producto === item.producto && e.talle === item.talle)
+            .filter(e => e.producto === item.producto && (e.talle || '') === (item.talle || ''))
             .reduce((sum, e) => sum + e.cantidades, 0);
 
         const resta = item.cantidades - entregadoTotalItem;
