@@ -2,23 +2,12 @@
 
 namespace BarsacOMS.Api.Models
 {
-    public enum TipoProveedor
-    {
-        Papel,
-        Telas,
-        Insumo_DTF_Impresion,
-        Merceria,
-        Packaging,
-        Tecnico
-    }
-
     public class Proveedor
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = string.Empty;
 
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public TipoProveedor Tipo { get; set; }
+        public string Tipo { get; set; } = string.Empty; // 👈 Manejado directamente como texto
 
         public string Telefono { get; set; } = string.Empty;
 
