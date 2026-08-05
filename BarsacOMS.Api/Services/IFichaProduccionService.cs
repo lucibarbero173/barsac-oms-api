@@ -9,5 +9,6 @@ namespace BarsacOMS.Api.Services
         Task<FichaProduccion> CreateAsync(FichaProduccion ficha);
         Task<bool> UpdateAsync(FichaProduccion ficha);
         Task<bool> DeleteAsync(int id);
+
     }
 }

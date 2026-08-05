@@ -13,7 +13,7 @@ namespace BarsacOMS.Api.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<FichaProduccion>> GetAllAsync()
+        public async Task<List<FichaProduccion>> GetAllAsync()
         {
             return await _context.FichasProduccion
                 .Include(f => f.Orden)
@@ -22,7 +22,7 @@ namespace BarsacOMS.Api.Services
                 .ToListAsync();
         }
 
-        public async Task<FichaProduccion> GetByIdAsync(int id)
+        public async Task<FichaProduccion?> GetByIdAsync(int id)
         {
             return await _context.FichasProduccion
                 .Include(f => f.Orden)
