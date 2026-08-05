@@ -19,6 +19,7 @@ namespace BarsacOMS.Api.Data
         public DbSet<Pago> Pagos { get; set; }
         public DbSet<FichaProduccion> FichasProduccion { get; set; }
         public DbSet<DetalleFichaProduccion> DetallesFichaProduccion { get; set; }
+        public DbSet<EntregaParcial> EntregasParciales { get; set; } 
         public DbSet<Usuario> Usuarios { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -40,6 +41,11 @@ namespace BarsacOMS.Api.Data
                 entity.HasMany(e => e.Items)
                       .WithOne()
                       .HasForeignKey(e => e.FichaProduccionId);
+
+                // 👈 NUEVA RELACIÓN CON ENTREGAS PARCIALES
+                entity.HasMany(e => e.EntregasParciales)
+                      .WithOne()
+                      .HasForeignKey(e => e.FichaProduccionId);
             });
 
             modelBuilder.Entity<DetalleFichaProduccion>(entity =>
@@ -58,6 +64,24 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Calandra).HasColumnName("calandra");
                 entity.Property(e => e.Corte).HasColumnName("corte");
                 entity.Property(e => e.Entregado).HasColumnName("entregado");
+                entity.Property(e => e.FechaEntrega).HasColumnName("fecha_entrega");
+            });
+
+            // =====================
+            // ENTREGA PARCIAL (NUEVO)
+            // =====================
+            modelBuilder.Entity<EntregaParcial>(entity =>
+            {
+                entity.ToTable("entrega_parcial");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.FichaProduccionId).HasColumnName("ficha_produccion_id");
+                entity.Property(e => e.Producto).HasColumnName("producto");
+                entity.Property(e => e.Cantidades).HasColumnName("cantidades");
+                entity.Property(e => e.Talle).HasColumnName("talle");
+                entity.Property(e => e.Numero).HasColumnName("numero");
+                entity.Property(e => e.Nombre).HasColumnName("nombre");
+                entity.Property(e => e.EstadoItem).HasColumnName("estado_item");
                 entity.Property(e => e.FechaEntrega).HasColumnName("fecha_entrega");
             });
 
@@ -134,7 +158,7 @@ namespace BarsacOMS.Api.Data
                 entity.HasOne(c => c.Orden)
                       .WithMany()
                       .HasForeignKey(c => c.OrdenId)
-                      .OnDelete(DeleteBehavior.SetNull); // Si borras la orden, el cobro no se borra, solo queda orden_id en NULL
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             // =====================
@@ -164,12 +188,7 @@ namespace BarsacOMS.Api.Data
 
                 entity.Property(e => e.Id).HasColumnName("id");
                 entity.Property(e => e.Nombre).HasColumnName("nombre");
-
-                // Le decimos a EF que en la BD es un string (VARCHAR), pero en C# usa el Enum
-                entity.Property(e => e.Tipo)
-                      .HasColumnName("tipo")
-                      .HasConversion<string>();
-
+                entity.Property(e => e.Tipo).HasColumnName("tipo");
                 entity.Property(e => e.Telefono).HasColumnName("telefono");
             });
 
@@ -196,20 +215,16 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Nombre).HasColumnName("nombre");
                 entity.Property(e => e.Tipo).HasColumnName("tipo");
 
-                // Campos específicos de TELAS
                 entity.Property(e => e.MetrosRindePorKilo).HasColumnName("metros_rinde_por_kilo");
                 entity.Property(e => e.PrecioPorKilo).HasColumnName("precio_por_kilo");
 
-                // Campos específicos de TINTAS
                 entity.Property(e => e.Color).HasColumnName("color");
                 entity.Property(e => e.PrecioPorLitro).HasColumnName("precio_por_litro");
 
-                // Campos específicos de PAPEL
                 entity.Property(e => e.Gramaje).HasColumnName("gramaje");
                 entity.Property(e => e.MetrosPorRollo).HasColumnName("metros_por_rollo");
                 entity.Property(e => e.PrecioPorRollo).HasColumnName("precio_por_rollo");
 
-                // Relación con Proveedores
                 entity.Property(e => e.ProveedorId).HasColumnName("proveedor_id");
             });
 

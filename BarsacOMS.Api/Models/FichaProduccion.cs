@@ -15,5 +15,7 @@ namespace BarsacOMS.Api.Models
         public string Modista { get; set; }
 
         public List<DetalleFichaProduccion> Items { get; set; } = new();
+
+        public List<EntregaParcial> EntregasParciales { get; set; } = new();
     }
 }

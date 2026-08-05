@@ -6,6 +6,7 @@
         EnProceso = 1,
         Finalizado = 2,
         Entregado = 3,
-        Cancelado = 4
+        EntregadoParcial = 5,
+        Cancelado = 6
     }
 }

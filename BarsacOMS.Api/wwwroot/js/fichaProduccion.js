@@ -286,7 +286,7 @@ function editarFicha(idFicha) {
     $('#modalFichaProduccion').modal('show');
 }
 
-// Abrir Modal de Previsualización
+// Abrir Modal de Previsualización (con historial de entregas parciales y faltantes)
 function verFicha(idFicha) {
     const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
@@ -297,15 +297,17 @@ function verFicha(idFicha) {
     $('#viewModista').text(ficha.modista || 'Sin asignar');
     $('#viewFechaEntrega').text(ficha.orden && ficha.orden.fechaEntrega ? ficha.orden.fechaEntrega.split('T')[0] : '-');
 
-    const $tbody = $('#viewTablaDetalleBody');
-    $tbody.empty();
+    // Seleccionamos el contenedor principal donde está el detalle (puedes ajustar el ID según tu HTML o usar un contenedor general en el body del modal)
+    const $container = $('#contenidoImprimible'); // O el selector del contenedor dentro de tu modal #modalVerFicha
 
-    const items = ficha.items || [];
-    items.forEach(p => {
-        const checkIcon = '<i class="fas fa-check text-success"></i>';
-        const timesIcon = '<i class="fas fa-times text-muted"></i>';
+    // 1. Renderizar tabla superior (Items Originales)
+    const itemsOriginales = ficha.items || [];
+    let htmlOriginal = '';
+    const checkIcon = '<i class="fas fa-check text-success"></i>';
+    const timesIcon = '<i class="fas fa-times text-muted"></i>';
 
-        $tbody.append(`
+    itemsOriginales.forEach(p => {
+        htmlOriginal += `
             <tr>
                 <td class="font-weight-bold">${p.cantidades || 1}</td>
                 <td class="text-left font-weight-bold">${p.producto}</td>
@@ -316,14 +318,235 @@ function verFicha(idFicha) {
                 <td>${p.impresion ? checkIcon : timesIcon}</td>
                 <td>${p.calandra ? checkIcon : timesIcon}</td>
                 <td>${p.corte ? checkIcon : timesIcon}</td>
-                <td class="${p.entregado ? 'bg-success text-white font-weight-bold' : ''}">
-                    ${p.entregado ? 'Entregado' : 'Pendiente'}
-                </td>
+                <td>${p.entregado ? 'Entregada' : 'Pendiente'}</td>
             </tr>
-        `);
+        `;
+    });
+    $('#viewTablaDetalleBody').html(htmlOriginal); // Tu tabla principal del modal
+
+    // 2. Renderizar Entregas Parciales e historial (Secciones amarillas de la imagen)
+    // Nota: Esto asume que el backend te devuelve un array de entregas agrupadas por fecha o lote, 
+    // o puedes adaptar la estructura según cómo guardes el historial.
+    const entregasParciales = ficha.entregasParciales || [];
+
+    // Limpiamos dinámicos previos si los hubiera y generamos las secciones de entregas y lo que falta
+    $('.seccion-entrega-dinamica').remove();
+
+    // Agrupar entregas por fecha o ID de entrega si aplica, o mostrarlas cronológicamente
+    // Aquí construimos el HTML dinámico para inyectarlo debajo de la tabla principal:
+    let htmlDinamico = '';
+
+    // Simulamos las secciones de Entregas Parciales si existen
+    if (entregasParciales.length > 0) {
+        // Ejemplo de estructura iterando las entregas parciales guardadas
+        entregasParciales.forEach((entrega, idx) => {
+            const fechaEntregaStr = entrega.fechaEntrega ? entrega.fechaEntrega.split('T')[0] : '';
+            htmlDinamico += `
+                <div class="card my-3 border-warning seccion-entrega-dinamica">
+                    <div class="card-header bg-warning text-dark font-weight-bold">
+                        Entrega Parcial ${idx + 1} - ${fechaEntregaStr}
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0 text-center">
+                            <thead>
+                                <tr>
+                                    <th>Cant.</th>
+                                    <th>Producto</th>
+                                    <th>Talle</th>
+                                    <th>Número</th>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>${entrega.cantidades}</td>
+                                    <td>${entrega.producto}</td>
+                                    <td>${entrega.talle || '-'}</td>
+                                    <td>${entrega.numero || '-'}</td>
+                                    <td>${entrega.nombre || '-'}</td>
+                                    <td><span class="badge badge-success">Entregada</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // 3. Calcular lo que "Falta Entregar" (Apartado rojo de la imagen)
+    // Calculamos el remanente restando lo original menos la suma de entregas parciales por producto/talle
+    let pendientesCalculados = [];
+    itemsOriginales.forEach(item => {
+        const entregadoTotalItem = entregasParciales
+            .filter(e => e.producto === item.producto && e.talle === item.talle)
+            .reduce((sum, e) => sum + e.cantidades, 0);
+
+        const resta = item.cantidades - entregadoTotalItem;
+        if (resta > 0) {
+            pendientesCalculados.push({
+                ...item,
+                cantidades: resta
+            });
+        }
     });
 
+    // Si todavía falta entregar algo, mostramos el apartado rojo
+    if (pendientesCalculados.length > 0) {
+        let rowsFaltantes = '';
+        pendientesCalculados.forEach(p => {
+            rowsFaltantes += `
+                <tr>
+                    <td class="font-weight-bold text-danger">${p.cantidades}</td>
+                    <td class="text-left">${p.producto}</td>
+                    <td>${p.talle || '-'}</td>
+                    <td>${p.numero || '-'}</td>
+                    <td>${p.nombre || '-'}</td>
+                    <td>${p.archivo ? checkIcon : timesIcon}</td>
+                    <td>${p.impresion ? checkIcon : timesIcon}</td>
+                    <td>${p.calandra ? checkIcon : timesIcon}</td>
+                    <td>${p.corte ? checkIcon : timesIcon}</td>
+                    <td><span class="badge badge-danger">Pendiente</span></td>
+                </tr>
+            `;
+        });
+
+        htmlDinamico += `
+            <div class="card my-3 border-danger seccion-entrega-dinamica">
+                <div class="card-header bg-danger text-white font-weight-bold">
+                    Falta Entregar
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0 text-center">
+                        <thead>
+                            <tr>
+                                <th>Cant.</th>
+                                <th>Producto</th>
+                                <th>Talle</th>
+                                <th>Número</th>
+                                <th>Nombre</th>
+                                <th>Archivo</th>
+                                <th>Impresión</th>
+                                <th>Calandra</th>
+                                <th>Corte</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsFaltantes}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    // Inyectamos las secciones dinámicas debajo de la tabla principal en el modal
+    $('#viewTablaDetalleBody').closest('.table-responsive').after(htmlDinamico);
+
     $('#modalVerFicha').modal('show');
+}
+
+// ==========================================
+// NUEVO: FUNCIONALIDAD DE ENTREGAS PARCIALES
+// ==========================================
+
+let fichaActualEntregaId = null;
+
+// 1. Abrir Modal para Registrar Entregas Parciales
+function abrirModalEntrega(idFicha) {
+    const ficha = fichasProduccion.find(f => f.id === idFicha);
+    if (!ficha) return;
+
+    fichaActualEntregaId = ficha.id;
+    $('#entregaIdFicha').text(ficha.id);
+    $('#entregaNumOrden').text(`#${ficha.ordenId}`);
+    $('#entregaCliente').text(ficha.orden ? ficha.orden.nombreCliente : '-');
+
+    const $tbody = $('#tablaEntregaParcialBody');
+    $tbody.empty();
+
+    const items = ficha.items || [];
+
+    if (items.length === 0) {
+        $tbody.append(`<tr><td colspan="7" class="text-center text-muted">No hay items en esta ficha.</td></tr>`);
+    } else {
+        items.forEach((p, index) => {
+            // Si ya está entregado globalmente, podemos pre-marcarlo o dejarlo interactivo
+            const checkedAttr = p.entregado ? 'checked' : '';
+            const disabledAttr = p.entregado ? '' : ''; // O puedes bloquear si ya está entregado
+
+            $tbody.append(`
+                <tr data-index="${index}">
+                    <td class="text-center align-middle">
+                        <input type="checkbox" class="chk-item-entrega" data-item-id="${p.id || 0}" ${checkedAttr} ${disabledAttr}>
+                    </td>
+                    <td class="align-middle font-weight-bold">${p.cantidades || 1}</td>
+                    <td class="align-middle">${p.producto}</td>
+                    <td class="align-middle">${p.talle || '-'}</td>
+                    <td class="align-middle">${p.numero || '-'}</td>
+                    <td class="align-middle">${p.nombre || '-'}</td>
+                    <td class="align-middle">
+                        <span class="badge ${p.entregado ? 'badge-success' : 'badge-secondary'}">
+                            ${p.entregado ? 'Entregado' : 'Pendiente'}
+                        </span>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+
+    $('#modalEntregaParcial').modal('show');
+}
+
+// 2. Guardar las Entregas Parciales seleccionadas hacia la API
+async function guardarEntregaParcial() {
+    if (!fichaActualEntregaId) return;
+
+    const entregasSeleccionadas = [];
+
+    $('#tablaEntregaParcialBody tr').each(function () {
+        const row = $(this);
+        const chk = row.find('.chk-item-entrega');
+
+        if (chk.length) {
+            const itemId = chk.data('item-id');
+            const isChecked = chk.is(':checked');
+
+            // Recolectamos el estado de cada item o enviamos los IDs que se marcaron como entregados
+            entregasSeleccionadas.push({
+                id: itemId,
+                entregado: isChecked
+            });
+        }
+    });
+
+    const payload = {
+        fichaProduccionId: fichaActualEntregaId,
+        itemsEntregados: entregasSeleccionadas
+    };
+
+    try {
+        const response = await fetch(`/api/FichaProduccion/${fichaActualEntregaId}/entrega-parcial`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error('Error al registrar entrega parcial:', errText);
+            throw new Error('No se pudo registrar la entrega parcial.');
+        }
+
+        $('#modalEntregaParcial').modal('hide');
+        await cargarTablaFichas(); // Recarga la tabla principal para actualizar los estados/badges
+        alert('Entregas registradas correctamente.');
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Ocurrió un error al guardar la entrega parcial.');
+    }
 }
 
 // Función de Impresión
