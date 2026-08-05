@@ -25,9 +25,17 @@ namespace BarsacOMS.Api.Services
 
         public async Task<Proveedor> CrearProveedorAsync(Proveedor proveedor)
         {
-            _context.Proveedores.Add(proveedor);
-            await _context.SaveChangesAsync();
-            return proveedor;
+            try
+            {
+                _context.Proveedores.Add(proveedor);
+                await _context.SaveChangesAsync();
+                return proveedor;
+            }
+            catch (Exception ex)
+            {
+                // Esto te mostrará el error exacto de SQL o Entity Framework en los logs de Railway
+                throw new Exception($"Error al guardar proveedor: {ex.Message} - Inner: {ex.InnerException?.Message}");
+            }
         }
 
         public async Task<bool> ActualizarProveedorAsync(int id, Proveedor proveedor)
