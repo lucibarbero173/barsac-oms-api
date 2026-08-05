@@ -345,7 +345,6 @@ async function guardarPedido() {
 
         const estadoVal = Number(document.getElementById("estadoSelect")?.value || 0);
 
-        // Si es 0 o vacío, se envía null
         const senasInput = document.getElementById("senas")?.value;
         const senasVal = (senasInput && Number(senasInput) > 0) ? Number(senasInput) : null;
 
@@ -379,6 +378,28 @@ async function guardarPedido() {
             const errorText = await response.text();
             alert("Error del servidor: " + errorText);
             return;
+        }
+
+        // Si es una creación exitosa o edición, capturamos la respuesta para obtener el ID de la orden
+        const ordenGuardada = await response.json();
+        const ordenIdFinal = idOrdenEdicion ? Number(idOrdenEdicion) : ordenGuardada.id;
+
+        // 💡 REGISTRAR SEÑA EN LA API DE COBROS AUTOMÁTICAMENTE
+        if (senasVal && senasVal > 0) {
+            const cobroDto = {
+                ordenId: ordenIdFinal,
+                fecha: pedido.fechaPedido,
+                monto: senasVal,
+                clienteId: Number(clienteVal),
+                concepto: "SEÑA DE PEDIDO",
+                formaPago: pedido.formaPago
+            };
+
+            await fetch("https://barsac-oms-api-production.up.railway.app/api/Cobros", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(cobroDto)
+            });
         }
 
         alert(idOrdenEdicion ? "Pedido actualizado correctamente" : "Pedido guardado correctamente");
