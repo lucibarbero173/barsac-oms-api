@@ -335,6 +335,76 @@
         </div>
     </div>
 
+    <!-- MODAL VER / IMPRIMIR FICHA DE PRODUCCIÓN -->
+    <div class="modal fade modal-custom-theme" id="modalVerFicha" tabindex="-1" role="dialog" aria-labelledby="modalVerFichaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content">
+
+                <!-- Header Modal -->
+                <div class="modal-header py-3">
+                    <h5 class="modal-title font-weight-bold" id="modalVerFichaLabel">
+                        <i class="fas fa-eye mr-2 text-primary"></i> Detalle de Ficha de Producción #<span id="viewIdFicha"></span>
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <!-- Body Modal (Contenido Imprimible) -->
+                <div class="modal-body px-4 py-3" id="contenidoImprimible">
+                    <div class="card p-3 mb-3 shadow-sm bg-light">
+                        <div class="row">
+                            <div class="col-md-3 form-group mb-1">
+                                <span class="font-weight-bold text-muted small">N° Orden:</span> <span id="viewNumOrden" class="font-weight-bold"></span>
+                            </div>
+                            <div class="col-md-3 form-group mb-1">
+                                <span class="font-weight-bold text-muted small">Cliente:</span> <span id="viewCliente" class="font-weight-bold"></span>
+                            </div>
+                            <div class="col-md-3 form-group mb-1">
+                                <span class="font-weight-bold text-muted small">Modista Asignada:</span> <span id="viewModista" class="font-weight-bold text-warning"></span>
+                            </div>
+                            <div class="col-md-3 form-group mb-1">
+                                <span class="font-weight-bold text-muted small">Fecha Entrega:</span> <span id="viewFechaEntrega" class="font-weight-bold"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="font-weight-bold text-primary mb-2">Desglose Original de Prendas</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm text-center align-middle" width="100%">
+                            <thead class="bg-white">
+                                <tr>
+                                    <th>Cant.</th>
+                                    <th>Producto</th>
+                                    <th>Talle</th>
+                                    <th>Número</th>
+                                    <th>Nombre</th>
+                                    <th>Arch.</th>
+                                    <th>Imp.</th>
+                                    <th>Cal.</th>
+                                    <th>Corte</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="viewTablaDetalleBody">
+                                <!-- Se llena dinámicamente con JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Footer Modal -->
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary btn-sm px-4" onclick="imprimirFichaDesdeModal()">
+                        <i class="fas fa-print mr-1"></i> Imprimir Ficha
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts Base -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
