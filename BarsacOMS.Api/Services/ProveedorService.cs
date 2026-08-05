@@ -25,9 +25,18 @@ namespace BarsacOMS.Api.Services
 
         public async Task<Proveedor> CrearProveedorAsync(Proveedor proveedor)
         {
-            _context.Proveedores.Add(proveedor);
-            await _context.SaveChangesAsync();
-            return proveedor;
+            try
+            {
+                _context.Proveedores.Add(proveedor);
+                await _context.SaveChangesAsync();
+                return proveedor;
+            }
+            catch (DbUpdateException ex)
+            {
+                // Esto extraerá el mensaje real de la base de datos PostgreSQL
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                throw new Exception($"Error de BD: {innerMessage}");
+            }
         }
 
         public async Task<bool> ActualizarProveedorAsync(int id, Proveedor proveedor)
