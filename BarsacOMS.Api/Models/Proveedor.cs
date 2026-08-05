@@ -8,7 +8,7 @@ namespace BarsacOMS.Api.Models
         Telas,
         Insumo_DTF_Impresion,
         Merceria,
-        Packagin,
+        Packaging,
         Tecnico
     }
 
