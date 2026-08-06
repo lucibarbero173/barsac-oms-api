@@ -352,14 +352,33 @@ async function guardarFicha() {
 }
 
 // Abrir Modal de Edición
-function editarFicha(idFicha) {
+// Abrir Modal de Edición
+async function editarFicha(idFicha) {
     const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
 
     $('#fichaId').val(ficha.id);
     $('#modalFichaTitulo').text(`Editar Ficha de Producción #${ficha.id}`);
 
-    $('#selectPedido').val(ficha.ordenId).prop('disabled', true);
+    // Si la orden no está en ordenesDisponibles (porque ya tiene ficha), la consultamos para tener sus detalles
+    let ordenAsociada = ordenesDisponibles.find(o => o.id === ficha.ordenId);
+    if (!ordenAsociada && ficha.ordenId) {
+        try {
+            const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/Orden/${ficha.ordenId}`);
+            if (response.ok) {
+                ordenAsociada = await response.json();
+                ordenesDisponibles.push(ordenAsociada); // La agregamos temporalmente para que funcione el validador y los selects
+            }
+        } catch (e) {
+            console.error("No se pudo cargar la orden para edición", e);
+        }
+    }
+
+    // Aseguramos que el select del pedido tenga la opción y esté bloqueado
+    const $select = $('#selectPedido');
+    $select.html(`<option value="${ficha.ordenId}">Pedido #${ficha.ordenId} - ${ficha.orden ? ficha.orden.nombreCliente : ''}</option>`);
+    $select.val(ficha.ordenId).prop('disabled', true);
+
     $('#inputCliente').val(ficha.orden ? ficha.orden.nombreCliente : '');
     $('#selectModista').val(ficha.modista);
     $('#inputFechaPedido').val(ficha.orden && ficha.orden.fechaPedido ? ficha.orden.fechaPedido.split('T')[0] : '');
