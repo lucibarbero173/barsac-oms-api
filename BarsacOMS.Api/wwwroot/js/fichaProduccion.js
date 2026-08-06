@@ -40,6 +40,7 @@ async function cargarOrdenesParaSelect() {
 }
 
 // Cargar automáticamente los datos de la orden consultando el detalle individual por ID
+// Cargar automáticamente los datos de la orden consultando el detalle individual por ID
 async function cargarDatosOrdenSeleccionada(ordenId) {
     const $body = $('#modalDetalleBody');
     $body.empty();
@@ -52,7 +53,6 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
     }
 
     try {
-        // Hacemos un fetch al endpoint individual de la orden para asegurar que traiga los detalles completos
         const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/Orden/${ordenId}`);
         if (!response.ok) throw new Error("No se pudo obtener el detalle de la orden");
 
@@ -63,19 +63,17 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
         $('#inputFechaPedido').val(orden.fechaPedido ? orden.fechaPedido.split('T')[0] : '');
         $('#inputFechaEntrega').val(orden.fechaEntrega ? orden.fechaEntrega.split('T')[0] : '');
 
-        // Guardamos los detalles temporalmente en la orden seleccionada para que estén accesibles al generar opciones
         const ordenEnLista = ordenesDisponibles.find(o => o.id === parseInt(ordenId));
         if (ordenEnLista) {
             ordenEnLista.detalles = orden.detalles;
         }
 
-        // Si tiene detalles, los cargamos en las filas del modal
         if (orden.detalles && Array.isArray(orden.detalles)) {
             orden.detalles.forEach(d => {
-                // Soportamos si el producto viene como objeto o como texto
-                const nombreProducto = (d.producto && d.producto.nombre) ? d.producto.nombre : (d.producto || `Producto ID: ${d.productoId || ''}`);
+                // Extraemos correctamente el nombre del objeto producto
+                const nombreProducto = (d.producto && d.producto.nombre) ? d.producto.nombre : (d.producto || '');
                 const cantidadOrden = d.cantidad || 1;
-                const talleOrden = d.talle || d.talleNombre || '';
+                const talleOrden = d.talle || '';
 
                 agregarFilaPrendaDesgloseModal(cantidadOrden, nombreProducto, talleOrden, null, '');
             });
@@ -159,7 +157,7 @@ function abrirModalGenerarFicha() {
     $('#modalFichaProduccion').modal('show');
 }
 
-// Generar opciones de productos robustas
+// Generar opciones de productos leyendo la propiedad .nombre del objeto producto
 function obtenerOpcionesProductosOrden() {
     const ordenId = parseInt($('#selectPedido').val());
     const orden = ordenesDisponibles.find(o => o.id === ordenId);
@@ -170,8 +168,7 @@ function obtenerOpcionesProductosOrden() {
 
     let opciones = '<option value="">-- Seleccione Producto --</option>';
     orden.detalles.forEach(d => {
-        // Captura cualquier variante en la que venga el nombre del producto
-        const nombreProd = d.producto || d.nombreProducto || d.productoNombre || '';
+        const nombreProd = (d.producto && d.producto.nombre) ? d.producto.nombre : (d.producto || '');
         if (nombreProd) {
             opciones += `<option value="${nombreProd}">${nombreProd}</option>`;
         }
