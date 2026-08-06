@@ -141,15 +141,30 @@ function abrirModalGenerarFicha() {
 }
 
 // Generar opciones de productos permitidos basados exclusivamente en la orden seleccionada
+// Generar opciones de productos permitidos basados exclusivamente en la orden seleccionada
 function obtenerOpcionesProductosOrden() {
     const ordenId = parseInt($('#selectPedido').val());
     const orden = ordenesDisponibles.find(o => o.id === ordenId);
-    if (!orden || !orden.detalles) return '<option value="">-- Seleccione --</option>';
+
+    if (!orden || !orden.detalles || !Array.isArray(orden.detalles)) {
+        return '<option value="">-- Seleccione --</option>';
+    }
 
     let opciones = '<option value="">-- Seleccione Producto --</option>';
     orden.detalles.forEach(d => {
-        const nombreProd = d.producto ? (d.producto.nombre || d.producto) : `Producto ID: ${d.productoId}`;
-        opciones += `<option value="${nombreProd}">${nombreProd}</option>`;
+        // Maneja si viene como objeto {nombre: "Remera"} o directamente como string "Remera" o ID
+        let nombreProd = '';
+        if (typeof d.producto === 'object' && d.producto !== null) {
+            nombreProd = d.producto.nombre || d.producto.descripcion || '';
+        } else if (typeof d.producto === 'string') {
+            nombreProd = d.producto;
+        } else {
+            nombreProd = d.nombreProducto || `Producto ID: ${d.productoId || 'N/A'}`;
+        }
+
+        if (nombreProd) {
+            opciones += `<option value="${nombreProd}">${nombreProd}</option>`;
+        }
     });
     return opciones;
 }
