@@ -1,5 +1,6 @@
 ﻿let fichasProduccion = [];
 let ordenesDisponibles = [];
+let cargandoOrden = false;
 
 $(document).ready(function () {
     // Inicializar DataTable
@@ -40,8 +41,10 @@ async function cargarOrdenesParaSelect() {
 }
 
 // Cargar automáticamente los datos de la orden consultando el detalle individual por ID
-// Cargar automáticamente los datos de la orden consultando el detalle individual por ID
 async function cargarDatosOrdenSeleccionada(ordenId) {
+    if (cargandoOrden) return;
+    cargandoOrden = true;
+
     const $body = $('#modalDetalleBody');
     $body.empty();
 
@@ -49,6 +52,7 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
         $('#inputCliente').val('');
         $('#inputFechaPedido').val('');
         $('#inputFechaEntrega').val('');
+        cargandoOrden = false;
         return;
     }
 
@@ -57,7 +61,6 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
         if (!response.ok) throw new Error("No se pudo obtener el detalle de la orden");
 
         const orden = await response.json();
-        console.log("Orden completa con detalles:", orden);
 
         $('#inputCliente').val(orden.nombreCliente || '');
         $('#inputFechaPedido').val(orden.fechaPedido ? orden.fechaPedido.split('T')[0] : '');
@@ -70,7 +73,6 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
 
         if (orden.detalles && Array.isArray(orden.detalles)) {
             orden.detalles.forEach(d => {
-                // Extraemos correctamente el nombre del objeto producto
                 const nombreProducto = (d.producto && d.producto.nombre) ? d.producto.nombre : (d.producto || '');
                 const cantidadOrden = d.cantidad || 1;
                 const talleOrden = d.talle || '';
@@ -80,6 +82,8 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
         }
     } catch (error) {
         console.error("Error al cargar la orden detallada:", error);
+    } finally {
+        cargandoOrden = false;
     }
 }
 
@@ -225,7 +229,6 @@ function agregarFilaPrendaDesgloseModal(cantidades = 1, producto = '', talle = '
     `;
 
     $('#modalDetalleBody').append(tr);
-    // Seleccionar automáticamente el producto si se pasó por parámetro
     if (producto) {
         $(`#fila-${filaId} .input-producto`).val(producto);
     }
@@ -257,10 +260,9 @@ async function guardarFicha() {
         return;
     }
 
-    // Mapeamos los topes máximos permitidos por cada producto según la orden
     const limitesPermitidos = {};
     (ordenAsociada.detalles || []).forEach(d => {
-        const nomProd = d.producto ? (d.producto.nombre || d.producto) : '';
+        const nomProd = (d.producto && d.producto.nombre) ? d.producto.nombre : (d.producto || '');
         limitesPermitidos[nomProd] = (limitesPermitidos[nomProd] || 0) + (d.cantidad || 0);
     });
 
@@ -301,7 +303,6 @@ async function guardarFicha() {
         return;
     }
 
-    // Validamos que no se exceda de la cantidad máxima pedida en la orden
     for (const [prod, cantTotal] of Object.entries(cantidadesAcumuladas)) {
         const maximo = limitesPermitidos[prod] || 0;
         if (cantTotal > maximo) {
@@ -373,7 +374,7 @@ function editarFicha(idFicha) {
     $('#modalFichaProduccion').modal('show');
 }
 
-// Abrir Modal de Previsualización (con fecha al lado y estado correcto)
+// Abrir Modal de Previsualización
 function verFicha(idFicha) {
     const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
@@ -688,7 +689,7 @@ function imprimirFichaDesdeModal() {
 
     ventana.document.write('<html><head><title>Imprimir Ficha de Producción</title>');
     ventana.document.write('<link rel="stylesheet" href="css/sb-admin-2.min.css">');
-    ventana.document.write('</body class="p-4">');
+    ventana.document.write('</head><body class="p-4">');
     ventana.document.write('<h2 class="mb-4 text-center">Ficha de Producción y Taller</h2>');
     ventana.document.write(contenido);
     ventana.document.write('</body></html>');
