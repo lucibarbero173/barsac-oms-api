@@ -39,7 +39,7 @@ async function cargarOrdenesParaSelect() {
     }
 }
 
-// Cargar automáticamente los datos de la orden seleccionada en los inputs del modal
+// Cargar automáticamente los datos de la orden seleccionada en los inputs del modal con control estricto
 function cargarDatosOrdenSeleccionada(ordenId) {
     const orden = ordenesDisponibles.find(o => o.id === parseInt(ordenId));
     const $body = $('#modalDetalleBody');
@@ -50,11 +50,12 @@ function cargarDatosOrdenSeleccionada(ordenId) {
         $('#inputFechaPedido').val(orden.fechaPedido ? orden.fechaPedido.split('T')[0] : '');
         $('#inputFechaEntrega').val(orden.fechaEntrega ? orden.fechaEntrega.split('T')[0] : '');
 
-        // Si la orden viene con sus detalles mapeados, se cargan automáticamente
+        // Si la orden viene con sus detalles mapeados, se cargan de forma estricta (fija)
         if (orden.detalles && Array.isArray(orden.detalles)) {
             orden.detalles.forEach(d => {
                 const nombreProducto = d.producto ? (d.producto.nombre || d.producto) : `Producto ID: ${d.productoId || ''}`;
-                agregarFilaPrendaModal(d.cantidad || 1, nombreProducto, d.talle || '', null, '');
+                const cantidadOrden = d.cantidad || 1;
+                agregarFilaPrendaFijaModal(cantidadOrden, nombreProducto, d.talle || '', null, '');
             });
         }
     } else {
@@ -138,21 +139,21 @@ function abrirModalGenerarFicha() {
     $('#modalFichaProduccion').modal('show');
 }
 
-// Agregar fila dinámica a la tabla del modal
-function agregarFilaPrendaModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false) {
+// Fila fija estricta basada pura y exclusivamente en la Orden de Trabajo (Evita alterar cantidades o productos)
+function agregarFilaPrendaFijaModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false) {
     const filaId = Date.now() + Math.random().toString(36).substring(2, 5);
     const cantVal = (cantidades !== null && cantidades !== undefined && !isNaN(cantidades)) ? cantidades : 1;
 
     const tr = `
         <tr id="fila-${filaId}">
             <td>
-                <input type="number" class="form-control form-control-sm input-cantidades text-center" value="${cantVal}" min="1">
+                <input type="number" class="form-control form-control-sm input-cantidades text-center bg-light" value="${cantVal}" readonly>
             </td>
             <td>
-                <input type="text" class="form-control form-control-sm input-producto" value="${producto}" placeholder="Ej: Camiseta">
+                <input type="text" class="form-control form-control-sm input-producto bg-light" value="${producto}" readonly>
             </td>
             <td>
-                <input type="text" class="form-control form-control-sm input-talle" value="${talle}" placeholder="L">
+                <input type="text" class="form-control form-control-sm input-talle bg-light" value="${talle}" readonly>
             </td>
             <td>
                 <input type="text" class="form-control form-control-sm input-numero" value="${numero !== null && numero !== undefined ? numero : ''}" placeholder="10">
@@ -175,10 +176,8 @@ function agregarFilaPrendaModal(cantidades = 1, producto = '', talle = '', numer
             <td class="align-middle bg-warning-soft">
                 <input type="checkbox" class="chk-entregado" ${entregado ? 'checked' : ''}>
             </td>
-            <td class="align-middle">
-                <button type="button" class="btn btn-outline-danger btn-sm border-0" onclick="eliminarFilaPrenda('${filaId}')">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
+            <td class="align-middle text-center text-muted" title="Definido por la Orden de Trabajo">
+                <i class="fas fa-lock"></i>
             </td>
         </tr>
     `;
@@ -186,12 +185,7 @@ function agregarFilaPrendaModal(cantidades = 1, producto = '', talle = '', numer
     $('#modalDetalleBody').append(tr);
 }
 
-// Eliminar fila de la tabla
-function eliminarFilaPrenda(filaId) {
-    $(`#fila-${filaId}`).remove();
-}
-
-// Guardar (POST o PUT) hacia el Backend C#
+// Guardar (POST o PUT) hacia el Backend C# con validación estricta de consistencia
 async function guardarFicha() {
     const ordenId = parseInt($('#selectPedido').val());
     const modista = $('#selectModista').val();
@@ -201,16 +195,36 @@ async function guardarFicha() {
         return;
     }
 
+    const ordenAsociada = ordenesDisponibles.find(o => o.id === ordenId);
+    if (!ordenAsociada) {
+        alert('La orden seleccionada no es válida.');
+        return;
+    }
+
     const items = [];
+    let hayErrorValidacion = false;
+
     $('#modalDetalleBody tr').each(function () {
         const row = $(this);
-        const valNumero = row.find('.input-numero').val();
+        const productoFila = row.find('.input-producto').val();
+        const talleFila = row.find('.input-talle').val();
         const parsedCant = parseInt(row.find('.input-cantidades').val());
+        const valNumero = row.find('.input-numero').val();
+
+        // Validamos consistencia contra la orden original
+        const detalleOrdenOriginal = (ordenAsociada.detalles || []).find(d => {
+            const nomProd = d.producto ? (d.producto.nombre || d.producto) : '';
+            return nomProd === productoFila && (d.talle || '') === talleFila;
+        });
+
+        if (!detalleOrdenOriginal || detalleOrdenOriginal.cantidad !== parsedCant) {
+            hayErrorValidacion = true;
+        }
 
         items.push({
             cantidades: (!isNaN(parsedCant) && parsedCant > 0) ? parsedCant : 1,
-            producto: row.find('.input-producto').val() || '',
-            talle: row.find('.input-talle').val() || '',
+            producto: productoFila || '',
+            talle: talleFila || '',
             numero: valNumero !== "" && !isNaN(parseInt(valNumero)) ? parseInt(valNumero) : null,
             nombre: row.find('.input-nombre').val() || null,
             archivo: row.find('.chk-arch').is(':checked'),
@@ -220,6 +234,11 @@ async function guardarFicha() {
             entregado: row.find('.chk-entregado').is(':checked')
         });
     });
+
+    if (hayErrorValidacion) {
+        alert('Error de consistencia: Las cantidades o productos de la ficha no coinciden exactamente con la Orden de Trabajo. Modifique primero la orden si necesita cambiar cantidades.');
+        return;
+    }
 
     const idFichaExistente = $('#fichaId').val();
 
@@ -279,7 +298,7 @@ function editarFicha(idFicha) {
 
     const items = ficha.items || [];
     items.forEach(p => {
-        agregarFilaPrendaModal(p.cantidades, p.producto, p.talle, p.numero, p.nombre, p.archivo, p.impresion, p.calandra, p.corte, p.entregado);
+        agregarFilaPrendaFijaModal(p.cantidades, p.producto, p.talle, p.numero, p.nombre, p.archivo, p.impresion, p.calandra, p.corte, p.entregado);
     });
 
     $('#modalFichaProduccion').modal('show');
@@ -324,7 +343,6 @@ function verFicha(idFicha) {
     let htmlDinamico = '';
 
     if (entregasParciales.length > 0) {
-        // Agrupamos las entregas exactamente por fecha
         const gruposPorFecha = {};
         entregasParciales.forEach(entrega => {
             const fechaStr = entrega.fechaEntrega ? entrega.fechaEntrega.split('T')[0] : 'Sin fecha';
@@ -346,12 +364,10 @@ function verFicha(idFicha) {
 
                 const cantOriginal = itemOriginal ? itemOriginal.cantidades : entrega.cantidades;
 
-                // Calculamos cuánto se ha entregado de este producto/talle en total hasta ahora
                 const acumuladoTotal = entregasParciales
                     .filter(e => e.producto === entrega.producto && (e.talle || '') === (entrega.talle || ''))
                     .reduce((sum, e) => sum + e.cantidades, 0);
 
-                // Si lo entregado en este registro cubre o si el acumulado llega al original, definimos el estado
                 let estadoBadge = '<span class="badge badge-success">Entregada</span>';
                 if (entrega.cantidades < cantOriginal && acumuladoTotal < cantOriginal) {
                     estadoBadge = '<span class="badge badge-warning">Parcial</span>';
@@ -373,7 +389,6 @@ function verFicha(idFicha) {
                 `;
             });
 
-            // Formatear la fecha para que quede hermosa al lado del título (ej: 05/08/2026)
             let fechaFormateada = fecha;
             if (fecha !== 'Sin fecha') {
                 const partes = fecha.split('-');
@@ -414,7 +429,6 @@ function verFicha(idFicha) {
         });
     }
 
-    // 2. SECCIÓN DE FALTA ENTREGAR
     let pendientesCalculados = [];
     itemsOriginales.forEach(item => {
         const entregadoTotalItem = entregasParciales
@@ -489,7 +503,6 @@ function verFicha(idFicha) {
 
 let fichaActualEntregaId = null;
 
-// 1. Abrir Modal para Registrar Entregas Parciales con cantidades editables
 function abrirModalEntrega(idFicha) {
     const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
@@ -541,13 +554,11 @@ function abrirModalEntrega(idFicha) {
     $('#modalEntregaParcial').modal('show');
 }
 
-// 2. Guardar Actualización de Entregas Parciales
 async function guardarEntregaParcial() {
     if (!fichaActualEntregaId) return;
 
     const entregasNuevas = [];
 
-    // Recorremos las filas del modal de entrega parcial
     $('#tablaEntregaParcialBody tr').each(function () {
         const row = $(this);
         const producto = row.data('producto');
@@ -558,7 +569,6 @@ async function guardarEntregaParcial() {
             const cantidadIngresada = parseInt(inputCant.val()) || 0;
 
             if (cantidadIngresada > 0) {
-                // Buscamos los datos extra (número, nombre) de la prenda original si es necesario
                 const ficha = fichasProduccion.find(f => f.id === fichaActualEntregaId);
                 const itemOriginal = ficha.items.find(i => i.producto === producto && (i.talle || '') === String(talle));
 
@@ -581,7 +591,6 @@ async function guardarEntregaParcial() {
     }
 
     try {
-        // Llamamos al endpoint POST /api/EntregaParcial/ficha/{fichaId} que creamos en el Backend
         const response = await fetch(`/api/EntregaParcial/ficha/${fichaActualEntregaId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
