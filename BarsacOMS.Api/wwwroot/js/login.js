@@ -47,7 +47,7 @@
                 localStorage.setItem('usuarioNombre', usuario.nombre || usuario.Nombre || '');
             }
 
-            console.log("Redirigiendo a index.html...");
+            console.log("Redirigiendo a estadisticas.html...");
             window.location.replace('estadisticas.html');
         } else {
             console.log("FALLÓ LA CONDICIÓN DEL IF");

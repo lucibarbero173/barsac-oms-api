@@ -682,32 +682,91 @@ async function guardarEntregaParcial() {
     }
 }
 
-// Función de Impresión Mejorada, Limpia y con Modista en Blanco si no está asignada
+// Función de Impresión con sección de faltantes para completar a mano y control de páginas
 function imprimirFichaDesdeModal() {
     // Clonamos el contenido original para manipularlo sin alterar el modal en pantalla
     const $contenidoOriginal = $('#contenidoImprimible').clone();
 
-    // Eliminamos las secciones dinámicas de entregas parciales y faltantes
+    // Eliminamos secciones dinámicas previas por si acaso
     $contenidoOriginal.find('.seccion-entrega-dinamica').remove();
-
-    // Si hay botones o elementos interactivos, los removemos
     $contenidoOriginal.find('button').remove();
 
-    // Verificamos el texto de la modista en el clon y si dice "Sin asignar", lo dejamos en blanco
+    // Dejar la modista en blanco si dice "Sin asignar"
     const $spanModista = $contenidoOriginal.find('#viewModista');
     if ($spanModista.text().trim() === 'Sin asignar') {
-        // Ponemos un espacio en blanco o una línea punteada/baja para rellenar a mano
         $spanModista.html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
     }
 
     const contenidoLimpio = $contenidoOriginal.html();
+
+    // Creamos la plantilla de la tablita vacía para anotaciones / faltantes a mano
+    const htmlSeccionFaltantesManual = `
+        <div class="mt-4 seccion-faltantes-manual">
+            <h6 class="font-weight-bold text-secondary mb-2">Control de Faltantes / Notas de Taller (A completar a mano):</h6>
+            <table class="table table-bordered table-sm text-center">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">Cant.</th>
+                        <th class="text-left">Producto</th>
+                        <th style="width: 10%;">Talle</th>
+                        <th style="width: 10%;">Número</th>
+                        <th style="width: 18%;">Nombre</th>
+                        <th style="width: 8%;">Arch.</th>
+                        <th style="width: 8%;">Imp.</th>
+                        <th style="width: 8%;">Cal.</th>
+                        <th style="width: 8%;">Corte</th>
+                        <th style="width: 12%;">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Generamos 3 filas vacías para que puedan escribir cómodamente -->
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+
     const ventana = window.open('', '', 'height=700,width=900');
 
     ventana.document.write(`
         <html>
             <head>
-                <title>Ficha de Producción #${~$('#viewIdFicha').text()}</title>
-                <!-- Bootstrap CSS para mantener la grilla y estilos base -->
+                <title>Ficha de Producción</title>
                 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
                 <style>
                     body {
@@ -734,7 +793,7 @@ function imprimirFichaDesdeModal() {
                         border-collapse: collapse !important;
                     }
                     table th, table td {
-                        padding: 8px !important;
+                        padding: 7px !important;
                         vertical-align: middle !important;
                         border: 1px solid #e3e6f0 !important;
                         text-align: center;
@@ -745,11 +804,20 @@ function imprimirFichaDesdeModal() {
                     }
                     .text-left { text-align: left !important; }
                     
-                    /* Estilo específico para encabezado de impresión */
                     .print-header {
                         border-bottom: 2px solid #4e73df;
                         padding-bottom: 10px;
                         margin-bottom: 20px;
+                    }
+
+                    /* Control inteligente de páginas para impresión */
+                    @media print {
+                        .seccion-faltantes-manual {
+                            /* Si entra en la hoja abajo, se queda ahí. Si no, el navegador la pasa automáticamente a la hoja 2 */
+                            break-inside: avoid;
+                            page-break-inside: avoid;
+                            margin-top: 30px;
+                        }
                     }
                 </style>
             </head>
@@ -766,6 +834,7 @@ function imprimirFichaDesdeModal() {
                     </div>
                     
                     ${contenidoLimpio}
+                    ${htmlSeccionFaltantesManual}
                 </div>
             </body>
         </html>
