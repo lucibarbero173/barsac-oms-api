@@ -682,16 +682,23 @@ async function guardarEntregaParcial() {
     }
 }
 
-// Función de Impresión Mejorada y Limpia
+// Función de Impresión Mejorada, Limpia y con Modista en Blanco si no está asignada
 function imprimirFichaDesdeModal() {
     // Clonamos el contenido original para manipularlo sin alterar el modal en pantalla
     const $contenidoOriginal = $('#contenidoImprimible').clone();
 
-    // Eliminamos las secciones dinámicas de entregas parciales y faltantes que se agregan por código
+    // Eliminamos las secciones dinámicas de entregas parciales y faltantes
     $contenidoOriginal.find('.seccion-entrega-dinamica').remove();
 
-    // Opcional: Si tienes botones o elementos interactivos dentro que no deben salir en el papel, los removemos
+    // Si hay botones o elementos interactivos, los removemos
     $contenidoOriginal.find('button').remove();
+
+    // Verificamos el texto de la modista en el clon y si dice "Sin asignar", lo dejamos en blanco
+    const $spanModista = $contenidoOriginal.find('#viewModista');
+    if ($spanModista.text().trim() === 'Sin asignar') {
+        // Ponemos un espacio en blanco o una línea punteada/baja para rellenar a mano
+        $spanModista.html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+    }
 
     const contenidoLimpio = $contenidoOriginal.html();
     const ventana = window.open('', '', 'height=700,width=900');
@@ -767,7 +774,6 @@ function imprimirFichaDesdeModal() {
     ventana.document.close();
     ventana.focus();
 
-    // Damos un pequeño respiro para que carguen los estilos de la CDN antes de llamar al diálogo de impresión
     setTimeout(() => {
         ventana.print();
         ventana.close();
