@@ -39,7 +39,7 @@ async function cargarOrdenesParaSelect() {
     }
 }
 
-// Cargar automáticamente los datos de la orden seleccionada en los inputs del modal con control estricto
+// Cargar automáticamente los datos de la orden seleccionada y precargar filas según el pedido
 function cargarDatosOrdenSeleccionada(ordenId) {
     const orden = ordenesDisponibles.find(o => o.id === parseInt(ordenId));
     const $body = $('#modalDetalleBody');
@@ -50,12 +50,13 @@ function cargarDatosOrdenSeleccionada(ordenId) {
         $('#inputFechaPedido').val(orden.fechaPedido ? orden.fechaPedido.split('T')[0] : '');
         $('#inputFechaEntrega').val(orden.fechaEntrega ? orden.fechaEntrega.split('T')[0] : '');
 
-        // Si la orden viene con sus detalles mapeados, se cargan de forma estricta (fija)
+        // Por cada detalle de la orden, generamos una o más filas iniciales de desglose
         if (orden.detalles && Array.isArray(orden.detalles)) {
             orden.detalles.forEach(d => {
                 const nombreProducto = d.producto ? (d.producto.nombre || d.producto) : `Producto ID: ${d.productoId || ''}`;
                 const cantidadOrden = d.cantidad || 1;
-                agregarFilaPrendaFijaModal(cantidadOrden, nombreProducto, d.talle || '', null, '');
+                // Agregamos la fila permitiendo desglosar pero atada a los productos permitidos de la orden
+                agregarFilaPrendaDesgloseModal(cantidadOrden, nombreProducto, d.talle || '', null, '');
             });
         }
     } else {
@@ -139,21 +140,38 @@ function abrirModalGenerarFicha() {
     $('#modalFichaProduccion').modal('show');
 }
 
-// Fila fija estricta basada pura y exclusivamente en la Orden de Trabajo (Evita alterar cantidades o productos)
-function agregarFilaPrendaFijaModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false) {
+// Generar opciones de productos permitidos basados exclusivamente en la orden seleccionada
+function obtenerOpcionesProductosOrden() {
+    const ordenId = parseInt($('#selectPedido').val());
+    const orden = ordenesDisponibles.find(o => o.id === ordenId);
+    if (!orden || !orden.detalles) return '<option value="">-- Seleccione --</option>';
+
+    let opciones = '<option value="">-- Seleccione Producto --</option>';
+    orden.detalles.forEach(d => {
+        const nombreProd = d.producto ? (d.producto.nombre || d.producto) : `Producto ID: ${d.productoId}`;
+        opciones += `<option value="${nombreProd}">${nombreProd}</option>`;
+    });
+    return opciones;
+}
+
+// Fila con desglose permitido: permite elegir talle libremente pero restringe el producto al pedido
+function agregarFilaPrendaDesgloseModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false) {
     const filaId = Date.now() + Math.random().toString(36).substring(2, 5);
     const cantVal = (cantidades !== null && cantidades !== undefined && !isNaN(cantidades)) ? cantidades : 1;
+    const opcionesProd = obtenerOpcionesProductosOrden();
 
     const tr = `
         <tr id="fila-${filaId}">
             <td>
-                <input type="number" class="form-control form-control-sm input-cantidades text-center bg-light" value="${cantVal}" readonly>
+                <input type="number" class="form-control form-control-sm input-cantidades text-center" value="${cantVal}" min="1">
             </td>
             <td>
-                <input type="text" class="form-control form-control-sm input-producto bg-light" value="${producto}" readonly>
+                <select class="form-control form-control-sm input-producto">
+                    ${opcionesProd}
+                </select>
             </td>
             <td>
-                <input type="text" class="form-control form-control-sm input-talle bg-light" value="${talle}" readonly>
+                <input type="text" class="form-control form-control-sm input-talle" value="${talle}" placeholder="Ej: L o M">
             </td>
             <td>
                 <input type="text" class="form-control form-control-sm input-numero" value="${numero !== null && numero !== undefined ? numero : ''}" placeholder="10">
@@ -176,16 +194,32 @@ function agregarFilaPrendaFijaModal(cantidades = 1, producto = '', talle = '', n
             <td class="align-middle bg-warning-soft">
                 <input type="checkbox" class="chk-entregado" ${entregado ? 'checked' : ''}>
             </td>
-            <td class="align-middle text-center text-muted" title="Definido por la Orden de Trabajo">
-                <i class="fas fa-lock"></i>
+            <td class="align-middle text-center">
+                <button type="button" class="btn btn-outline-danger btn-sm border-0" onclick="eliminarFilaPrenda('${filaId}')">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
             </td>
         </tr>
     `;
 
     $('#modalDetalleBody').append(tr);
+    // Seleccionar automáticamente el producto si se pasó por parámetro
+    if (producto) {
+        $(`#fila-${filaId} .input-producto`).val(producto);
+    }
 }
 
-// Guardar (POST o PUT) hacia el Backend C# con validación estricta de consistencia
+// Alias para mantener compatibilidad con el botón "Agregar Prenda" del HTML
+function agregarFilaPrendaModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false) {
+    agregarFilaPrendaDesgloseModal(cantidades, producto, talle, numero, nombre, archivo, impresion, calandra, corte, entregado);
+}
+
+// Eliminar fila de la tabla
+function eliminarFilaPrenda(filaId) {
+    $(`#fila-${filaId}`).remove();
+}
+
+// Guardar con validación estricta de topes por producto según la orden
 async function guardarFicha() {
     const ordenId = parseInt($('#selectPedido').val());
     const modista = $('#selectModista').val();
@@ -201,29 +235,34 @@ async function guardarFicha() {
         return;
     }
 
+    // Mapeamos los topes máximos permitidos por cada producto según la orden
+    const limitesPermitidos = {};
+    (ordenAsociada.detalles || []).forEach(d => {
+        const nomProd = d.producto ? (d.producto.nombre || d.producto) : '';
+        limitesPermitidos[nomProd] = (limitesPermitidos[nomProd] || 0) + (d.cantidad || 0);
+    });
+
     const items = [];
-    let hayErrorValidacion = false;
+    const cantidadesAcumuladas = {};
+    let productoInvalido = false;
 
     $('#modalDetalleBody tr').each(function () {
         const row = $(this);
         const productoFila = row.find('.input-producto').val();
         const talleFila = row.find('.input-talle').val();
-        const parsedCant = parseInt(row.find('.input-cantidades').val());
+        const parsedCant = parseInt(row.find('.input-cantidades').val()) || 0;
         const valNumero = row.find('.input-numero').val();
 
-        // Validamos consistencia contra la orden original
-        const detalleOrdenOriginal = (ordenAsociada.detalles || []).find(d => {
-            const nomProd = d.producto ? (d.producto.nombre || d.producto) : '';
-            return nomProd === productoFila && (d.talle || '') === talleFila;
-        });
-
-        if (!detalleOrdenOriginal || detalleOrdenOriginal.cantidad !== parsedCant) {
-            hayErrorValidacion = true;
+        if (!productoFila || !(productoFila in limitesPermitidos)) {
+            productoInvalido = true;
+            return;
         }
 
+        cantidadesAcumuladas[productoFila] = (cantidadesAcumuladas[productoFila] || 0) + parsedCant;
+
         items.push({
-            cantidades: (!isNaN(parsedCant) && parsedCant > 0) ? parsedCant : 1,
-            producto: productoFila || '',
+            cantidades: parsedCant > 0 ? parsedCant : 1,
+            producto: productoFila,
             talle: talleFila || '',
             numero: valNumero !== "" && !isNaN(parseInt(valNumero)) ? parseInt(valNumero) : null,
             nombre: row.find('.input-nombre').val() || null,
@@ -235,13 +274,21 @@ async function guardarFicha() {
         });
     });
 
-    if (hayErrorValidacion) {
-        alert('Error de consistencia: Las cantidades o productos de la ficha no coinciden exactamente con la Orden de Trabajo. Modifique primero la orden si necesita cambiar cantidades.');
+    if (productoInvalido) {
+        alert('Hay productos seleccionados que no corresponden a la Orden de Trabajo o están vacíos.');
         return;
     }
 
-    const idFichaExistente = $('#fichaId').val();
+    // Validamos que no se exceda de la cantidad máxima pedida en la orden
+    for (const [prod, cantTotal] of Object.entries(cantidadesAcumuladas)) {
+        const maximo = limitesPermitidos[prod] || 0;
+        if (cantTotal > maximo) {
+            alert(`Error de cantidad: Estás intentando fabricar ${cantTotal} unidades de "${prod}", pero la Orden solo permite un máximo de ${maximo}. Modifica primero la orden si necesitas agregar más.`);
+            return;
+        }
+    }
 
+    const idFichaExistente = $('#fichaId').val();
     const payload = {
         ordenId: ordenId,
         modista: modista || 'Sin asignar',
@@ -298,7 +345,7 @@ function editarFicha(idFicha) {
 
     const items = ficha.items || [];
     items.forEach(p => {
-        agregarFilaPrendaFijaModal(p.cantidades, p.producto, p.talle, p.numero, p.nombre, p.archivo, p.impresion, p.calandra, p.corte, p.entregado);
+        agregarFilaPrendaDesgloseModal(p.cantidades, p.producto, p.talle, p.numero, p.nombre, p.archivo, p.impresion, p.calandra, p.corte, p.entregado);
     });
 
     $('#modalFichaProduccion').modal('show');
@@ -612,10 +659,6 @@ async function guardarEntregaParcial() {
     }
 }
 
-function agregarFilaPrendaModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false) {
-    agregarFilaPrendaFijaModal(cantidades, producto, talle, numero, nombre, archivo, impresion, calandra, corte, entregado);
-}
-
 // Función de Impresión
 function imprimirFichaDesdeModal() {
     const contenido = document.getElementById('contenidoImprimible').innerHTML;
@@ -623,7 +666,7 @@ function imprimirFichaDesdeModal() {
 
     ventana.document.write('<html><head><title>Imprimir Ficha de Producción</title>');
     ventana.document.write('<link rel="stylesheet" href="css/sb-admin-2.min.css">');
-    ventana.document.write('</head><body class="p-4">');
+    ventana.document.write('</body class="p-4">');
     ventana.document.write('<h2 class="mb-4 text-center">Ficha de Producción y Taller</h2>');
     ventana.document.write(contenido);
     ventana.document.write('</body></html>');
