@@ -46,16 +46,17 @@ function cargarDatosOrdenSeleccionada(ordenId) {
     $body.empty();
 
     if (orden) {
+        console.log("Datos de la orden seleccionada:", orden); // <-- Mirá esto en la consola del navegador (F12)
+
         $('#inputCliente').val(orden.nombreCliente || '');
         $('#inputFechaPedido').val(orden.fechaPedido ? orden.fechaPedido.split('T')[0] : '');
         $('#inputFechaEntrega').val(orden.fechaEntrega ? orden.fechaEntrega.split('T')[0] : '');
 
-        // Por cada detalle de la orden, generamos una o más filas iniciales de desglose
         if (orden.detalles && Array.isArray(orden.detalles)) {
             orden.detalles.forEach(d => {
-                const nombreProducto = d.producto ? (d.producto.nombre || d.producto) : `Producto ID: ${d.productoId || ''}`;
+                // Probamos directamente las opciones más comunes
+                const nombreProducto = d.producto || d.nombreProducto || d.productoNombre || `Producto ID: ${d.productoId || ''}`;
                 const cantidadOrden = d.cantidad || 1;
-                // Agregamos la fila permitiendo desglosar pero atada a los productos permitidos de la orden
                 agregarFilaPrendaDesgloseModal(cantidadOrden, nombreProducto, d.talle || '', null, '');
             });
         }
@@ -140,8 +141,7 @@ function abrirModalGenerarFicha() {
     $('#modalFichaProduccion').modal('show');
 }
 
-// Generar opciones de productos permitidos basados exclusivamente en la orden seleccionada
-// Generar opciones de productos permitidos basados exclusivamente en la orden seleccionada
+// Generar opciones de productos robustas
 function obtenerOpcionesProductosOrden() {
     const ordenId = parseInt($('#selectPedido').val());
     const orden = ordenesDisponibles.find(o => o.id === ordenId);
@@ -152,16 +152,8 @@ function obtenerOpcionesProductosOrden() {
 
     let opciones = '<option value="">-- Seleccione Producto --</option>';
     orden.detalles.forEach(d => {
-        // Maneja si viene como objeto {nombre: "Remera"} o directamente como string "Remera" o ID
-        let nombreProd = '';
-        if (typeof d.producto === 'object' && d.producto !== null) {
-            nombreProd = d.producto.nombre || d.producto.descripcion || '';
-        } else if (typeof d.producto === 'string') {
-            nombreProd = d.producto;
-        } else {
-            nombreProd = d.nombreProducto || `Producto ID: ${d.productoId || 'N/A'}`;
-        }
-
+        // Captura cualquier variante en la que venga el nombre del producto
+        const nombreProd = d.producto || d.nombreProducto || d.productoNombre || '';
         if (nombreProd) {
             opciones += `<option value="${nombreProd}">${nombreProd}</option>`;
         }
