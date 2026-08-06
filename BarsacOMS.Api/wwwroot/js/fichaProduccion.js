@@ -39,31 +39,49 @@ async function cargarOrdenesParaSelect() {
     }
 }
 
-// Cargar automáticamente los datos de la orden seleccionada y precargar filas según el pedido
-function cargarDatosOrdenSeleccionada(ordenId) {
-    const orden = ordenesDisponibles.find(o => o.id === parseInt(ordenId));
+// Cargar automáticamente los datos de la orden consultando el detalle individual por ID
+async function cargarDatosOrdenSeleccionada(ordenId) {
     const $body = $('#modalDetalleBody');
     $body.empty();
 
-    if (orden) {
-        console.log("Datos de la orden seleccionada:", orden); // <-- Mirá esto en la consola del navegador (F12)
+    if (!ordenId) {
+        $('#inputCliente').val('');
+        $('#inputFechaPedido').val('');
+        $('#inputFechaEntrega').val('');
+        return;
+    }
+
+    try {
+        // Hacemos un fetch al endpoint individual de la orden para asegurar que traiga los detalles completos
+        const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/Orden/${ordenId}`);
+        if (!response.ok) throw new Error("No se pudo obtener el detalle de la orden");
+
+        const orden = await response.json();
+        console.log("Orden completa con detalles:", orden);
 
         $('#inputCliente').val(orden.nombreCliente || '');
         $('#inputFechaPedido').val(orden.fechaPedido ? orden.fechaPedido.split('T')[0] : '');
         $('#inputFechaEntrega').val(orden.fechaEntrega ? orden.fechaEntrega.split('T')[0] : '');
 
+        // Guardamos los detalles temporalmente en la orden seleccionada para que estén accesibles al generar opciones
+        const ordenEnLista = ordenesDisponibles.find(o => o.id === parseInt(ordenId));
+        if (ordenEnLista) {
+            ordenEnLista.detalles = orden.detalles;
+        }
+
+        // Si tiene detalles, los cargamos en las filas del modal
         if (orden.detalles && Array.isArray(orden.detalles)) {
             orden.detalles.forEach(d => {
-                // Probamos directamente las opciones más comunes
-                const nombreProducto = d.producto || d.nombreProducto || d.productoNombre || `Producto ID: ${d.productoId || ''}`;
+                // Soportamos si el producto viene como objeto o como texto
+                const nombreProducto = (d.producto && d.producto.nombre) ? d.producto.nombre : (d.producto || `Producto ID: ${d.productoId || ''}`);
                 const cantidadOrden = d.cantidad || 1;
-                agregarFilaPrendaDesgloseModal(cantidadOrden, nombreProducto, d.talle || '', null, '');
+                const talleOrden = d.talle || d.talleNombre || '';
+
+                agregarFilaPrendaDesgloseModal(cantidadOrden, nombreProducto, talleOrden, null, '');
             });
         }
-    } else {
-        $('#inputCliente').val('');
-        $('#inputFechaPedido').val('');
-        $('#inputFechaEntrega').val('');
+    } catch (error) {
+        console.error("Error al cargar la orden detallada:", error);
     }
 }
 
