@@ -24,7 +24,6 @@ $(document).ready(function () {
 
 async function cargarOrdenesParaSelect(fichaActualIdEnEdicion = null) {
     try {
-        // Cambiamos la ruta para consumir únicamente las órdenes sin ficha del backend
         const response = await fetch('/api/FichaProduccion/sin-ficha');
         if (!response.ok) throw new Error('Error al obtener las órdenes disponibles');
 
@@ -34,12 +33,8 @@ async function cargarOrdenesParaSelect(fichaActualIdEnEdicion = null) {
         $select.html('<option value="">-- Seleccionar --</option>');
 
         ordenesDisponibles.forEach(orden => {
-            // Si estamos editando, permitimos incluir también la orden actual de esa ficha
-            const esLaActualDeEdicion = fichaActualIdEnEdicion && parseInt(fichaActualIdEnEdicion) === orden.id;
-
-            if (esLaActualDeEdicion || !ordenesDisponibles.some(o => o.id === orden.id)) {
-                $select.append(`<option value="${orden.id}">Pedido #${orden.id} - ${orden.nombreCliente || 'Sin Cliente'}</option>`);
-            }
+            // Simplemente agregamos cada orden limpia que viene del servidor
+            $select.append(`<option value="${orden.id}">Pedido #${orden.id} - ${orden.nombreCliente || 'Sin Cliente'}</option>`);
         });
     } catch (error) {
         console.error('Error al cargar órdenes disponibles:', error);
