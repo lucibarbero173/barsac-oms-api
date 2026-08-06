@@ -22,33 +22,31 @@ $(document).ready(function () {
     });
 });
 
-// Cargar listado de órdenes reales para el <select>, excluyendo las que ya tienen ficha
 async function cargarOrdenesParaSelect(fichaActualIdEnEdicion = null) {
     try {
-        const response = await fetch('/api/Orden');
-        if (!response.ok) throw new Error('Error al obtener las órdenes');
+        // Cambiamos la ruta para consumir únicamente las órdenes sin ficha del backend
+        const response = await fetch('/api/FichaProduccion/sin-ficha');
+        if (!response.ok) throw new Error('Error al obtener las órdenes disponibles');
 
         ordenesDisponibles = await response.json();
-
-        // Obtenemos los IDs de orden que ya tienen una ficha de producción creada
-        const ordenesConFichaIds = fichasProduccion.map(f => f.ordenId);
 
         const $select = $('#selectPedido');
         $select.html('<option value="">-- Seleccionar --</option>');
 
         ordenesDisponibles.forEach(orden => {
-            // Si la orden ya tiene ficha, EXCEPTO que sea la misma ficha que estamos editando actualmente, la saltamos
-            const yaTieneFicha = ordenesConFichaIds.includes(orden.id);
+            // Si estamos editando, permitimos incluir también la orden actual de esa ficha
             const esLaActualDeEdicion = fichaActualIdEnEdicion && parseInt(fichaActualIdEnEdicion) === orden.id;
 
-            if (!yaTieneFicha || esLaActualDeEdicion) {
+            if (esLaActualDeEdicion || !ordenesDisponibles.some(o => o.id === orden.id)) {
                 $select.append(`<option value="${orden.id}">Pedido #${orden.id} - ${orden.nombreCliente || 'Sin Cliente'}</option>`);
             }
         });
     } catch (error) {
-        console.error('Error al cargar órdenes:', error);
+        console.error('Error al cargar órdenes disponibles:', error);
     }
 }
+
+
 // Cargar automáticamente los datos de la orden consultando el detalle individual por ID
 async function cargarDatosOrdenSeleccionada(ordenId) {
     if (cargandoOrden) return;
