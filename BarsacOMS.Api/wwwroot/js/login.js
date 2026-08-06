@@ -48,7 +48,7 @@
             }
 
             console.log("Redirigiendo a index.html...");
-            window.location.replace('index.html');
+            window.location.replace('estadisticas.html');
         } else {
             console.log("FALLÓ LA CONDICIÓN DEL IF");
             feedback.classList.remove('d-none');
