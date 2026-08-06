@@ -682,22 +682,94 @@ async function guardarEntregaParcial() {
     }
 }
 
-// Función de Impresión
+// Función de Impresión Mejorada y Limpia
 function imprimirFichaDesdeModal() {
-    const contenido = document.getElementById('contenidoImprimible').innerHTML;
-    const ventana = window.open('', '', 'height=600,width=800');
+    // Clonamos el contenido original para manipularlo sin alterar el modal en pantalla
+    const $contenidoOriginal = $('#contenidoImprimible').clone();
 
-    ventana.document.write('<html><head><title>Imprimir Ficha de Producción</title>');
-    ventana.document.write('<link rel="stylesheet" href="css/sb-admin-2.min.css">');
-    ventana.document.write('</head><body class="p-4">');
-    ventana.document.write('<h2 class="mb-4 text-center">Ficha de Producción y Taller</h2>');
-    ventana.document.write(contenido);
-    ventana.document.write('</body></html>');
+    // Eliminamos las secciones dinámicas de entregas parciales y faltantes que se agregan por código
+    $contenidoOriginal.find('.seccion-entrega-dinamica').remove();
+
+    // Opcional: Si tienes botones o elementos interactivos dentro que no deben salir en el papel, los removemos
+    $contenidoOriginal.find('button').remove();
+
+    const contenidoLimpio = $contenidoOriginal.html();
+    const ventana = window.open('', '', 'height=700,width=900');
+
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Ficha de Producción #${~$('#viewIdFicha').text()}</title>
+                <!-- Bootstrap CSS para mantener la grilla y estilos base -->
+                <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+                <style>
+                    body {
+                        background-color: #fff !important;
+                        color: #333;
+                        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                        padding: 20px;
+                    }
+                    .card {
+                        border: 1px solid #ddd !important;
+                        box-shadow: none !important;
+                        margin-bottom: 20px;
+                    }
+                    .card-header {
+                        background-color: #f8f9fc !important;
+                        color: #4e73df !important;
+                        font-weight: bold;
+                        border-bottom: 1px solid #ddd;
+                    }
+                    table {
+                        width: 100% !important;
+                        margin-bottom: 1rem;
+                        color: #212529;
+                        border-collapse: collapse !important;
+                    }
+                    table th, table td {
+                        padding: 8px !important;
+                        vertical-align: middle !important;
+                        border: 1px solid #e3e6f0 !important;
+                        text-align: center;
+                    }
+                    table th {
+                        background-color: #f8f9fc !important;
+                        color: #5a5c69;
+                    }
+                    .text-left { text-align: left !important; }
+                    
+                    /* Estilo específico para encabezado de impresión */
+                    .print-header {
+                        border-bottom: 2px solid #4e73df;
+                        padding-bottom: 10px;
+                        margin-bottom: 20px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container-fluid">
+                    <div class="row print-header align-items-center">
+                        <div class="col-8">
+                            <h3 class="m-0 font-weight-bold text-primary">Ficha de Producción y Taller</h3>
+                            <small class="text-muted">Sistema de Gestión - Barsac OMS</small>
+                        </div>
+                        <div class="col-4 text-right">
+                            <span class="font-weight-bold">Fecha de impresión:</span> ${new Date().toLocaleDateString()}
+                        </div>
+                    </div>
+                    
+                    ${contenidoLimpio}
+                </div>
+            </body>
+        </html>
+    `);
 
     ventana.document.close();
     ventana.focus();
+
+    // Damos un pequeño respiro para que carguen los estilos de la CDN antes de llamar al diálogo de impresión
     setTimeout(() => {
         ventana.print();
         ventana.close();
-    }, 500);
+    }, 600);
 }
