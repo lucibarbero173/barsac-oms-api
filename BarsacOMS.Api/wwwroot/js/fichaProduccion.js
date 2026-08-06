@@ -612,6 +612,10 @@ async function guardarEntregaParcial() {
     }
 }
 
+function agregarFilaPrendaModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false) {
+    agregarFilaPrendaFijaModal(cantidades, producto, talle, numero, nombre, archivo, impresion, calandra, corte, entregado);
+}
+
 // Función de Impresión
 function imprimirFichaDesdeModal() {
     const contenido = document.getElementById('contenidoImprimible').innerHTML;
