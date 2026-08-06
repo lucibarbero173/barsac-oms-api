@@ -59,6 +59,17 @@ namespace BarsacOMS.Api.Services
             return true;
         }
 
+        public async Task<IEnumerable<OrdenTrabajo>> GetOrdenesSinFichaAsync()
+        {
+            var ordenesConFichaIds = await _context.FichasProduccion
+                .Select(f => f.OrdenId)
+                .ToListAsync();
+
+            return await _context.Ordenes
+                .Where(o => !ordenesConFichaIds.Contains(o.Id))
+                .ToListAsync();
+        }
+
         public async Task<bool> DeleteAsync(int id)
         {
             var ficha = await _context.FichasProduccion.FindAsync(id);

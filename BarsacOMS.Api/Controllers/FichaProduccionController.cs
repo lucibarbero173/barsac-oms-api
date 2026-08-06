@@ -55,6 +55,14 @@ namespace BarsacOMS.Api.Controllers
             return NoContent();
         }
 
+        // GET: api/FichaProduccion/sin-ficha
+        [HttpGet("sin-ficha")]
+        public async Task<IActionResult> GetOrdenesSinFicha()
+        {
+            var ordenes = await _fichaService.GetOrdenesSinFichaAsync();
+            return Ok(ordenes);
+        }
+
         // DELETE: api/FichaProduccion/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)

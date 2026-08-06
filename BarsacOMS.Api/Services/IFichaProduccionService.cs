@@ -10,5 +10,6 @@ namespace BarsacOMS.Api.Services
         Task<bool> UpdateAsync(FichaProduccion ficha);
         Task<bool> DeleteAsync(int id);
 
+        Task<List<OrdenTrabajo>> GetOrdenesSinFichaAsync();
     }
 }
