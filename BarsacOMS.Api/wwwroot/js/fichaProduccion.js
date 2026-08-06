@@ -682,16 +682,13 @@ async function guardarEntregaParcial() {
     }
 }
 
-// Función de Impresión con sección de faltantes para completar a mano y control de páginas
+// Función de Impresión con tabla extendida hasta el final y bordes oscuros
 function imprimirFichaDesdeModal() {
-    // Clonamos el contenido original para manipularlo sin alterar el modal en pantalla
     const $contenidoOriginal = $('#contenidoImprimible').clone();
 
-    // Eliminamos secciones dinámicas previas por si acaso
     $contenidoOriginal.find('.seccion-entrega-dinamica').remove();
     $contenidoOriginal.find('button').remove();
 
-    // Dejar la modista en blanco si dice "Sin asignar"
     const $spanModista = $contenidoOriginal.find('#viewModista');
     if ($spanModista.text().trim() === 'Sin asignar') {
         $spanModista.html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
@@ -699,11 +696,29 @@ function imprimirFichaDesdeModal() {
 
     const contenidoLimpio = $contenidoOriginal.html();
 
-    // Creamos la plantilla de la tablita vacía para anotaciones / faltantes a mano
+    // Generamos varias filas vacías para que la tabla se estire y complete toda la hoja
+    let filasVaciasHtml = '';
+    for (let i = 0; i < 12; i++) {
+        filasVaciasHtml += `
+            <tr>
+                <td style="height: 28px;">&nbsp;</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        `;
+    }
+
     const htmlSeccionFaltantesManual = `
         <div class="mt-4 seccion-faltantes-manual">
-            <h6 class="font-weight-bold text-secondary mb-2">Control de Faltantes / Notas de Taller (A completar a mano):</h6>
-            <table class="table table-bordered table-sm text-center">
+            <h6 class="font-weight-bold text-dark mb-2">Control de Faltantes / Notas de Taller (A completar a mano):</h6>
+            <table class="table table-bordered table-sm text-center tabla-impresion">
                 <thead>
                     <tr>
                         <th style="width: 8%;">Cant.</th>
@@ -719,43 +734,7 @@ function imprimirFichaDesdeModal() {
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Generamos 3 filas vacías para que puedan escribir cómodamente -->
-                    <tr>
-                        <td>&nbsp;</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
+                    ${filasVaciasHtml}
                 </tbody>
             </table>
         </div>
@@ -771,52 +750,48 @@ function imprimirFichaDesdeModal() {
                 <style>
                     body {
                         background-color: #fff !important;
-                        color: #333;
+                        color: #000;
                         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
                         padding: 20px;
                     }
                     .card {
-                        border: 1px solid #ddd !important;
+                        border: 1.5px solid #666 !important;
                         box-shadow: none !important;
                         margin-bottom: 20px;
                     }
                     .card-header {
-                        background-color: #f8f9fc !important;
-                        color: #4e73df !important;
+                        background-color: #f1f1f1 !important;
+                        color: #000 !important;
                         font-weight: bold;
-                        border-bottom: 1px solid #ddd;
+                        border-bottom: 1.5px solid #666;
                     }
-                    table {
-                        width: 100% !important;
-                        margin-bottom: 1rem;
-                        color: #212529;
-                        border-collapse: collapse !important;
+                    /* Bordes más oscuros y nítidos para todas las tablas */
+                    table, table th, table td {
+                        border: 1.5px solid #666 !important;
                     }
                     table th, table td {
-                        padding: 7px !important;
+                        padding: 6px !important;
                         vertical-align: middle !important;
-                        border: 1px solid #e3e6f0 !important;
                         text-align: center;
+                        color: #000;
                     }
                     table th {
-                        background-color: #f8f9fc !important;
-                        color: #5a5c69;
+                        background-color: #eaeaea !important;
+                        color: #000;
+                        font-weight: bold;
                     }
                     .text-left { text-align: left !important; }
                     
                     .print-header {
-                        border-bottom: 2px solid #4e73df;
+                        border-bottom: 2px solid #333;
                         padding-bottom: 10px;
                         margin-bottom: 20px;
                     }
 
-                    /* Control inteligente de páginas para impresión */
                     @media print {
                         .seccion-faltantes-manual {
-                            /* Si entra en la hoja abajo, se queda ahí. Si no, el navegador la pasa automáticamente a la hoja 2 */
                             break-inside: avoid;
                             page-break-inside: avoid;
-                            margin-top: 30px;
                         }
                     }
                 </style>
@@ -825,7 +800,7 @@ function imprimirFichaDesdeModal() {
                 <div class="container-fluid">
                     <div class="row print-header align-items-center">
                         <div class="col-8">
-                            <h3 class="m-0 font-weight-bold text-primary">Ficha de Producción y Taller</h3>
+                            <h3 class="m-0 font-weight-bold text-dark">Ficha de Producción y Taller</h3>
                             <small class="text-muted">Sistema de Gestión - Barsac OMS</small>
                         </div>
                         <div class="col-4 text-right">
