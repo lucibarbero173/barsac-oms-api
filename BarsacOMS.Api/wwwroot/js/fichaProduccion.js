@@ -135,8 +135,8 @@ async function cargarTablaFichas() {
             `;
 
             table.row.add([
-                `#${ficha.id}`,
-                `#${ficha.ordenId}`,
+                `${ficha.id}`,
+                `${ficha.ordenId}`,
                 clienteNombre,
                 ficha.modista || 'Sin asignar',
                 fechaPedido,
