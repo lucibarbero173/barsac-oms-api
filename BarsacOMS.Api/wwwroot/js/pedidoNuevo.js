@@ -57,19 +57,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
-// Cargar lista de clientes
+// Cargar lista de clientes ordenada alfabéticamente y con su número al lado
 async function cargarClientesSelect() {
     try {
         const res = await fetch("https://barsac-oms-api-production.up.railway.app/api/cliente");
         if (!res.ok) return;
         const clientes = await res.json();
 
+        // 1. Ordenar alfabéticamente por el nombre del cliente
+        clientes.sort((a, b) => {
+            const nombreA = (a.nombre || "").toLowerCase();
+            const nombreB = (b.nombre || "").toLowerCase();
+            return nombreA.localeCompare(nombreB);
+        });
+
         const select = document.getElementById("clienteSelect");
         if (!select) return;
 
         select.innerHTML = '<option value="">Seleccione Cliente</option>';
+
+        // 2. Agregar cada cliente mostrando su número al lado
         clientes.forEach(c => {
-            select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+            select.innerHTML += `<option value="${c.id}">#${c.id} - ${c.nombre}</option>`;
         });
     } catch (e) {
         console.error("Error al cargar clientes:", e);
