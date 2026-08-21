@@ -235,10 +235,10 @@ async function recalcularTodosLosPrecios() {
     calcularTotales();
 }
 
-// Calcular Totales (Incluyendo la suma del nuevo input Total de Prendas)[cite: 3]
+// Calcular Totales (Incluyendo la suma del nuevo input Total de Prendas)
 function calcularTotales() {
     let totalGeneral = 0;
-    let cantidadTotalPrendas = 0; // Acumulador para el total de prendas[cite: 3]
+    let cantidadTotalPrendas = 0; // Acumulador para el total de prendas
 
     document.querySelectorAll("#detalleBody tr").forEach(fila => {
         const cant = Number(fila.querySelector(".cantidad")?.value || 0);
@@ -250,14 +250,14 @@ function calcularTotales() {
         }
 
         totalGeneral += totalFila;
-        cantidadTotalPrendas += cant; // Sumamos la cantidad de esta fila[cite: 3]
+        cantidadTotalPrendas += cant; // Sumamos la cantidad de esta fila
     });
 
     const senas = Number(document.getElementById("senas")?.value || 0);
     const otrosCobros = Number(document.getElementById("otrosCobros")?.value || 0);
     const saldo = totalGeneral - senas - otrosCobros;
 
-    // Asignar valores a los inputs correspondientes[cite: 3]
+    // Asignar valores a los inputs correspondientes
     if (document.getElementById("totalPrendas")) document.getElementById("totalPrendas").value = cantidadTotalPrendas;
     if (document.getElementById("importeTotal")) document.getElementById("importeTotal").value = totalGeneral;
     if (document.getElementById("totalGeneral")) document.getElementById("totalGeneral").value = totalGeneral;
@@ -346,7 +346,7 @@ async function guardarPedido() {
                     productoId: prodId,
                     talle: fila.querySelector(".talle").value,
                     cantidad: Number(fila.querySelector(".cantidad").value),
-                    precioUnitario: Number(fila.querySelector(".precio").value) // Corregido a precioUnitario[cite: 3]
+                    precioUnitario: Number(fila.querySelector(".precio").value)
                 });
             }
         });
@@ -359,7 +359,6 @@ async function guardarPedido() {
 
         const estadoVal = Number(document.getElementById("estadoSelect")?.value || 0);
 
-        // Si es 0 o vacío, se envía null
         const senasInput = document.getElementById("senas")?.value;
         const senasVal = (senasInput && Number(senasInput) > 0) ? Number(senasInput) : null;
 
