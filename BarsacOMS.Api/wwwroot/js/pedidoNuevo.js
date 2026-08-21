@@ -177,6 +177,7 @@ function agregarFila() {
     `);
 
     actualizarEstadoLecturaPrecios();
+    calcularTotales();
 }
 
 function eliminarFila(btn) {
@@ -237,8 +238,11 @@ async function recalcularTodosLosPrecios() {
 // Calcular Totales
 function calcularTotales() {
     let totalGeneral = 0;
+    let totalPrendas = 0;
+    const filas = document.querySelectorAll("#detalleBody tr");
+    let cantidadFilas = filas.length;
 
-    document.querySelectorAll("#detalleBody tr").forEach(fila => {
+    filas.forEach(fila => {
         const cant = Number(fila.querySelector(".cantidad")?.value || 0);
         const precio = Number(fila.querySelector(".precio")?.value || 0);
         const totalFila = cant * precio;
@@ -248,12 +252,15 @@ function calcularTotales() {
         }
 
         totalGeneral += totalFila;
+        totalPrendas += cant;
     });
 
     const senas = Number(document.getElementById("senas")?.value || 0);
     const otrosCobros = Number(document.getElementById("otrosCobros")?.value || 0);
     const saldo = totalGeneral - senas - otrosCobros;
 
+    if (document.getElementById("totalPrendas")) document.getElementById("totalPrendas").value = totalPrendas;
+    if (document.getElementById("totalFilas")) document.getElementById("totalFilas").value = cantidadFilas;
     if (document.getElementById("importeTotal")) document.getElementById("importeTotal").value = totalGeneral;
     if (document.getElementById("totalGeneral")) document.getElementById("totalGeneral").value = totalGeneral;
     if (document.getElementById("saldo")) document.getElementById("saldo").value = saldo;
