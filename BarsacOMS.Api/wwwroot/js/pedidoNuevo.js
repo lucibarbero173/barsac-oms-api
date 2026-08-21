@@ -177,6 +177,7 @@ function agregarFila() {
     `);
 
     actualizarEstadoLecturaPrecios();
+    calcularTotales(); // Para que actualice el contador al agregar
 }
 
 function eliminarFila(btn) {
@@ -234,9 +235,10 @@ async function recalcularTodosLosPrecios() {
     calcularTotales();
 }
 
-// Calcular Totales
+// Calcular Totales (Incluyendo la suma del nuevo input Total de Prendas)[cite: 3]
 function calcularTotales() {
     let totalGeneral = 0;
+    let cantidadTotalPrendas = 0; // Acumulador para el total de prendas[cite: 3]
 
     document.querySelectorAll("#detalleBody tr").forEach(fila => {
         const cant = Number(fila.querySelector(".cantidad")?.value || 0);
@@ -248,12 +250,15 @@ function calcularTotales() {
         }
 
         totalGeneral += totalFila;
+        cantidadTotalPrendas += cant; // Sumamos la cantidad de esta fila[cite: 3]
     });
 
     const senas = Number(document.getElementById("senas")?.value || 0);
     const otrosCobros = Number(document.getElementById("otrosCobros")?.value || 0);
     const saldo = totalGeneral - senas - otrosCobros;
 
+    // Asignar valores a los inputs correspondientes[cite: 3]
+    if (document.getElementById("totalPrendas")) document.getElementById("totalPrendas").value = cantidadTotalPrendas;
     if (document.getElementById("importeTotal")) document.getElementById("importeTotal").value = totalGeneral;
     if (document.getElementById("totalGeneral")) document.getElementById("totalGeneral").value = totalGeneral;
     if (document.getElementById("saldo")) document.getElementById("saldo").value = saldo;
@@ -341,7 +346,7 @@ async function guardarPedido() {
                     productoId: prodId,
                     talle: fila.querySelector(".talle").value,
                     cantidad: Number(fila.querySelector(".cantidad").value),
-                    precio: Number(fila.querySelector(".precio").value)
+                    precioUnitario: Number(fila.querySelector(".precio").value) // Corregido a precioUnitario[cite: 3]
                 });
             }
         });
