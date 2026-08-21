@@ -20,6 +20,11 @@ $(document).ready(function () {
         const ordenId = parseInt($(this).val());
         cargarDatosOrdenSeleccionada(ordenId);
     });
+
+    // Event listener global para recalcular el total de prendas al modificar cantidades
+    $(document).on('input', '.input-cantidades', function () {
+        actualizarTotalPrendasFicha();
+    });
 });
 
 async function cargarOrdenesParaSelect(fichaActualIdEnEdicion = null) {
@@ -33,14 +38,12 @@ async function cargarOrdenesParaSelect(fichaActualIdEnEdicion = null) {
         $select.html('<option value="">-- Seleccionar --</option>');
 
         ordenesDisponibles.forEach(orden => {
-            // Simplemente agregamos cada orden limpia que viene del servidor
             $select.append(`<option value="${orden.id}">Pedido #${orden.id} - ${orden.nombreCliente || 'Sin Cliente'}</option>`);
         });
     } catch (error) {
         console.error('Error al cargar órdenes disponibles:', error);
     }
 }
-
 
 // Cargar automáticamente los datos de la orden consultando el detalle individual por ID
 async function cargarDatosOrdenSeleccionada(ordenId) {
@@ -54,6 +57,7 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
         $('#inputCliente').val('');
         $('#inputFechaPedido').val('');
         $('#inputFechaEntrega').val('');
+        actualizarTotalPrendasFicha();
         cargandoOrden = false;
         return;
     }
@@ -82,6 +86,8 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
                 agregarFilaPrendaDesgloseModal(cantidadOrden, nombreProducto, talleOrden, null, '');
             });
         }
+
+        actualizarTotalPrendasFicha();
     } catch (error) {
         console.error("Error al cargar la orden detallada:", error);
     } finally {
@@ -94,6 +100,16 @@ function cargarDatosPedidoSeleccionado(val) {
     if (val) {
         cargarDatosOrdenSeleccionada(parseInt(val));
     }
+}
+
+// Función para calcular y actualizar el contador total de prendas en la ficha
+function actualizarTotalPrendasFicha() {
+    let total = 0;
+    $('#modalDetalleBody tr').each(function () {
+        const cant = parseInt($(this).find('.input-cantidades').val()) || 0;
+        total += cant;
+    });
+    $('#totalPrendasFicha').text(total);
 }
 
 // Cargar la tabla principal desde la API
@@ -160,6 +176,7 @@ function abrirModalGenerarFicha() {
     $('#modalDetalleBody').empty();
 
     $('#selectPedido').prop('disabled', false);
+    actualizarTotalPrendasFicha();
     $('#modalFichaProduccion').modal('show');
 }
 
@@ -234,6 +251,7 @@ function agregarFilaPrendaDesgloseModal(cantidades = 1, producto = '', talle = '
     if (producto) {
         $(`#fila-${filaId} .input-producto`).val(producto);
     }
+    actualizarTotalPrendasFicha();
 }
 
 // Alias para mantener compatibilidad con el botón "Agregar Prenda" del HTML
@@ -244,6 +262,7 @@ function agregarFilaPrendaModal(cantidades = 1, producto = '', talle = '', numer
 // Eliminar fila de la tabla
 function eliminarFilaPrenda(filaId) {
     $(`#fila-${filaId}`).remove();
+    actualizarTotalPrendasFicha();
 }
 
 // Guardar con validación estricta de topes por producto según la orden
@@ -352,7 +371,6 @@ async function guardarFicha() {
 }
 
 // Abrir Modal de Edición
-// Abrir Modal de Edición
 async function editarFicha(idFicha) {
     const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
@@ -360,21 +378,19 @@ async function editarFicha(idFicha) {
     $('#fichaId').val(ficha.id);
     $('#modalFichaTitulo').text(`Editar Ficha de Producción #${ficha.id}`);
 
-    // Si la orden no está en ordenesDisponibles (porque ya tiene ficha), la consultamos para tener sus detalles
     let ordenAsociada = ordenesDisponibles.find(o => o.id === ficha.ordenId);
     if (!ordenAsociada && ficha.ordenId) {
         try {
             const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/Orden/${ficha.ordenId}`);
             if (response.ok) {
                 ordenAsociada = await response.json();
-                ordenesDisponibles.push(ordenAsociada); // La agregamos temporalmente para que funcione el validador y los selects
+                ordenesDisponibles.push(ordenAsociada);
             }
         } catch (e) {
             console.error("No se pudo cargar la orden para edición", e);
         }
     }
 
-    // Aseguramos que el select del pedido tenga la opción y esté bloqueado
     const $select = $('#selectPedido');
     $select.html(`<option value="${ficha.ordenId}">Pedido #${ficha.ordenId} - ${ficha.orden ? ficha.orden.nombreCliente : ''}</option>`);
     $select.val(ficha.ordenId).prop('disabled', true);
@@ -392,6 +408,7 @@ async function editarFicha(idFicha) {
         agregarFilaPrendaDesgloseModal(p.cantidades, p.producto, p.talle, p.numero, p.nombre, p.archivo, p.impresion, p.calandra, p.corte, p.entregado);
     });
 
+    actualizarTotalPrendasFicha();
     $('#modalFichaProduccion').modal('show');
 }
 
@@ -717,7 +734,6 @@ function imprimirFichaDesdeModal() {
 
     const contenidoLimpio = $contenidoOriginal.html();
 
-    // Generamos varias filas vacías para que la tabla se estire y complete toda la hoja
     let filasVaciasHtml = '';
     for (let i = 0; i < 12; i++) {
         filasVaciasHtml += `
@@ -786,7 +802,6 @@ function imprimirFichaDesdeModal() {
                         font-weight: bold;
                         border-bottom: 1.5px solid #666;
                     }
-                    /* Bordes más oscuros y nítidos para todas las tablas */
                     table, table th, table td {
                         border: 1.5px solid #666 !important;
                     }
