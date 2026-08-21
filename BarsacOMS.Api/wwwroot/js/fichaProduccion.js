@@ -124,14 +124,33 @@ async function cargarTablaFichas() {
 
         fichasProduccion.forEach(ficha => {
             const items = ficha.items || [];
-            const totalPrendas = items.length;
-            const entregadas = items.filter(p => p.entregado).length;
+            const entregasParciales = ficha.entregasParciales || [];
 
+            let totalPrendasFicha = 0;
+            let totalEntregadasFicha = 0;
+
+            items.forEach(item => {
+                const cantItem = item.cantidades || 1;
+                totalPrendasFicha += cantItem;
+
+                const entregadoEsteItem = entregasParciales
+                    .filter(e => e.producto === item.producto && String(e.talle || '') === String(item.talle || ''))
+                    .reduce((sum, e) => sum + e.cantidades, 0);
+
+                if (item.entregado) {
+                    totalEntregadasFicha += cantItem;
+                } else {
+                    totalEntregadasFicha += Math.min(entregadoEsteItem, cantItem);
+                }
+            });
+
+            // Lógica exacta de estados
             let badgeEstado = '<span class="badge badge-secondary">Pendiente</span>';
-            if (totalPrendas > 0 && entregadas === totalPrendas) {
-                badgeEstado = '<span class="badge badge-success">Completado</span>';
-            } else if (entregadas > 0) {
-                badgeEstado = `<span class="badge badge-warning">En Proceso (${entregadas}/${totalPrendas})</span>`;
+
+            if (totalPrendasFicha > 0 && totalEntregadasFicha >= totalPrendasFicha) {
+                badgeEstado = '<span class="badge badge-success">Completado</span>'; // O Entregado
+            } else if (totalEntregadasFicha > 0 && totalEntregadasFicha < totalPrendasFicha) {
+                badgeEstado = '<span class="badge badge-warning">Entrega Parcial</span>';
             }
 
             const clienteNombre = ficha.orden ? ficha.orden.nombreCliente : '-';
