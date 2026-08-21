@@ -678,13 +678,13 @@ async function guardarEntregaParcial() {
 
             if (cantidadIngresada > 0) {
                 const ficha = fichasProduccion.find(f => f.id === fichaActualEntregaId);
-                const itemOriginal = ficha.items.find(i => i.producto === producto && (i.talle || '') === String(talle));
+                const itemOriginal = ficha.items.find(i => i.producto === producto && String(i.talle || '') === String(talle || ''));
 
                 entregasNuevas.push({
                     fichaProduccionId: fichaActualEntregaId,
                     producto: producto,
                     cantidades: cantidadIngresada,
-                    talle: talle || '',
+                    talle: talle !== null && talle !== undefined ? String(talle) : '', // <--- AQUÍ ESTÁ LA SOLUCIÓN (Forzamos string)
                     numero: itemOriginal ? itemOriginal.numero : null,
                     nombre: itemOriginal ? itemOriginal.nombre : null,
                     estadoItem: "Entregada"
@@ -719,7 +719,6 @@ async function guardarEntregaParcial() {
         alert('Ocurrió un error al guardar la entrega.');
     }
 }
-
 // Función de Impresión con tabla extendida hasta el final y bordes oscuros
 function imprimirFichaDesdeModal() {
     const $contenidoOriginal = $('#contenidoImprimible').clone();
