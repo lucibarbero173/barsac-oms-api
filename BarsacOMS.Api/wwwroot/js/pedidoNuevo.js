@@ -394,24 +394,39 @@ async function cargarOrdenParaEditar(id) {
 }
 
 // Guardar Pedido (POST / PUT) de forma robusta
+// Guardar Pedido (POST / PUT) de forma robusta
 async function guardarPedido() {
     try {
         const detalles = [];
+        let errorValidacion = false;
 
         document.querySelectorAll("#detalleBody tr").forEach(fila => {
-            const prodId = Number(fila.querySelector(".producto").value);
-            const cantidad = Number(fila.querySelector(".cantidad").value);
-            const precioUnitario = Number(fila.querySelector(".precio").value);
+            const prodSelect = fila.querySelector(".producto");
+            const cantInput = fila.querySelector(".cantidad");
+            const precioInput = fila.querySelector(".precio");
+            const talleSelect = fila.querySelector(".talle");
 
-            if (prodId) {
+            const prodId = Number(prodSelect ? prodSelect.value : 0);
+            const cantidad = Number(cantInput ? cantInput.value : 0);
+            const precioUnitario = Number(precioInput ? precioInput.value : 0);
+            const talle = talleSelect ? talleSelect.value : "ADULTO";
+
+            if (prodId > 0 && cantidad > 0) {
                 detalles.push({
                     productoId: prodId,
-                    talle: fila.querySelector(".talle").value,
+                    talle: talle,
                     cantidad: cantidad,
-                    precioUnitario: precioUnitario
+                    precioUnitario: precioUnitario // <-- Aquí viaja el precio real ya cargado
                 });
+            } else {
+                errorValidacion = true;
             }
         });
+
+        if (detalles.length === 0 || errorValidacion) {
+            alert("Por favor complete correctamente los productos y cantidades en el detalle.");
+            return;
+        }
 
         const clienteVal = document.getElementById("clienteSelect")?.value;
         if (!clienteVal) {
@@ -437,6 +452,8 @@ async function guardarPedido() {
             otrosCobros: otrosCobrosVal,
             detalles: detalles
         };
+
+        console.log("JSON enviado al backend:", JSON.stringify(pedido)); // Para depurar en consola si hace falta
 
         const url = idOrdenEdicion
             ? `https://barsac-oms-api-production.up.railway.app/api/orden/${idOrdenEdicion}`
