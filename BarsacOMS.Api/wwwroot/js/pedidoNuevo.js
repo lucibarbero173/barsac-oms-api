@@ -142,7 +142,7 @@ async function cargarProductosGlobal() {
 }
 
 // Agregar fila a la tabla
-function agregarFila() {
+async function agregarFila() {
     let opciones = '<option value="">Seleccione Producto</option>';
 
     productosGlobal.forEach(p => {
@@ -184,13 +184,13 @@ function agregarFila() {
 
     actualizarEstadoLecturaPrecios();
 
-    // Autoseleccionar el primer producto y buscar su precio automáticamente al crear nueva fila
+    // Autoseleccionar el primer producto y ESPERAR a que la API traiga el precio antes de calcular totales
     const filas = tbody.querySelectorAll("tr");
     const ultimaFila = filas[filas.length - 1];
     const selectProd = ultimaFila.querySelector(".producto");
     if (selectProd && selectProd.options.length > 1) {
         selectProd.selectedIndex = 1;
-        actualizarPrecio(selectProd);
+        await actualizarPrecio(selectProd);
     } else {
         calcularTotales();
     }
@@ -235,7 +235,7 @@ async function actualizarPrecio(element) {
         console.error("Error al obtener precio:", e);
     }
 
-    calcularTotales();
+    calcularTotales(); // <-- Se ejecuta estrictamente después de obtener el precio
 }
 
 // Recalcular todos los precios si cambia la Forma de Pago
@@ -328,6 +328,7 @@ async function cargarOrdenParaEditar(id) {
                 opciones += `<option value="${p.id}">${p.nombre}</option>`;
             });
 
+            // 1. Insertar filas con sus datos base
             for (const d of orden.detalles) {
                 tbody.insertAdjacentHTML("beforeend", `
                     <tr>
@@ -346,10 +347,10 @@ async function cargarOrdenParaEditar(id) {
                             </select>
                         </td>
                         <td>
-                            <input type="number" class="form-control precio" value="${d.precioUnitario}" oninput="calcularTotales()">
+                            <input type="number" class="form-control precio" value="${d.precioUnitario || 0}" oninput="calcularTotales()">
                         </td>
                         <td>
-                            <input type="number" class="form-control total" value="${d.cantidad * d.precioUnitario}" readonly>
+                            <input type="number" class="form-control total" value="0" readonly>
                         </td>
                         <td class="text-center">
                             <button class="btn btn-danger btn-sm" onclick="eliminarFila(this)">
@@ -363,14 +364,21 @@ async function cargarOrdenParaEditar(id) {
                 const ultimaFila = filas[filas.length - 1];
                 ultimaFila.querySelector(".producto").value = d.productoId;
                 ultimaFila.querySelector(".talle").value = d.talle;
+            }
 
-                // Si el precio unitario viene en 0 de la BD o por las listas, forzamos la actualización consultando a la API
-                if (!d.precioUnitario || d.precioUnitario === 0) {
-                    cargandoEdicion = false; // Desactivamos temporalmente para permitir buscar el precio
-                    await actualizarPrecio(ultimaFila.querySelector(".producto"));
-                    cargandoEdicion = true; // Volvemos a bloquear
+            // 2. Apagar candado y ESPERAR a que la API traiga los precios reales de cada ítem
+            cargandoEdicion = false;
+
+            const filasCreadas = tbody.querySelectorAll("tr");
+            for (const fila of filasCreadas) {
+                const prodSelect = fila.querySelector(".producto");
+                if (prodSelect && prodSelect.value) {
+                    await actualizarPrecio(prodSelect); // Espera la respuesta antes de pasar al siguiente
                 }
             }
+
+            cargandoEdicion = true; // Volver a bloquear edición masiva accidental
+
         } else {
             agregarFila();
         }
@@ -381,7 +389,7 @@ async function cargarOrdenParaEditar(id) {
         console.error(error);
         alert("Error de conexión al cargar la orden");
     } finally {
-        cargandoEdicion = false; // Desactivamos el candado una vez que finalizó la carga completa
+        cargandoEdicion = false; // Desactivar candado general
     }
 }
 
