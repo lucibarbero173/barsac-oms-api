@@ -196,7 +196,8 @@ namespace BarsacOMS.Api.Services
                     var producto = await _context.Productos.FindAsync(d.ProductoId)
                         ?? throw new InvalidOperationException($"El producto {d.ProductoId} no existe.");
 
-                    var precioUnitario = d.Precio;
+                    // 🛠️ CORRECCIÓN AQUÍ: leer d.PrecioUnitario en lugar de d.Precio
+                    var precioUnitario = d.PrecioUnitario;
                     var total = precioUnitario * d.Cantidad;
 
                     orden.Detalles.Add(new DetallePedido
