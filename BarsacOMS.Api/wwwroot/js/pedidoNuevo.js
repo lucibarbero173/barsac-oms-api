@@ -264,7 +264,7 @@ function calcularTotales() {
     if (document.getElementById("saldo")) document.getElementById("saldo").value = saldo;
 }
 
-// Cargar orden para editar
+// Cargar orden para editar (Corregido para no pisar los precios con 0)
 async function cargarOrdenParaEditar(id) {
     try {
         const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/orden/${id}`);
@@ -276,7 +276,7 @@ async function cargarOrdenParaEditar(id) {
 
         const orden = await response.json();
 
-        // 1. Cargar cliente y sus datos
+        // 1. Cargar cliente y sus datos (Sin disparar eventos que recalculen precios todavía)
         if (orden.clienteId) {
             const clienteSelect = document.getElementById("clienteSelect");
             if (clienteSelect) {
@@ -307,20 +307,53 @@ async function cargarOrdenParaEditar(id) {
         if (document.getElementById("senas")) document.getElementById("senas").value = orden.senas || "";
         if (document.getElementById("otrosCobros")) document.getElementById("otrosCobros").value = orden.otrosCobros || "";
 
-        // 6. Detalle de Filas
+        // 6. Detalle de Filas (Construcción limpia sin disparar fetches cruzados)
         const tbody = document.getElementById("detalleBody");
         tbody.innerHTML = "";
 
         if (orden.detalles && orden.detalles.length > 0) {
+            let opciones = '<option value="">Seleccione Producto</option>';
+            productosGlobal.forEach(p => {
+                opciones += `<option value="${p.id}">${p.nombre}</option>`;
+            });
+
             orden.detalles.forEach(d => {
-                agregarFila();
+                // Insertamos la fila directamente con los valores ya cargados para evitar que los 'onchange' disparen peticiones vacías
+                tbody.insertAdjacentHTML("beforeend", `
+                    <tr>
+                        <td>
+                            <input type="number" class="form-control cantidad" value="${d.cantidad}" min="1" onchange="calcularTotales()">
+                        </td>
+                        <td>
+                            <select class="form-control producto" onchange="actualizarPrecio(this)">
+                                ${opciones}
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-control talle" onchange="actualizarPrecio(this)">
+                                <option value="ADULTO">Adulto</option>
+                                <option value="NIÑO">Niño</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control precio" value="${d.precioUnitario}" oninput="calcularTotales()">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control total" value="${d.cantidad * d.precioUnitario}" readonly>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-danger btn-sm" onclick="eliminarFila(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `);
+
+                // Seleccionamos los valores correctos en los selects de la última fila insertada
                 const filas = tbody.querySelectorAll("tr");
                 const ultimaFila = filas[filas.length - 1];
-
-                ultimaFila.querySelector(".cantidad").value = d.cantidad;
                 ultimaFila.querySelector(".producto").value = d.productoId;
                 ultimaFila.querySelector(".talle").value = d.talle;
-                ultimaFila.querySelector(".precio").value = d.precioUnitario;
             });
         } else {
             agregarFila();
