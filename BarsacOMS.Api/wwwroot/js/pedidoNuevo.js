@@ -183,7 +183,17 @@ function agregarFila() {
     `);
 
     actualizarEstadoLecturaPrecios();
-    calcularTotales();
+
+    // Autoseleccionar el primer producto y buscar su precio automáticamente al crear nueva fila
+    const filas = tbody.querySelectorAll("tr");
+    const ultimaFila = filas[filas.length - 1];
+    const selectProd = ultimaFila.querySelector(".producto");
+    if (selectProd && selectProd.options.length > 1) {
+        selectProd.selectedIndex = 1;
+        actualizarPrecio(selectProd);
+    } else {
+        calcularTotales();
+    }
 }
 
 function eliminarFila(btn) {
@@ -318,7 +328,7 @@ async function cargarOrdenParaEditar(id) {
                 opciones += `<option value="${p.id}">${p.nombre}</option>`;
             });
 
-            orden.detalles.forEach(d => {
+            for (const d of orden.detalles) {
                 tbody.insertAdjacentHTML("beforeend", `
                     <tr>
                         <td>
@@ -353,7 +363,14 @@ async function cargarOrdenParaEditar(id) {
                 const ultimaFila = filas[filas.length - 1];
                 ultimaFila.querySelector(".producto").value = d.productoId;
                 ultimaFila.querySelector(".talle").value = d.talle;
-            });
+
+                // Si el precio unitario viene en 0 de la BD o por las listas, forzamos la actualización consultando a la API
+                if (!d.precioUnitario || d.precioUnitario === 0) {
+                    cargandoEdicion = false; // Desactivamos temporalmente para permitir buscar el precio
+                    await actualizarPrecio(ultimaFila.querySelector(".producto"));
+                    cargandoEdicion = true; // Volvemos a bloquear
+                }
+            }
         } else {
             agregarFila();
         }
