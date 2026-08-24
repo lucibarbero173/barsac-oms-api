@@ -1,5 +1,6 @@
 ﻿let productosGlobal = [];
 let idOrdenEdicion = null;
+let cargandoEdicion = false; // Candado para evitar recálculos automáticos indebidos
 
 // ==========================================
 // FUNCIÓN MAPEADORA DE FORMA DE PAGO (Ámbito Global)
@@ -118,6 +119,11 @@ async function cargarDatosCliente() {
         // Actualizamos los campos de precio de todas las filas creadas
         actualizarEstadoLecturaPrecios();
 
+        // Si cambiamos de cliente y no estamos cargando una edición, recalculamos precios de los ítems existentes
+        if (!cargandoEdicion) {
+            await recalcularTodosLosPrecios();
+        }
+
     } catch (e) {
         console.error("Error al cargar datos del cliente:", e);
     }
@@ -177,7 +183,7 @@ function agregarFila() {
     `);
 
     actualizarEstadoLecturaPrecios();
-    calcularTotales(); // Para que actualice el contador al agregar
+    calcularTotales();
 }
 
 function eliminarFila(btn) {
@@ -187,6 +193,8 @@ function eliminarFila(btn) {
 
 // Actualizar el precio dinámicamente al cambiar Producto, Talle o Forma de Pago
 async function actualizarPrecio(element) {
+    if (cargandoEdicion) return; // Si estamos cargando datos iniciales, ignoramos eventos sueltos
+
     const fila = element.closest("tr");
     const productoId = fila.querySelector(".producto").value;
     const talle = fila.querySelector(".talle").value;
@@ -198,10 +206,7 @@ async function actualizarPrecio(element) {
         return;
     }
 
-    // Obtenemos la opción del combo de forma de pago
     const formaPagoSeleccionada = document.getElementById("formaPago")?.value || "efectivo";
-
-    // Mapeamos a 'EFECTIVO' o 'TRANSFERENCIA'
     const tipoPagoBackend = mapearTipoPagoAClave(formaPagoSeleccionada);
 
     if (!productoId) {
@@ -225,6 +230,8 @@ async function actualizarPrecio(element) {
 
 // Recalcular todos los precios si cambia la Forma de Pago
 async function recalcularTodosLosPrecios() {
+    if (cargandoEdicion) return;
+
     const filas = document.querySelectorAll("#detalleBody tr");
     for (const fila of filas) {
         const prodSelect = fila.querySelector(".producto");
@@ -235,10 +242,10 @@ async function recalcularTodosLosPrecios() {
     calcularTotales();
 }
 
-// Calcular Totales (Incluyendo la suma del nuevo input Total de Prendas)
+// Calcular Totales
 function calcularTotales() {
     let totalGeneral = 0;
-    let cantidadTotalPrendas = 0; // Acumulador para el total de prendas
+    let cantidadTotalPrendas = 0;
 
     document.querySelectorAll("#detalleBody tr").forEach(fila => {
         const cant = Number(fila.querySelector(".cantidad")?.value || 0);
@@ -250,22 +257,22 @@ function calcularTotales() {
         }
 
         totalGeneral += totalFila;
-        cantidadTotalPrendas += cant; // Sumamos la cantidad de esta fila
+        cantidadTotalPrendas += cant;
     });
 
     const senas = Number(document.getElementById("senas")?.value || 0);
     const otrosCobros = Number(document.getElementById("otrosCobros")?.value || 0);
     const saldo = totalGeneral - senas - otrosCobros;
 
-    // Asignar valores a los inputs correspondientes
     if (document.getElementById("totalPrendas")) document.getElementById("totalPrendas").value = cantidadTotalPrendas;
     if (document.getElementById("importeTotal")) document.getElementById("importeTotal").value = totalGeneral;
     if (document.getElementById("totalGeneral")) document.getElementById("totalGeneral").value = totalGeneral;
     if (document.getElementById("saldo")) document.getElementById("saldo").value = saldo;
 }
 
-// Cargar orden para editar (Corregido para no pisar los precios con 0)
+// Cargar orden para editar de forma segura
 async function cargarOrdenParaEditar(id) {
+    cargandoEdicion = true; // Activamos el candado de carga
     try {
         const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/orden/${id}`);
         if (!response.ok) {
@@ -276,7 +283,6 @@ async function cargarOrdenParaEditar(id) {
 
         const orden = await response.json();
 
-        // 1. Cargar cliente y sus datos (Sin disparar eventos que recalculen precios todavía)
         if (orden.clienteId) {
             const clienteSelect = document.getElementById("clienteSelect");
             if (clienteSelect) {
@@ -285,12 +291,10 @@ async function cargarOrdenParaEditar(id) {
             await cargarDatosCliente();
         }
 
-        // 2. Forma de Pago
         if (orden.formaPago && document.getElementById("formaPago")) {
             document.getElementById("formaPago").value = orden.formaPago;
         }
 
-        // 3. Fechas
         if (orden.fechaPedido && document.getElementById("fechaPedido")) {
             document.getElementById("fechaPedido").value = orden.fechaPedido.split("T")[0];
         }
@@ -298,16 +302,13 @@ async function cargarOrdenParaEditar(id) {
             document.getElementById("fechaEntrega").value = orden.fechaEntrega.split("T")[0];
         }
 
-        // 4. Estado
         if (orden.estado !== undefined && document.getElementById("estadoSelect")) {
             document.getElementById("estadoSelect").value = orden.estado;
         }
 
-        // 5. Montos
         if (document.getElementById("senas")) document.getElementById("senas").value = orden.senas || "";
         if (document.getElementById("otrosCobros")) document.getElementById("otrosCobros").value = orden.otrosCobros || "";
 
-        // 6. Detalle de Filas (Construcción limpia sin disparar fetches cruzados)
         const tbody = document.getElementById("detalleBody");
         tbody.innerHTML = "";
 
@@ -318,7 +319,6 @@ async function cargarOrdenParaEditar(id) {
             });
 
             orden.detalles.forEach(d => {
-                // Insertamos la fila directamente con los valores ya cargados para evitar que los 'onchange' disparen peticiones vacías
                 tbody.insertAdjacentHTML("beforeend", `
                     <tr>
                         <td>
@@ -349,7 +349,6 @@ async function cargarOrdenParaEditar(id) {
                     </tr>
                 `);
 
-                // Seleccionamos los valores correctos en los selects de la última fila insertada
                 const filas = tbody.querySelectorAll("tr");
                 const ultimaFila = filas[filas.length - 1];
                 ultimaFila.querySelector(".producto").value = d.productoId;
@@ -364,22 +363,27 @@ async function cargarOrdenParaEditar(id) {
     } catch (error) {
         console.error(error);
         alert("Error de conexión al cargar la orden");
+    } finally {
+        cargandoEdicion = false; // Desactivamos el candado una vez que finalizó la carga completa
     }
 }
 
-// Guardar Pedido (POST / PUT)
+// Guardar Pedido (POST / PUT) de forma robusta
 async function guardarPedido() {
     try {
         const detalles = [];
 
         document.querySelectorAll("#detalleBody tr").forEach(fila => {
             const prodId = Number(fila.querySelector(".producto").value);
+            const cantidad = Number(fila.querySelector(".cantidad").value);
+            const precioUnitario = Number(fila.querySelector(".precio").value);
+
             if (prodId) {
                 detalles.push({
                     productoId: prodId,
                     talle: fila.querySelector(".talle").value,
-                    cantidad: Number(fila.querySelector(".cantidad").value),
-                    precioUnitario: Number(fila.querySelector(".precio").value)
+                    cantidad: cantidad,
+                    precioUnitario: precioUnitario
                 });
             }
         });

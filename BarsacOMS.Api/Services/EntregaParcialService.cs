@@ -30,14 +30,12 @@ namespace BarsacOMS.Api.Services
 
             if (ficha == null) return false;
 
-            // 1. Acumular o registrar las nuevas cantidades entregadas
+            // 1. Acumular o registrar las nuevas cantidades entregadas (agrupando por Producto y Talle)
             foreach (var nueva in nuevasEntregas)
             {
                 var existente = ficha.EntregasParciales.FirstOrDefault(e =>
                     e.Producto == nueva.Producto &&
-                    e.Talle == nueva.Talle &&
-                    e.Numero == nueva.Numero &&
-                    e.Nombre == nueva.Nombre);
+                    string.Equals(e.Talle ?? string.Empty, nueva.Talle ?? string.Empty, StringComparison.OrdinalIgnoreCase));
 
                 if (existente != null)
                 {
@@ -48,21 +46,21 @@ namespace BarsacOMS.Api.Services
                 {
                     nueva.FichaProduccionId = fichaId;
                     _context.EntregasParciales.Add(nueva);
+                    // Aseguramos que la colección en memoria también lo tenga para la validación posterior
+                    ficha.EntregasParciales.Add(nueva);
                 }
             }
 
             await _context.SaveChangesAsync();
 
-            // 2. Verificar si se completó todo (comparar original vs entregado acumulado)
+            // 2. Verificar si se completó todo (comparando original vs entregado acumulado por Producto y Talle)
             bool todoEntregado = true;
 
             foreach (var itemOriginal in ficha.Items)
             {
                 int totalEntregadoAcumulado = ficha.EntregasParciales
                     .Where(e => e.Producto == itemOriginal.Producto &&
-                                e.Talle == itemOriginal.Talle &&
-                                e.Numero == itemOriginal.Numero &&
-                                e.Nombre == itemOriginal.Nombre)
+                                string.Equals(e.Talle ?? string.Empty, itemOriginal.Talle ?? string.Empty, StringComparison.OrdinalIgnoreCase))
                     .Sum(e => e.Cantidades);
 
                 if (totalEntregadoAcumulado < itemOriginal.Cantidades)
@@ -77,11 +75,11 @@ namespace BarsacOMS.Api.Services
             {
                 if (todoEntregado)
                 {
-                    ficha.Orden.Estado = EstadoOrden.Entregado; // O Finalizado según prefieras
+                    ficha.Orden.Estado = EstadoOrden.Entregado; // Valor 3
                 }
                 else
                 {
-                    ficha.Orden.Estado = EstadoOrden.EntregadoParcial;
+                    ficha.Orden.Estado = EstadoOrden.EntregadoParcial; // Valor 5
                 }
             }
 
