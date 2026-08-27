@@ -43,8 +43,16 @@ namespace BarsacOMS.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> PostProducto([FromBody] GuardarProductoDTO dto)
         {
-            var productoCreado = await _productoService.CrearProductoAsync(dto);
-            return Ok(new { id = productoCreado.Id, mensaje = "Producto creado con éxito" });
+            try
+            {
+                var productoCreado = await _productoService.CrearProductoAsync(dto);
+                return Ok(new { id = productoCreado.Id, mensaje = "Producto creado con éxito" });
+            }
+            catch (Exception ex)
+            {
+                // Esto te devolverá el error real en la respuesta HTTP en lugar de un 500 genérico
+                return StatusCode(500, new { error = ex.Message, inner = ex.InnerException?.Message });
+            }
         }
 
         [HttpPut("{id}")]
