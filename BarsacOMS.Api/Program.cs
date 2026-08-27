@@ -10,8 +10,18 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
 // CONFIGURACIÓN DE BASE DE DATOS
+// Primero intenta obtener la conexión de variables de entorno (producción Railway)
+// Si no existe, usa la del appsettings.json (desarrollo local)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("No se encontró la cadena de conexión a la base de datos. Configura 'DefaultConnection' en appsettings.json o la variable 'DATABASE_URL'.");
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // REGISTRO DE SERVICIOS
 builder.Services.AddScoped<IOrdenService, OrdenService>();

@@ -2,16 +2,19 @@
 using BarsacOMS.Api.DTOs;
 using BarsacOMS.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BarsacOMS.Api.Services
 {
     public class ProductoService : IProductoService
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<ProductoService> _logger;
 
-        public ProductoService(AppDbContext context)
+        public ProductoService(AppDbContext context, ILogger<ProductoService> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<ProductoListDTO>> ObtenerProductosAsync()
@@ -53,14 +56,33 @@ namespace BarsacOMS.Api.Services
 
         public async Task<ProductoListDTO> CrearProductoAsync(GuardarProductoDTO dto)
         {
-            var nuevoProducto = new Producto { Nombre = dto.Nombre };
+            try
+            {
+                _logger.LogInformation("Iniciando creación de producto: {Nombre}", dto.Nombre);
 
-            MapearOActualizarPrecios(nuevoProducto, dto);
+                var nuevoProducto = new Producto { Nombre = dto.Nombre };
 
-            _context.Productos.Add(nuevoProducto);
-            await _context.SaveChangesAsync();
+                MapearOActualizarPrecios(nuevoProducto, dto);
 
-            return MapearAProductoListDTO(nuevoProducto);
+                _logger.LogInformation("Producto mapeado, añadiendo a contexto");
+                _context.Productos.Add(nuevoProducto);
+
+                _logger.LogInformation("Guardando cambios en base de datos");
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Producto creado exitosamente con ID: {ProductoId}", nuevoProducto.Id);
+                return MapearAProductoListDTO(nuevoProducto);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                _logger.LogError(dbEx, "Error de base de datos al crear producto");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error general al crear producto");
+                throw;
+            }
         }
 
         public async Task<bool> ActualizarProductoAsync(int id, GuardarProductoDTO dto)
