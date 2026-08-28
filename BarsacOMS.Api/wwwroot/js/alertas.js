@@ -25,6 +25,8 @@ async function cargarTablaAlertas() {
         // ID del estado "Entregado"
         const ESTADO_ENTREGADO = 3;
 
+        let filasHTML = ''; // Acumular todas las filas en una variable
+
         ordenes.forEach(o => {
             // Ignorar pedidos entregados
             if (o.estado === ESTADO_ENTREGADO) return;
@@ -94,8 +96,11 @@ async function cargarTablaAlertas() {
                     </td>
                 </tr>
             `;
-            tbody.innerHTML += filaHTML;
+            filasHTML += filaHTML;
         });
+
+        // Insertar todas las filas de una sola vez
+        tbody.innerHTML = filasHTML;
 
         // Re-inicializamos DataTables
         dataTableInstance = $('#dataTableAlertas').DataTable({
@@ -111,27 +116,27 @@ async function cargarTablaAlertas() {
 }
 
 async function marcarComoEntregado(id) {
-    if (!confirm(`¿Confirmás marcar la Orden #${id} como ENTREGADA?`)) return;
+    if (!confirm(`¿Confirmás marcar la Orden #${id} como ENTREGADA?\nEsto creará una entrega completa en Ficha de Producción.`)) return;
 
     try {
-        const ESTADO_ENTREGADO = 3;
-
-        // Enviamos Content-Type para evitar el error 415
-        const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/orden/${id}/estado?nuevoEstado=${ESTADO_ENTREGADO}`, {
-            method: 'PUT',
+        // Llamar al nuevo endpoint que crea una entrega completa
+        const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/entrega-parcial/completa/${id}`, {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(ESTADO_ENTREGADO) // Por si el backend lo espera en el Body
+            }
         });
 
         if (res.ok) {
+            alert("¡Entrega completa registrada exitosamente!");
             cargarTablaAlertas(); // Se recarga la tabla y desaparece el pedido entregado
         } else {
-            alert("Error al actualizar el estado del pedido.");
+            const errorData = await res.json();
+            alert(`Error: ${errorData.message || "Error al registrar la entrega"}`);
         }
     } catch (e) {
         console.error("Error:", e);
+        alert("Error de conexión: " + e.message);
     }
 }
 
