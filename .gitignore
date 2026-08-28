@@ -4,6 +4,7 @@ obj/
 *.user
 *.suo
 *.log
+BarsacOMS.Api/appsettings.Development.json
 
 
 

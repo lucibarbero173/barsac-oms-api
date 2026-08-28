@@ -73,15 +73,29 @@ namespace BarsacOMS.Api.Services
             {
                 Exito = true,
                 Mensaje = "Login exitoso",
-                Usuario = usuario,
+                Usuario = new UsuarioDto
+                {
+                    Id = usuario.Id,
+                    Nombre = usuario.Nombre,
+                    Email = usuario.Email,
+                    Rol = usuario.Rol,
+                    Activo = usuario.Activo,
+                    CreatedAt = usuario.CreatedAt
+                },
                 Token = tokenGenerado // Asegúrate de tener la propiedad Token en ResultadoLoginDto
             };
         }
 
         private string GenerarJwtToken(Usuario usuario)
         {
-            // Toma la clave desde appsettings.json o usa el valor por defecto configurado en Program.cs
-            var jwtKey = _configuration["Jwt:SecretKey"] ?? "ClaveSecretaSuperSeguraParaBarsacOMS2026!";
+            // Toma la clave desde appsettings.json (Jwt:Key) o de la variable de entorno JWT_KEY
+            var jwtKey = _configuration["Jwt:Key"] ?? Environment.GetEnvironmentVariable("JWT_KEY");
+
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                throw new InvalidOperationException("No se encontró la clave JWT. Configura 'Jwt:Key' en appsettings.json o la variable de entorno 'JWT_KEY'.");
+            }
+
             var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
             var claims = new[]

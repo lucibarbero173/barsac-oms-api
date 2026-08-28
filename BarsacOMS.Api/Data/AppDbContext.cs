@@ -35,39 +35,18 @@ namespace BarsacOMS.Api.Data
 
                 entity.HasOne(e => e.Orden)
                       .WithMany()
-                      .HasForeignKey(e => e.OrdenId);
+                      .HasForeignKey(e => e.OrdenId)
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 // Mapeo explícito de la relación con DetalleFichaProduccion
                 entity.HasMany(e => e.Items)
                       .WithOne()
                       .HasForeignKey(e => e.FichaProduccionId);
 
-                // 👈 NUEVA RELACIÓN CON ENTREGAS PARCIALES
+                // Relación con entregas parciales
                 entity.HasMany(e => e.EntregasParciales)
                       .WithOne()
                       .HasForeignKey(e => e.FichaProduccionId);
-
-                modelBuilder.Entity<FichaProduccion>(entity =>
-                {
-                    entity.ToTable("ficha_produccion");
-                    entity.Property(e => e.Id).HasColumnName("id");
-                    entity.Property(e => e.OrdenId).HasColumnName("orden_id");
-                    entity.Property(e => e.Modista).HasColumnName("modista");
-
-                    // 👈 CAMBIO AQUÍ: Agregamos OnDelete(DeleteBehavior.Cascade)
-                    entity.HasOne(e => e.Orden)
-                          .WithMany()
-                          .HasForeignKey(e => e.OrdenId)
-                          .OnDelete(DeleteBehavior.Cascade);
-
-                    entity.HasMany(e => e.Items)
-                          .WithOne()
-                          .HasForeignKey(e => e.FichaProduccionId);
-
-                    entity.HasMany(e => e.EntregasParciales)
-                          .WithOne()
-                          .HasForeignKey(e => e.FichaProduccionId);
-                });
             });
 
             modelBuilder.Entity<DetalleFichaProduccion>(entity =>

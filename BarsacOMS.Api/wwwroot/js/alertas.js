@@ -120,7 +120,7 @@ async function marcarComoEntregado(id) {
 
     try {
         // Llamar al nuevo endpoint que crea una entrega completa
-        const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/entrega-parcial/completa/${id}`, {
+        const res = await fetch(`/api/EntregaParcial/completa/${id}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

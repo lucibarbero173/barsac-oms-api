@@ -11,10 +11,14 @@ namespace BarsacOMS.Api.Controllers
     public class EntregaParcialController : ControllerBase
     {
         private readonly IEntregaParcialService _service;
+        private readonly IOrdenService _ordenService;
+        private readonly IFichaProduccionService _fichaService;
 
-        public EntregaParcialController(IEntregaParcialService service)
+        public EntregaParcialController(IEntregaParcialService service, IOrdenService ordenService, IFichaProduccionService fichaService)
         {
             _service = service;
+            _ordenService = ordenService;
+            _fichaService = fichaService;
         }
 
         [HttpGet("ficha/{fichaId}")]
@@ -38,6 +42,66 @@ namespace BarsacOMS.Api.Controllers
             {
                 // Esto mostrará el error exacto en la respuesta HTTP
                 return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message, stack = ex.StackTrace });
+            }
+        }
+
+        [HttpPost("completa/{ordenId}")]
+        public async Task<IActionResult> RegistrarEntregaCompleta(int ordenId)
+        {
+            try
+            {
+                // 1. Obtener la orden con sus detalles
+                var orden = await _ordenService.ObtenerOrdenPorIdAsync(ordenId);
+                if (orden == null)
+                    return NotFound(new { message = "Orden no encontrada" });
+
+                // 2. Obtener la FichaProduccion vinculada a esta orden
+                var ficha = await _fichaService.ObtenerFichaPorOrdenAsync(ordenId);
+                if (ficha == null)
+                    return NotFound(new { message = "Ficha de Producción no encontrada para esta orden" });
+
+                // 3. Crear una EntregaParcial solo con lo que falta entregar de cada línea
+                //    (RegistrarEntregaParcialAsync ACUMULA sobre lo ya entregado, así que acá
+                //    hay que mandar la diferencia, no la cantidad total del pedido, para no duplicar)
+                var entregasFaltantes = new List<EntregaParcial>();
+
+                if (orden.Detalles != null && orden.Detalles.Count > 0)
+                {
+                    foreach (var detalle in orden.Detalles)
+                    {
+                        var nombreProducto = detalle.Producto?.Nombre ?? $"Producto #{detalle.ProductoId}";
+                        var talle = detalle.Talle ?? "";
+
+                        int yaEntregado = ficha.EntregasParciales
+                            .Where(e => e.Producto == nombreProducto &&
+                                        string.Equals(e.Talle ?? string.Empty, talle, StringComparison.OrdinalIgnoreCase))
+                            .Sum(e => e.Cantidades);
+
+                        int faltante = detalle.Cantidad - yaEntregado;
+                        if (faltante <= 0) continue; // ya estaba entregado (o esta línea no tiene pendiente)
+
+                        entregasFaltantes.Add(new EntregaParcial
+                        {
+                            FichaProduccionId = ficha.Id,
+                            Producto = nombreProducto,
+                            Cantidades = faltante,
+                            Talle = talle,
+                            EstadoItem = "Entregada", // Completa
+                            FechaEntrega = DateTime.UtcNow
+                        });
+                    }
+                }
+
+                // 4. Registrar las entregas (el servicio automáticamente actualizará el estado de la orden)
+                var resultado = await _service.RegistrarEntregaParcialAsync(ficha.Id, entregasFaltantes);
+                if (!resultado)
+                    return StatusCode(500, new { message = "Error al registrar las entregas" });
+
+                return Ok(new { message = "Entrega completa registrada exitosamente", ordenId, fichaId = ficha.Id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
             }
         }
     }
