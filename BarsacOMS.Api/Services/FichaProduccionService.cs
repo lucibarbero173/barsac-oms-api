@@ -70,6 +70,15 @@ namespace BarsacOMS.Api.Services
                 .ToListAsync();
         }
 
+        public async Task<FichaProduccion?> ObtenerFichaPorOrdenAsync(int ordenId)
+        {
+            return await _context.FichasProduccion
+                .Include(f => f.Orden)
+                .Include(f => f.Items)
+                .Include(f => f.EntregasParciales)
+                .FirstOrDefaultAsync(f => f.OrdenId == ordenId);
+        }
+
         public async Task<bool> DeleteAsync(int id)
         {
             var ficha = await _context.FichasProduccion.FindAsync(id);
