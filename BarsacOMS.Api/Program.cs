@@ -12,8 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 // CONFIGURACIÓN DE BASE DE DATOS
 // Primero intenta obtener la conexión de variables de entorno (producción Railway)
 // Si no existe, usa la del appsettings.json (desarrollo local)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+// OJO: usamos IsNullOrEmpty en vez de "??" porque appsettings.json puede traer "" (no null)
+// como placeholder, y "??" no cae al fallback cuando el valor es "" en vez de null.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+}
 
 if (string.IsNullOrEmpty(connectionString))
 {
@@ -36,7 +41,11 @@ builder.Services.AddScoped<IEntregaParcialService, EntregaParcialService>();
 
 // CONFIGURACIÓN DE AUTENTICACIÓN JWT
 // La clave sale de appsettings.json (local) o de la variable de entorno JWT_KEY (producción)
-var jwtKey = builder.Configuration["Jwt:Key"] ?? Environment.GetEnvironmentVariable("JWT_KEY");
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(jwtKey))
+{
+    jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
+}
 
 if (string.IsNullOrEmpty(jwtKey))
 {

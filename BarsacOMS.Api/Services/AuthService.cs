@@ -89,7 +89,11 @@ namespace BarsacOMS.Api.Services
         private string GenerarJwtToken(Usuario usuario)
         {
             // Toma la clave desde appsettings.json (Jwt:Key) o de la variable de entorno JWT_KEY
-            var jwtKey = _configuration["Jwt:Key"] ?? Environment.GetEnvironmentVariable("JWT_KEY");
+            var jwtKey = _configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
+            }
 
             if (string.IsNullOrEmpty(jwtKey))
             {
