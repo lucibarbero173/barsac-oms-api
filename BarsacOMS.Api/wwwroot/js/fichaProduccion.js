@@ -928,17 +928,16 @@ async function imprimirEtiquetas() {
         return;
     }
 
+    // Cada etiqueta física mide 5cm x 3cm: una etiqueta = una "página" para la impresora,
+    // sin grilla ni bordes de corte (el borde físico ya lo da el rollo de etiquetas).
     let etiquetasHtml = '';
     unidades.forEach(u => {
         etiquetasHtml += `
             <div class="etiqueta">
-                <div class="etiqueta-texto">
-                    <div><strong>Pedido #${u.ordenId}</strong></div>
-                    <div>${u.producto} - Talle ${u.talle || '-'}</div>
-                    ${u.detalle ? `<div>${u.detalle}</div>` : ''}
-                    ${u.nombre ? `<div>${u.nombre}${u.numero ? ' #' + u.numero : ''}</div>` : ''}
-                </div>
-                <svg class="barcode" jsbarcode-value="${u.id}" jsbarcode-height="40" jsbarcode-fontsize="12"></svg>
+                <div class="linea-pedido">Pedido #${u.ordenId}</div>
+                <div class="linea-producto">${u.producto} - Talle ${u.talle || '-'}</div>
+                ${(u.detalle || u.nombre) ? `<div class="linea-detalle">${[u.detalle, u.nombre ? (u.nombre + (u.numero ? ' #' + u.numero : '')) : null].filter(Boolean).join(' · ')}</div>` : ''}
+                <svg class="barcode" jsbarcode-value="${u.id}" jsbarcode-width="1.3" jsbarcode-height="26" jsbarcode-fontsize="9" jsbarcode-margin="0"></svg>
             </div>
         `;
     });
@@ -950,32 +949,52 @@ async function imprimirEtiquetas() {
                 <title>Etiquetas Ficha #${fichaIdEnVista}</title>
                 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
                 <style>
-                    body {
-                        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                        padding: 10px;
+                    @page {
+                        size: 50mm 30mm;
+                        margin: 0;
                     }
-                    .etiquetas-grid {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 8px;
+                    * { box-sizing: border-box; }
+                    body {
+                        font-family: Arial, Helvetica, sans-serif;
+                        margin: 0;
+                        padding: 0;
                     }
                     .etiqueta {
-                        border: 1px solid #333;
-                        width: 260px;
-                        padding: 8px;
+                        width: 50mm;
+                        height: 30mm;
+                        padding: 1mm 2mm;
                         text-align: center;
-                        page-break-inside: avoid;
+                        overflow: hidden;
+                        page-break-after: always;
                     }
-                    .etiqueta-texto {
-                        font-size: 12px;
-                        margin-bottom: 4px;
+                    .etiqueta:last-child {
+                        page-break-after: auto;
+                    }
+                    .linea-pedido {
+                        font-size: 7pt;
+                        line-height: 1.2;
+                    }
+                    .linea-producto {
+                        font-size: 8pt;
+                        font-weight: bold;
+                        line-height: 1.2;
+                    }
+                    .linea-detalle {
+                        font-size: 7pt;
+                        line-height: 1.2;
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
+                    .barcode {
+                        width: 100%;
+                        max-height: 13mm;
+                        margin-top: 0.5mm;
                     }
                 </style>
             </head>
             <body>
-                <div class="etiquetas-grid">
-                    ${etiquetasHtml}
-                </div>
+                ${etiquetasHtml}
                 <script>
                     window.onload = function () {
                         JsBarcode(".barcode").init();
