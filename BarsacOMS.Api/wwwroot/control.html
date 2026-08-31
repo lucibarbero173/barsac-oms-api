@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <!-- Protección de sesión inmediata -->
+    <script src="js/auth-guard.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Barsac² - Control</title>
+
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/custom-theme.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #1a1f2b;
+        }
+
+        .control-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 16px;
+        }
+
+        .control-topbar {
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
+
+        #inputEscaneo {
+            font-size: 2rem;
+            text-align: center;
+            padding: 20px;
+            max-width: 640px;
+            width: 100%;
+        }
+
+        .feedback-box {
+            max-width: 640px;
+            width: 100%;
+            min-height: 140px;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+            text-align: center;
+            transition: background-color 0.15s ease;
+        }
+
+        .feedback-ok { background-color: #1c7c3f; color: #fff; }
+        .feedback-repetida { background-color: #b8860b; color: #fff; }
+        .feedback-error { background-color: #a12e2e; color: #fff; }
+        .feedback-vacia { background-color: #2c3444; color: #aab2c5; }
+
+        .feedback-box h2 { margin-bottom: 4px; }
+        .feedback-box p { margin-bottom: 2px; }
+
+        .historial {
+            max-width: 640px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .historial-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        .historial-ok { background-color: rgba(28, 124, 63, 0.2); }
+        .historial-repetida { background-color: rgba(184, 134, 11, 0.2); }
+        .historial-error { background-color: rgba(161, 46, 46, 0.2); }
+    </style>
+</head>
+
+<body id="page-top">
+
+    <div class="control-wrapper">
+        <div class="control-topbar">
+            <span class="text-light mr-3" id="lblNombreUsuario"></span>
+            <a href="#" id="btnLogout" class="text-light"><i class="fas fa-sign-out-alt"></i> Salir</a>
+        </div>
+
+        <h1 class="text-light h3 mb-3">Control de Producción</h1>
+        <p class="text-light mb-4">Escaneá el código de la prenda con el lector</p>
+
+        <input type="text" id="inputEscaneo" class="form-control" autofocus autocomplete="off" placeholder="Esperando escaneo...">
+
+        <div class="feedback-box feedback-vacia" id="feedbackBox">
+            <h2><i class="fas fa-barcode"></i></h2>
+            <p>Escaneá una prenda para empezar</p>
+        </div>
+
+        <div class="historial" id="historial"></div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="js/control.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>

@@ -68,6 +68,7 @@
             <li class="nav-item"><a class="nav-link" href="cobros.html"><i class="fas fa-fw fa-hand-holding-usd"></i><span>Cobros</span></a></li>
             <li class="nav-item"><a class="nav-link" href="estadisticas.html"><i class="fas fa-fw fa-chart-bar"></i><span>Estadisticas</span></a></li>
             <li class="nav-item"><a class="nav-link" href="alertas.html"><i class="fas fa-fw fa-bell"></i><span>Alertas</span></a></li>
+            <li class="nav-item" data-roles="admin"><a class="nav-link" href="usuarios.html"><i class="fas fa-fw fa-user-cog"></i><span>Usuarios</span></a></li>
             <hr class="sidebar-divider d-none d-md-block">
 
             <div class="text-center d-none d-md-inline">
@@ -258,11 +259,12 @@
                             <table class="table table-bordered table-sm text-center align-middle" width="100%">
                                 <thead class="bg-white">
                                     <tr>
-                                        <th style="width: 8%;">Cant.</th>
-                                        <th style="width: 22%;">Producto</th>
-                                        <th style="width: 8%;">Talle</th>
-                                        <th style="width: 8%;">Número</th>
-                                        <th style="width: 18%;">Nombre</th>
+                                        <th style="width: 7%;">Cant.</th>
+                                        <th style="width: 18%;">Producto</th>
+                                        <th style="width: 7%;">Talle</th>
+                                        <th style="width: 7%;">Número</th>
+                                        <th style="width: 15%;">Nombre</th>
+                                        <th style="width: 13%;">Detalle</th>
                                         <th style="width: 5%;">Arch.</th>
                                         <th style="width: 5%;">Imp.</th>
                                         <th style="width: 5%;">Cal.</th>
@@ -401,6 +403,9 @@
                 <!-- Footer Modal -->
                 <div class="modal-footer py-2">
                     <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-info btn-sm px-4" onclick="imprimirEtiquetas()">
+                        <i class="fas fa-barcode mr-1"></i> Imprimir Etiquetas
+                    </button>
                     <button type="button" class="btn btn-primary btn-sm px-4" onclick="imprimirFichaDesdeModal()">
                         <i class="fas fa-print mr-1"></i> Imprimir Ficha
                     </button>
@@ -419,6 +424,9 @@
     <!-- Plugins DataTables -->
     <script src="vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <!-- Generación de códigos de barra para las etiquetas -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
     <!-- JS de la vista -->
     <script src="js/fichaProduccion.js"></script>

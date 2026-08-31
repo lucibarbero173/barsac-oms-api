@@ -1,6 +1,7 @@
 ﻿using BarsacOMS.Api.Data;
 using BarsacOMS.Api.DTOs;
 using BarsacOMS.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
@@ -16,6 +17,9 @@ namespace BarsacOMS.Api.Controllers
             _authService = authService;
         }
 
+        // El alta de cuentas reales (con rol) se hace desde UsuariosController (admin-only).
+        // Este endpoint queda restringido para no permitir autoregistro público.
+        [Authorize(Roles = "admin")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {

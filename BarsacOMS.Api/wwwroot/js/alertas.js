@@ -6,7 +6,7 @@ let dataTableInstance = null;
 
 async function cargarTablaAlertas() {
     try {
-        const response = await fetch("https://barsac-oms-api-production.up.railway.app/api/orden");
+        const response = await fetch("/api/orden");
         if (!response.ok) return;
 
         const ordenes = await response.json();
@@ -115,24 +115,27 @@ async function cargarTablaAlertas() {
     }
 }
 
+// EstadoOrden.Entregado = 3. Esta acción es manual: la usa Ludmi cuando el cliente
+// efectivamente retira el pedido (el control de calidad por escaneo es un paso previo,
+// separado, que deja el pedido en "Listo para Entregar" solo).
 async function marcarComoEntregado(id) {
-    if (!confirm(`¿Confirmás marcar la Orden #${id} como ENTREGADA?\nEsto creará una entrega completa en Ficha de Producción.`)) return;
+    if (!confirm(`¿Confirmás que el cliente retiró la Orden #${id}?`)) return;
 
     try {
-        // Llamar al nuevo endpoint que crea una entrega completa
-        const res = await fetch(`/api/EntregaParcial/completa/${id}`, {
-            method: 'POST',
+        const res = await fetch(`/api/orden/${id}/estado`, {
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify(3)
         });
 
         if (res.ok) {
-            alert("¡Entrega completa registrada exitosamente!");
+            alert("¡Pedido marcado como entregado!");
             cargarTablaAlertas(); // Se recarga la tabla y desaparece el pedido entregado
         } else {
-            const errorData = await res.json();
-            alert(`Error: ${errorData.message || "Error al registrar la entrega"}`);
+            const errorData = await res.json().catch(() => ({}));
+            alert(`Error: ${errorData.message || "Error al marcar la entrega"}`);
         }
     } catch (e) {
         console.error("Error:", e);
@@ -146,13 +149,16 @@ function obtenerBadgeEstado(estado) {
         case 1: return '<span class="badge badge-warning">En Proceso</span>';
         case 2: return '<span class="badge badge-info">Terminado</span>';
         case 3: return '<span class="badge badge-success">Entregado</span>';
+        case 4: return '<span class="badge badge-primary">Listo para Entregar</span>';
+        case 5: return '<span class="badge badge-warning">Entrega Parcial</span>';
+        case 6: return '<span class="badge badge-dark">Cancelado</span>';
         default: return '<span class="badge badge-light">Desconocido</span>';
     }
 }
 
 async function verDetallePedido(id) {
     try {
-        const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/orden/${id}`);
+        const res = await fetch(`/api/orden/${id}`);
         if (!res.ok) return;
 
         const o = await res.json();

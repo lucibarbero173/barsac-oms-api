@@ -1,6 +1,7 @@
 ﻿let fichasProduccion = [];
 let ordenesDisponibles = [];
 let cargandoOrden = false;
+let fichaIdEnVista = null;
 
 $(document).ready(function () {
     // Inicializar DataTable
@@ -63,7 +64,7 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
     }
 
     try {
-        const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/Orden/${ordenId}`);
+        const response = await fetch(`/api/Orden/${ordenId}`);
         if (!response.ok) throw new Error("No se pudo obtener el detalle de la orden");
 
         const orden = await response.json();
@@ -219,13 +220,13 @@ function obtenerOpcionesProductosOrden() {
 }
 
 // Fila con desglose permitido: permite elegir talle libremente pero restringe el producto al pedido
-function agregarFilaPrendaDesgloseModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false) {
+function agregarFilaPrendaDesgloseModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false, detalle = '', itemId = 0) {
     const filaId = Date.now() + Math.random().toString(36).substring(2, 5);
     const cantVal = (cantidades !== null && cantidades !== undefined && !isNaN(cantidades)) ? cantidades : 1;
     const opcionesProd = obtenerOpcionesProductosOrden();
 
     const tr = `
-        <tr id="fila-${filaId}">
+        <tr id="fila-${filaId}" data-item-id="${itemId || 0}">
             <td>
                 <input type="number" class="form-control form-control-sm input-cantidades text-center" value="${cantVal}" min="1">
             </td>
@@ -242,6 +243,9 @@ function agregarFilaPrendaDesgloseModal(cantidades = 1, producto = '', talle = '
             </td>
             <td>
                 <input type="text" class="form-control form-control-sm input-nombre" value="${nombre || ''}" placeholder="Jugador">
+            </td>
+            <td>
+                <input type="text" class="form-control form-control-sm input-detalle" value="${detalle || ''}" placeholder="Color/modelo">
             </td>
             <td class="align-middle">
                 <input type="checkbox" class="chk-arch" ${archivo ? 'checked' : ''}>
@@ -275,7 +279,7 @@ function agregarFilaPrendaDesgloseModal(cantidades = 1, producto = '', talle = '
 
 // Alias para mantener compatibilidad con el botón "Agregar Prenda" del HTML
 function agregarFilaPrendaModal(cantidades = 1, producto = '', talle = '', numero = '', nombre = '', archivo = false, impresion = false, calandra = false, corte = false, entregado = false) {
-    agregarFilaPrendaDesgloseModal(cantidades, producto, talle, numero, nombre, archivo, impresion, calandra, corte, entregado);
+    agregarFilaPrendaDesgloseModal(cantidades, producto, talle, numero, nombre, archivo, impresion, calandra, corte, entregado, '', 0);
 }
 
 // Eliminar fila de la tabla
@@ -316,6 +320,7 @@ async function guardarFicha() {
         const talleFila = row.find('.input-talle').val();
         const parsedCant = parseInt(row.find('.input-cantidades').val()) || 0;
         const valNumero = row.find('.input-numero').val();
+        const itemId = parseInt(row.attr('data-item-id')) || 0;
 
         if (!productoFila || !(productoFila in limitesPermitidos)) {
             productoInvalido = true;
@@ -325,11 +330,13 @@ async function guardarFicha() {
         cantidadesAcumuladas[productoFila] = (cantidadesAcumuladas[productoFila] || 0) + parsedCant;
 
         items.push({
+            id: itemId,
             cantidades: parsedCant > 0 ? parsedCant : 1,
             producto: productoFila,
             talle: talleFila || '',
             numero: valNumero !== "" && !isNaN(parseInt(valNumero)) ? parseInt(valNumero) : null,
             nombre: row.find('.input-nombre').val() || null,
+            detalle: row.find('.input-detalle').val() || null,
             archivo: row.find('.chk-arch').is(':checked'),
             impresion: row.find('.chk-imp').is(':checked'),
             calandra: row.find('.chk-cal').is(':checked'),
@@ -375,6 +382,13 @@ async function guardarFicha() {
             });
         }
 
+        if (response.status === 409) {
+            const conflicto = await response.json().catch(() => ({}));
+            const mensajes = (conflicto.conflictos || []).join('\n');
+            alert('No se pudo guardar:\n' + (mensajes || 'Hay prendas ya controladas que impiden este cambio.'));
+            return;
+        }
+
         if (!response.ok) {
             const errDetail = await response.text();
             console.error('Detalle error API:', errDetail);
@@ -400,7 +414,7 @@ async function editarFicha(idFicha) {
     let ordenAsociada = ordenesDisponibles.find(o => o.id === ficha.ordenId);
     if (!ordenAsociada && ficha.ordenId) {
         try {
-            const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/Orden/${ficha.ordenId}`);
+            const response = await fetch(`/api/Orden/${ficha.ordenId}`);
             if (response.ok) {
                 ordenAsociada = await response.json();
                 ordenesDisponibles.push(ordenAsociada);
@@ -424,7 +438,7 @@ async function editarFicha(idFicha) {
 
     const items = ficha.items || [];
     items.forEach(p => {
-        agregarFilaPrendaDesgloseModal(p.cantidades, p.producto, p.talle, p.numero, p.nombre, p.archivo, p.impresion, p.calandra, p.corte, p.entregado);
+        agregarFilaPrendaDesgloseModal(p.cantidades, p.producto, p.talle, p.numero, p.nombre, p.archivo, p.impresion, p.calandra, p.corte, p.entregado, p.detalle, p.id);
     });
 
     actualizarTotalPrendasFicha();
@@ -436,6 +450,7 @@ function verFicha(idFicha) {
     const ficha = fichasProduccion.find(f => f.id === idFicha);
     if (!ficha) return;
 
+    fichaIdEnVista = ficha.id;
     $('#viewIdFicha').text(ficha.id);
     $('#viewNumOrden').text(`#${ficha.ordenId}`);
     $('#viewCliente').text(ficha.orden ? ficha.orden.nombreCliente : '-');
@@ -876,4 +891,90 @@ function imprimirFichaDesdeModal() {
         ventana.print();
         ventana.close();
     }, 600);
+}
+
+// Imprime una etiqueta con código de barras por cada prenda individual de la ficha
+async function imprimirEtiquetas() {
+    if (!fichaIdEnVista) {
+        alert('Abrí primero la ficha que querés imprimir.');
+        return;
+    }
+
+    let unidades;
+    try {
+        const response = await fetch(`/api/PrendaUnidad/ficha/${fichaIdEnVista}`);
+        if (!response.ok) throw new Error('No se pudieron obtener las prendas de la ficha.');
+        unidades = await response.json();
+    } catch (error) {
+        console.error('Error al obtener prendas para imprimir etiquetas:', error);
+        alert('No se pudieron obtener las etiquetas de esta ficha.');
+        return;
+    }
+
+    if (!unidades || unidades.length === 0) {
+        alert('Esta ficha no tiene prendas generadas todavía.');
+        return;
+    }
+
+    let etiquetasHtml = '';
+    unidades.forEach(u => {
+        etiquetasHtml += `
+            <div class="etiqueta">
+                <div class="etiqueta-texto">
+                    <div><strong>Pedido #${u.ordenId}</strong></div>
+                    <div>${u.producto} - Talle ${u.talle || '-'}</div>
+                    ${u.detalle ? `<div>${u.detalle}</div>` : ''}
+                    ${u.nombre ? `<div>${u.nombre}${u.numero ? ' #' + u.numero : ''}</div>` : ''}
+                </div>
+                <svg class="barcode" jsbarcode-value="${u.id}" jsbarcode-height="40" jsbarcode-fontsize="12"></svg>
+            </div>
+        `;
+    });
+
+    const ventana = window.open('', '', 'height=700,width=900');
+
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Etiquetas Ficha #${fichaIdEnVista}</title>
+                <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+                <style>
+                    body {
+                        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                        padding: 10px;
+                    }
+                    .etiquetas-grid {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                    }
+                    .etiqueta {
+                        border: 1px solid #333;
+                        width: 260px;
+                        padding: 8px;
+                        text-align: center;
+                        page-break-inside: avoid;
+                    }
+                    .etiqueta-texto {
+                        font-size: 12px;
+                        margin-bottom: 4px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="etiquetas-grid">
+                    ${etiquetasHtml}
+                </div>
+                <script>
+                    window.onload = function () {
+                        JsBarcode(".barcode").init();
+                        setTimeout(function () { window.print(); }, 300);
+                    };
+                </script>
+            </body>
+        </html>
+    `);
+
+    ventana.document.close();
+    ventana.focus();
 }

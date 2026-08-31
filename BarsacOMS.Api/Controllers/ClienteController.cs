@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "admin")]
     [ApiController]
     [Route("api/[controller]")]
     public class ClienteController : ControllerBase

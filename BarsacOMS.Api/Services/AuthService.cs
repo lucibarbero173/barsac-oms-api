@@ -61,11 +61,6 @@ namespace BarsacOMS.Api.Services
                 return new ResultadoLoginDto { Exito = false, Mensaje = "Credenciales incorrectas." };
             }
 
-            if (usuario.Rol != "admin")
-            {
-                return new ResultadoLoginDto { Exito = false, Mensaje = "Acceso denegado. Se requieren permisos de administrador." };
-            }
-
             // Generamos el token JWT
             string tokenGenerado = GenerarJwtToken(usuario);
 

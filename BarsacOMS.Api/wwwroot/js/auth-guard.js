@@ -24,6 +24,7 @@ window.fetch = async function (...args) {
     if (response.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('usuarioNombre');
+        localStorage.removeItem('usuarioRol');
         window.location.replace('login.html');
     }
 
@@ -36,3 +37,34 @@ window.fetch = async function (...args) {
         window.location.replace('login.html');
     }
 })();
+
+// 3. Control de acceso por rol: qué páginas puede ver cada rol.
+//    "admin" ve todo. Los demás roles solo ven las páginas listadas acá.
+const PAGINAS_POR_ROL = {
+    control: ['control.html']
+};
+
+(function () {
+    const rol = localStorage.getItem('usuarioRol');
+    const paginaActual = window.location.pathname.split('/').pop();
+    const permitidas = PAGINAS_POR_ROL[rol];
+
+    if (permitidas && !permitidas.includes(paginaActual)) {
+        window.location.replace(permitidas[0]);
+    }
+})();
+
+// 4. Oculta del sidebar los ítems marcados con data-roles que no correspondan al rol actual.
+//    Ej: <li data-roles="admin">...</li> solo lo ve un usuario con rol admin.
+function ocultarMenuPorRol() {
+    const rol = localStorage.getItem('usuarioRol');
+    if (!rol) return;
+
+    document.querySelectorAll('[data-roles]').forEach((el) => {
+        const rolesPermitidos = el.getAttribute('data-roles').split(',').map((r) => r.trim());
+        if (!rolesPermitidos.includes(rol)) {
+            el.style.display = 'none';
+        }
+    });
+}
+document.addEventListener('DOMContentLoaded', ocultarMenuPorRol);

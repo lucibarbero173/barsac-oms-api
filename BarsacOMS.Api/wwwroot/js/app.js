@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Eliminamos las credenciales pero preservamos el tema si se desea
             localStorage.removeItem('token');
             localStorage.removeItem('usuarioNombre');
+            localStorage.removeItem('usuarioRol');
             localStorage.removeItem('usuarioLogueado');
 
             // Redirigimos al login

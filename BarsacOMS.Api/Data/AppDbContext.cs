@@ -19,8 +19,9 @@ namespace BarsacOMS.Api.Data
         public DbSet<Pago> Pagos { get; set; }
         public DbSet<FichaProduccion> FichasProduccion { get; set; }
         public DbSet<DetalleFichaProduccion> DetallesFichaProduccion { get; set; }
-        public DbSet<EntregaParcial> EntregasParciales { get; set; } 
+        public DbSet<EntregaParcial> EntregasParciales { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<PrendaUnidad> PrendasUnidad { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,6 +60,7 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Talle).HasColumnName("talle");
                 entity.Property(e => e.Numero).HasColumnName("numero");
                 entity.Property(e => e.Nombre).HasColumnName("nombre");
+                entity.Property(e => e.Detalle).HasColumnName("detalle");
 
                 entity.Property(e => e.Archivo).HasColumnName("archivo");
                 entity.Property(e => e.Impresion).HasColumnName("impresion");
@@ -66,6 +68,30 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Corte).HasColumnName("corte");
                 entity.Property(e => e.Entregado).HasColumnName("entregado");
                 entity.Property(e => e.FechaEntrega).HasColumnName("fecha_entrega");
+
+                entity.HasMany(e => e.Unidades)
+                      .WithOne()
+                      .HasForeignKey(u => u.DetalleFichaProduccionId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // =====================
+            // PRENDA UNIDAD (control por escaneo)
+            // =====================
+            modelBuilder.Entity<PrendaUnidad>(entity =>
+            {
+                entity.ToTable("prenda_unidad");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.DetalleFichaProduccionId).HasColumnName("detalle_ficha_produccion_id");
+                entity.Property(e => e.Controlada).HasColumnName("controlada");
+                entity.Property(e => e.FechaControl).HasColumnName("fecha_control");
+                entity.Property(e => e.ControladoPorUsuarioId).HasColumnName("controlado_por_usuario_id");
+
+                entity.HasOne<Usuario>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ControladoPorUsuarioId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             // =====================

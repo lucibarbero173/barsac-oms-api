@@ -43,12 +43,16 @@
                 localStorage.setItem('token', token);
             }
 
+            let rol = '';
             if (usuario) {
                 localStorage.setItem('usuarioNombre', usuario.nombre || usuario.Nombre || '');
+                rol = usuario.rol || usuario.Rol || '';
+                localStorage.setItem('usuarioRol', rol);
             }
 
-            console.log("Redirigiendo a estadisticas.html...");
-            window.location.replace('estadisticas.html');
+            const destino = rol === 'control' ? 'control.html' : 'estadisticas.html';
+            console.log("Redirigiendo a " + destino + "...");
+            window.location.replace(destino);
         } else {
             console.log("FALLÓ LA CONDICIÓN DEL IF");
             feedback.classList.remove('d-none');

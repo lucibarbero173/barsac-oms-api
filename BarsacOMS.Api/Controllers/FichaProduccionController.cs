@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "admin,control")]
     [ApiController]
     [Route("api/[controller]")]
     public class FichaProduccionController : ControllerBase
@@ -35,6 +35,7 @@ namespace BarsacOMS.Api.Controllers
         }
 
         // POST: api/FichaProduccion
+        [Authorize(Roles = "admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] FichaProduccion ficha)
         {
@@ -45,14 +46,19 @@ namespace BarsacOMS.Api.Controllers
         }
 
         // PUT: api/FichaProduccion/5
+        [Authorize(Roles = "admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] FichaProduccion ficha)
         {
             if (id != ficha.Id) return BadRequest("El ID no coincide");
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var updated = await _fichaService.UpdateAsync(ficha);
-            if (!updated) return NotFound();
+            var resultado = await _fichaService.UpdateAsync(ficha);
+            if (!resultado.Exito)
+            {
+                if (resultado.Conflictos.Count > 0) return Conflict(new { conflictos = resultado.Conflictos });
+                return NotFound();
+            }
 
             return NoContent();
         }
@@ -66,6 +72,7 @@ namespace BarsacOMS.Api.Controllers
         }
 
         // DELETE: api/FichaProduccion/5
+        [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

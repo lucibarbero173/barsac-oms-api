@@ -30,7 +30,7 @@ $(document).ready(function () {
 // CARGAR ORDENES
 // =================
 function cargarOrdenes() {
-    fetch("https://barsac-oms-api-production.up.railway.app/api/Orden")
+    fetch("/api/Orden")
         .then(res => res.json())
         .then(data => {
             if ($.fn.dataTable.isDataTable('#dataTable')) {
@@ -85,14 +85,16 @@ function formatearEstado(estado) {
         case 1: return `<span class="badge badge-warning">En Proceso</span>`;
         case 2: return `<span class="badge badge-success">Finalizado</span>`;
         case 3: return `<span class="badge badge-info">Entregado</span>`;
-        case 4: return `<span class="badge badge-danger">Cancelado</span>`;
+        case 4: return `<span class="badge badge-primary">Listo para Entregar</span>`;
+        case 5: return `<span class="badge badge-warning">Entrega Parcial</span>`;
+        case 6: return `<span class="badge badge-danger">Cancelado</span>`;
         default: return `<span class="badge badge-light">${estado}</span>`;
     }
 }
 
 async function verOrden(id) {
     try {
-        const response = await fetch(`https://barsac-oms-api-production.up.railway.app/api/orden/${id}`);
+        const response = await fetch(`/api/orden/${id}`);
         if (!response.ok) throw new Error("No se pudo obtener los datos del pedido");
 
         const orden = await response.json();
@@ -169,7 +171,7 @@ function editarOrden(id) {
 function eliminarOrden(id) {
     if (!confirm("¿Eliminar orden?")) return;
 
-    fetch(`https://barsac-oms-api-production.up.railway.app/api/Orden/${id}`, {
+    fetch(`/api/Orden/${id}`, {
         method: "DELETE"
     })
         .then(res => {
