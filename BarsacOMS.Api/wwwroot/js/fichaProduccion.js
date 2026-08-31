@@ -900,6 +900,16 @@ async function imprimirEtiquetas() {
         return;
     }
 
+    // Abrimos la ventana YA, antes de esperar la respuesta del servidor.
+    // Si la abrimos después de un "await", algunos navegadores la bloquean
+    // como si fuera un popup no deseado (pierden el "gesto" del click).
+    const ventana = window.open('', '', 'height=700,width=900');
+    if (!ventana) {
+        alert('El navegador bloqueó la ventana de impresión. Revisá el ícono de "popup bloqueado" en la barra de direcciones, permitilo para este sitio, y volvé a intentar.');
+        return;
+    }
+    ventana.document.write('<p style="font-family:sans-serif;padding:20px;">Generando etiquetas...</p>');
+
     let unidades;
     try {
         const response = await fetch(`/api/PrendaUnidad/ficha/${fichaIdEnVista}`);
@@ -907,11 +917,13 @@ async function imprimirEtiquetas() {
         unidades = await response.json();
     } catch (error) {
         console.error('Error al obtener prendas para imprimir etiquetas:', error);
+        ventana.close();
         alert('No se pudieron obtener las etiquetas de esta ficha.');
         return;
     }
 
     if (!unidades || unidades.length === 0) {
+        ventana.close();
         alert('Esta ficha no tiene prendas generadas todavía.');
         return;
     }
@@ -931,8 +943,7 @@ async function imprimirEtiquetas() {
         `;
     });
 
-    const ventana = window.open('', '', 'height=700,width=900');
-
+    ventana.document.open();
     ventana.document.write(`
         <html>
             <head>
