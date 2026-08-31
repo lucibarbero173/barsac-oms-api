@@ -932,11 +932,18 @@ async function imprimirEtiquetas() {
     // sin grilla ni bordes de corte (el borde físico ya lo da el rollo de etiquetas).
     let etiquetasHtml = '';
     unidades.forEach(u => {
+        // Cada campo (Detalle, Nombre, Número) va en la etiqueta solo si esa ficha lo tiene cargado.
+        const partesDetalle = [];
+        if (u.detalle) partesDetalle.push(u.detalle);
+        if (u.nombre || u.numero) {
+            partesDetalle.push([u.nombre, u.numero ? '#' + u.numero : null].filter(Boolean).join(' '));
+        }
+
         etiquetasHtml += `
             <div class="etiqueta">
                 <div class="linea-pedido">Pedido #${u.ordenId}</div>
                 <div class="linea-producto">${u.producto} - Talle ${u.talle || '-'}</div>
-                ${(u.detalle || u.nombre) ? `<div class="linea-detalle">${[u.detalle, u.nombre ? (u.nombre + (u.numero ? ' #' + u.numero : '')) : null].filter(Boolean).join(' · ')}</div>` : ''}
+                ${partesDetalle.length ? `<div class="linea-detalle">${partesDetalle.join(' · ')}</div>` : ''}
                 <svg class="barcode" jsbarcode-value="${u.id}" jsbarcode-width="1.7" jsbarcode-height="36" jsbarcode-fontsize="9" jsbarcode-margin="0"></svg>
             </div>
         `;
