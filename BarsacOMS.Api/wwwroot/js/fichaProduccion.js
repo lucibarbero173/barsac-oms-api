@@ -937,7 +937,7 @@ async function imprimirEtiquetas() {
                 <div class="linea-pedido">Pedido #${u.ordenId}</div>
                 <div class="linea-producto">${u.producto} - Talle ${u.talle || '-'}</div>
                 ${(u.detalle || u.nombre) ? `<div class="linea-detalle">${[u.detalle, u.nombre ? (u.nombre + (u.numero ? ' #' + u.numero : '')) : null].filter(Boolean).join(' · ')}</div>` : ''}
-                <svg class="barcode" jsbarcode-value="${u.id}" jsbarcode-width="1.3" jsbarcode-height="26" jsbarcode-fontsize="9" jsbarcode-margin="0"></svg>
+                <svg class="barcode" jsbarcode-value="${u.id}" jsbarcode-width="1.7" jsbarcode-height="36" jsbarcode-fontsize="9" jsbarcode-margin="0"></svg>
             </div>
         `;
     });
@@ -966,6 +966,9 @@ async function imprimirEtiquetas() {
                         text-align: center;
                         overflow: hidden;
                         page-break-after: always;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
                     }
                     .etiqueta:last-child {
                         page-break-after: auto;
@@ -988,8 +991,8 @@ async function imprimirEtiquetas() {
                     }
                     .barcode {
                         width: 100%;
-                        max-height: 13mm;
-                        margin-top: 0.5mm;
+                        max-height: 17mm;
+                        margin-top: 1mm;
                     }
                 </style>
             </head>
