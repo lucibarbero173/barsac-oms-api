@@ -81,13 +81,11 @@ function cargarOrdenes() {
 
 function formatearEstado(estado) {
     switch (estado) {
-        case 0: return `<span class="badge badge-secondary">Pendiente</span>`;
-        case 1: return `<span class="badge badge-warning">En Proceso</span>`;
-        case 2: return `<span class="badge badge-success">Finalizado</span>`;
-        case 3: return `<span class="badge badge-info">Entregado</span>`;
-        case 4: return `<span class="badge badge-primary">Listo para Entregar</span>`;
-        case 5: return `<span class="badge badge-warning">Entrega Parcial</span>`;
-        case 6: return `<span class="badge badge-danger">Cancelado</span>`;
+        case 0: return `<span class="badge" style="background-color:#dc3545;color:#fff;">Pendiente</span>`;
+        case 1: return `<span class="badge" style="background-color:#ffc107;color:#212529;">En Proceso</span>`;
+        case 2: return `<span class="badge" style="background-color:#8BC34A;color:#fff;">Entregado</span>`;
+        case 3: return `<span class="badge" style="background-color:#29ABE2;color:#fff;">Listo para Entregar</span>`;
+        case 4: return `<span class="badge" style="background-color:#FF9800;color:#fff;">Entrega Parcial</span>`;
         default: return `<span class="badge badge-light">${estado}</span>`;
     }
 }

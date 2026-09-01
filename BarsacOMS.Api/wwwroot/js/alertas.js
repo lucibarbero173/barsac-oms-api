@@ -115,7 +115,7 @@ async function cargarTablaAlertas() {
     }
 }
 
-// EstadoOrden.Entregado = 3. Esta acción es manual: la usa Ludmi cuando el cliente
+// EstadoOrden.Entregado = 2. Esta acción es manual: la usa Ludmi cuando el cliente
 // efectivamente retira el pedido (el control de calidad por escaneo es un paso previo,
 // separado, que deja el pedido en "Listo para Entregar" solo).
 async function marcarComoEntregado(id) {
@@ -127,7 +127,7 @@ async function marcarComoEntregado(id) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(3)
+            body: JSON.stringify(2)
         });
 
         if (res.ok) {
@@ -145,13 +145,11 @@ async function marcarComoEntregado(id) {
 
 function obtenerBadgeEstado(estado) {
     switch (estado) {
-        case 0: return '<span class="badge badge-secondary">Pendiente</span>';
-        case 1: return '<span class="badge badge-warning">En Proceso</span>';
-        case 2: return '<span class="badge badge-info">Terminado</span>';
-        case 3: return '<span class="badge badge-success">Entregado</span>';
-        case 4: return '<span class="badge badge-primary">Listo para Entregar</span>';
-        case 5: return '<span class="badge badge-warning">Entrega Parcial</span>';
-        case 6: return '<span class="badge badge-dark">Cancelado</span>';
+        case 0: return '<span class="badge" style="background-color:#dc3545;color:#fff;">Pendiente</span>';
+        case 1: return '<span class="badge" style="background-color:#ffc107;color:#212529;">En Proceso</span>';
+        case 2: return '<span class="badge" style="background-color:#8BC34A;color:#fff;">Entregado</span>';
+        case 3: return '<span class="badge" style="background-color:#29ABE2;color:#fff;">Listo para Entregar</span>';
+        case 4: return '<span class="badge" style="background-color:#FF9800;color:#fff;">Entrega Parcial</span>';
         default: return '<span class="badge badge-light">Desconocido</span>';
     }
 }

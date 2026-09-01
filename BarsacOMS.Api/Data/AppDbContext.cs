@@ -22,6 +22,9 @@ namespace BarsacOMS.Api.Data
         public DbSet<EntregaParcial> EntregasParciales { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<PrendaUnidad> PrendasUnidad { get; set; }
+        public DbSet<CostoProducto> CostosProducto { get; set; }
+        public DbSet<GastoGeneral> GastosGenerales { get; set; }
+        public DbSet<ConfiguracionCostos> ConfiguracionCostos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -269,6 +272,56 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Rol).HasColumnName("rol");
                 entity.Property(e => e.Activo).HasColumnName("activo");
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            });
+
+            // =====================
+            // COSTEADOR
+            // =====================
+            modelBuilder.Entity<CostoProducto>(entity =>
+            {
+                entity.ToTable("costo_producto");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.ProductoId).HasColumnName("producto_id");
+                entity.Property(e => e.MateriaPrimaTelaId).HasColumnName("materia_prima_tela_id");
+                entity.Property(e => e.PrendasPorKg).HasColumnName("prendas_por_kg");
+                entity.Property(e => e.Scrap).HasColumnName("scrap");
+                entity.Property(e => e.Flete).HasColumnName("flete");
+                entity.Property(e => e.Cierre).HasColumnName("cierre");
+                entity.Property(e => e.ElasticoCapucha).HasColumnName("elastico_capucha");
+                entity.Property(e => e.Impresion).HasColumnName("impresion");
+                entity.Property(e => e.Confeccion).HasColumnName("confeccion");
+                entity.Property(e => e.RemarquePorcentaje).HasColumnName("remarque_porcentaje");
+
+                entity.HasIndex(e => e.ProductoId).IsUnique();
+
+                entity.HasOne(e => e.Producto)
+                      .WithMany()
+                      .HasForeignKey(e => e.ProductoId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.MateriaPrimaTela)
+                      .WithMany()
+                      .HasForeignKey(e => e.MateriaPrimaTelaId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<GastoGeneral>(entity =>
+            {
+                entity.ToTable("gasto_general");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Nombre).HasColumnName("nombre");
+                entity.Property(e => e.MontoMensual).HasColumnName("monto_mensual");
+                entity.Property(e => e.Tipo).HasColumnName("tipo");
+            });
+
+            modelBuilder.Entity<ConfiguracionCostos>(entity =>
+            {
+                entity.ToTable("configuracion_costos");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.ProduccionMensualEstimada).HasColumnName("produccion_mensual_estimada");
             });
 
             // =====================

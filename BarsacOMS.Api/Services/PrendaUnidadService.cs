@@ -90,7 +90,7 @@ namespace BarsacOMS.Api.Services
             if (listoParaEntregar)
             {
                 var orden = await _context.Ordenes.FindAsync(ordenId);
-                if (orden != null && orden.Estado != EstadoOrden.Entregado && orden.Estado != EstadoOrden.Cancelado)
+                if (orden != null && orden.Estado != EstadoOrden.Entregado)
                 {
                     orden.Estado = EstadoOrden.ListoParaEntregar;
                     await _context.SaveChangesAsync();

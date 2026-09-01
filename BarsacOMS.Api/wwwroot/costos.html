@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <!-- Protección de sesión inmediata -->
+    <script src="js/auth-guard.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Barsac² - Costos</title>
+
+    <!-- Custom fonts for this template -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+    <!-- TU CSS PERSONALIZADO -->
+    <link href="css/custom-theme.css" rel="stylesheet">
+
+    <style>
+        #tabsProductos .nav-link { white-space: nowrap; }
+        .costo-readonly { background-color: rgba(0,0,0,0.04); font-weight: 600; }
+        .card-costos-resumen .valor { font-size: 1.4rem; font-weight: 700; }
+    </style>
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+                <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-laugh-wink"></i></div>
+                <div class="sidebar-brand-text mx-3">Barsac<sup>2</sup></div>
+            </a>
+            <hr class="sidebar-divider my-0">
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Compras</div>
+            <li class="nav-item"><a class="nav-link" href="proveedores.html"><i class="fas fa-fw fa-truck"></i><span>Proveedores</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="pagos.html"><i class="fas fa-fw fa-file-invoice-dollar"></i><span>Pagos</span></a></li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMateria" aria-expanded="false" aria-controls="collapseMateria">
+                    <i class="fas fa-fw fa-box"></i><span>Materia Prima</span>
+                </a>
+                <div id="collapseMateria" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="materiaPrimaTela.html">Telas</a>
+                        <a class="collapse-item" href="materiaPrimaPapel.html">Papel</a>
+                        <a class="collapse-item" href="materiaPrimaInsumo.html">Insumos DTF</a>
+                        <a class="collapse-item" href="materiaPrimaMerceria.html">Merceria</a>
+                        <a class="collapse-item" href="materiaPrimaOtros.html">Otros</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="productos.html"><i class="fas fa-fw fa-box"></i><span>Productos</span></a></li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Gestion</div>
+            <li class="nav-item"><a class="nav-link" href="clientes.html"><i class="fas fa-fw fa-users"></i><span>Clientes</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="pedidos.html"><i class="fas fa-fw fa-table"></i><span>Pedidos</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="fichaProduccion.html"><i class="fas fa-fw fa-cut"></i><span>Fichas Producción</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="cobros.html"><i class="fas fa-fw fa-hand-holding-usd"></i><span>Cobros</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="estadisticas.html"><i class="fas fa-fw fa-chart-bar"></i><span>Estadisticas</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="alertas.html"><i class="fas fa-fw fa-bell"></i><span>Alertas</span></a></li>
+            <li class="nav-item" data-roles="admin"><a class="nav-link" href="usuarios.html"><i class="fas fa-fw fa-user-cog"></i><span>Usuarios</span></a></li>
+            <li class="nav-item active" data-roles="admin"><a class="nav-link" href="costos.html"><i class="fas fa-fw fa-calculator"></i><span>Costos</span></a></li>
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <!-- End of Sidebar -->
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto align-items-center">
+                        <li class="nav-item">
+                            <button id="themeToggle" class="btn btn-link rounded-circle mr-3 border-0" title="Cambiar Tema">
+                                <i id="themeIcon" class="fas fa-moon text-gray-600 font-size-18"></i>
+                            </button>
+                        </li>
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small font-weight-bold" id="lblNombreUsuario">
+                                    Usuario
+                                </span>
+                                <div class="img-profile rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="#" id="btnLogout">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Cerrar Sesión
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- End of Topbar -->
+
+                <div class="container-fluid pt-2">
+                    <h1 class="h3 mb-4 font-weight-bold">Costos</h1>
+
+                    <!-- Pestañas: General + una por producto -->
+                    <ul class="nav nav-tabs" id="tabsProductos" role="tablist"></ul>
+
+                    <div class="tab-content" id="tabsProductosContent">
+
+                        <!-- ================= VISTA GENERAL ================= -->
+                        <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
+
+                            <div class="card shadow my-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Estructura de Costos</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm text-center" id="tablaGeneralCostos" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>Producto</th>
+                                                    <th>Tela</th>
+                                                    <th>Costo Tela Unit.</th>
+                                                    <th>Flete</th>
+                                                    <th>Cierre</th>
+                                                    <th>Elástico/Capucha</th>
+                                                    <th>Impresión</th>
+                                                    <th>Confección</th>
+                                                    <th>Otros Costos Unit.</th>
+                                                    <th>Costo Total</th>
+                                                    <th>Remarque %</th>
+                                                    <th>Precio Venta Estimado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tablaGeneralCostosBody">
+                                                <!-- Se carga dinámicamente vía JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card shadow mb-4 card-costos-resumen">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Producción Mensual Estimada</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="formConfiguracion" class="form-inline">
+                                        <label for="inputProduccionMensual" class="mr-2">Prendas por mes:</label>
+                                        <input type="number" min="0" class="form-control mr-3" id="inputProduccionMensual" style="width: 140px;" required>
+                                        <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+                                        <span class="ml-4">Otros costos unitario resultante: <span class="valor" id="lblOtrosCostosUnitario">$0</span></span>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="card shadow mb-4">
+                                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                            <h6 class="m-0 font-weight-bold text-primary">Costos Productivos</h6>
+                                            <span class="font-weight-bold" id="lblSubtotalProductivos">$0</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-sm" id="tablaProductivos">
+                                                <thead>
+                                                    <tr><th>Nombre</th><th>Monto Mensual</th><th></th></tr>
+                                                </thead>
+                                                <tbody id="tablaProductivosBody"></tbody>
+                                            </table>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="agregarFilaGasto('Productivo')">
+                                                <i class="fas fa-plus"></i> Agregar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="card shadow mb-4">
+                                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                            <h6 class="m-0 font-weight-bold text-primary">Otros Gastos</h6>
+                                            <span class="font-weight-bold" id="lblSubtotalOtros">$0</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-sm" id="tablaOtros">
+                                                <thead>
+                                                    <tr><th>Nombre</th><th>Monto Mensual</th><th></th></tr>
+                                                </thead>
+                                                <tbody id="tablaOtrosBody"></tbody>
+                                            </table>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="agregarFilaGasto('Otro')">
+                                                <i class="fas fa-plus"></i> Agregar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ================= FIN VISTA GENERAL ================= -->
+
+                        <!-- Acá se inyecta una pestaña por producto vía JS -->
+                    </div>
+                </div>
+
+            </div>
+            <!-- End of Main Content -->
+            <footer class="sticky-footer">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; BARSAC OMS 2026</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Plantilla oculta de la ficha de costeo por producto (se clona por JS) -->
+    <template id="templateFichaProducto">
+        <form class="form-costo-producto">
+            <div class="card shadow my-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Tabla de Costo de la Prenda</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 form-group">
+                            <label>Tela</label>
+                            <select class="form-control custom-select select-tela">
+                                <option value="">-- Sin tela --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label>Precio Tela / kg (actual)</label>
+                            <input type="text" class="form-control costo-readonly campo-precio-tela" readonly>
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label>Prendas por Kg</label>
+                            <input type="number" step="0.01" min="0" class="form-control campo-input" data-campo="prendasPorKg">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 form-group">
+                            <label>Scrap</label>
+                            <input type="number" step="0.01" min="0" class="form-control campo-input" data-campo="scrap">
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label>Flete</label>
+                            <input type="number" step="0.01" min="0" class="form-control campo-input" data-campo="flete">
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label>Cierre</label>
+                            <input type="number" step="0.01" min="0" class="form-control campo-input" data-campo="cierre">
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label>Elástico/Capucha</label>
+                            <input type="number" step="0.01" min="0" class="form-control campo-input" data-campo="elasticoCapucha">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 form-group">
+                            <label>Impresión</label>
+                            <input type="number" step="0.01" min="0" class="form-control campo-input" data-campo="impresion">
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label>Confección</label>
+                            <input type="number" step="0.01" min="0" class="form-control campo-input" data-campo="confeccion">
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label>Remarque %</label>
+                            <input type="number" step="0.01" min="0" class="form-control campo-input" data-campo="remarquePorcentaje">
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-3 form-group">
+                            <label>Costo Tela Unitario</label>
+                            <input type="text" class="form-control costo-readonly campo-costo-tela-unitario" readonly>
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label>Otros Costos Unitario</label>
+                            <input type="text" class="form-control costo-readonly campo-otros-costos-unitario" readonly>
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label>Costo Total</label>
+                            <input type="text" class="form-control costo-readonly campo-costo-total" readonly>
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label>Precio Venta Estimado</label>
+                            <input type="text" class="form-control costo-readonly campo-precio-venta" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Guardar Costo</button>
+                </div>
+            </div>
+        </form>
+    </template>
+
+    <!-- JS Scripts Base -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- JS de la vista -->
+    <script src="js/costos.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>

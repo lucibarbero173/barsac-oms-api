@@ -75,11 +75,11 @@ namespace BarsacOMS.Api.Services
             {
                 if (todoEntregado)
                 {
-                    ficha.Orden.Estado = EstadoOrden.Entregado; // Valor 3
+                    ficha.Orden.Estado = EstadoOrden.Entregado; // Valor 2
                 }
                 else
                 {
-                    ficha.Orden.Estado = EstadoOrden.EntregadoParcial; // Valor 5
+                    ficha.Orden.Estado = EstadoOrden.EntregadoParcial; // Valor 4
                 }
             }
 
