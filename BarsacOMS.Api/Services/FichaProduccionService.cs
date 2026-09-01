@@ -21,6 +21,7 @@ namespace BarsacOMS.Api.Services
             return await _context.FichasProduccion
                 .Include(f => f.Orden)
                 .Include(f => f.Items)
+                    .ThenInclude(i => i.Unidades)
                 .Include(f => f.EntregasParciales)
                 .ToListAsync();
         }
@@ -30,6 +31,7 @@ namespace BarsacOMS.Api.Services
             return await _context.FichasProduccion
                 .Include(f => f.Orden)
                 .Include(f => f.Items)
+                    .ThenInclude(i => i.Unidades)
                 .Include(f => f.EntregasParciales)
                 .FirstOrDefaultAsync(f => f.Id == id);
         }
@@ -172,6 +174,7 @@ namespace BarsacOMS.Api.Services
             return await _context.FichasProduccion
                 .Include(f => f.Orden)
                 .Include(f => f.Items)
+                    .ThenInclude(i => i.Unidades)
                 .Include(f => f.EntregasParciales)
                 .FirstOrDefaultAsync(f => f.OrdenId == ordenId);
         }

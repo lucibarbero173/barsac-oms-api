@@ -125,33 +125,25 @@ async function cargarTablaFichas() {
 
         fichasProduccion.forEach(ficha => {
             const items = ficha.items || [];
-            const entregasParciales = ficha.entregasParciales || [];
 
+            // El estado de la ficha se calcula en base a lo escaneado en control.html
+            // (PrendaUnidad.Controlada), no a las entregas parciales manuales viejas.
             let totalPrendasFicha = 0;
-            let totalEntregadasFicha = 0;
+            let totalControladasFicha = 0;
 
             items.forEach(item => {
                 const cantItem = item.cantidades || 1;
                 totalPrendasFicha += cantItem;
-
-                const entregadoEsteItem = entregasParciales
-                    .filter(e => e.producto === item.producto && String(e.talle || '') === String(item.talle || ''))
-                    .reduce((sum, e) => sum + e.cantidades, 0);
-
-                if (item.entregado) {
-                    totalEntregadasFicha += cantItem;
-                } else {
-                    totalEntregadasFicha += Math.min(entregadoEsteItem, cantItem);
-                }
+                const unidades = item.unidades || [];
+                totalControladasFicha += unidades.filter(u => u.controlada).length;
             });
 
-            // Lógica exacta de estados
             let badgeEstado = '<span class="badge badge-secondary">Pendiente</span>';
 
-            if (totalPrendasFicha > 0 && totalEntregadasFicha >= totalPrendasFicha) {
-                badgeEstado = '<span class="badge badge-success">Completado</span>'; // O Entregado
-            } else if (totalEntregadasFicha > 0 && totalEntregadasFicha < totalPrendasFicha) {
-                badgeEstado = '<span class="badge badge-warning">Entrega Parcial</span>';
+            if (totalPrendasFicha > 0 && totalControladasFicha >= totalPrendasFicha) {
+                badgeEstado = '<span class="badge badge-success">Listo para Entregar</span>';
+            } else if (totalControladasFicha > 0) {
+                badgeEstado = '<span class="badge badge-warning">Incompleto</span>';
             }
 
             const clienteNombre = ficha.orden ? ficha.orden.nombreCliente : '-';
@@ -571,13 +563,14 @@ function verFicha(idFicha) {
         });
     }
 
+    // "Falta Entregar" ahora refleja lo que falta ESCANEAR en control.html
+    // (PrendaUnidad.Controlada), no las entregas parciales manuales viejas.
     let pendientesCalculados = [];
     itemsOriginales.forEach(item => {
-        const entregadoTotalItem = entregasParciales
-            .filter(e => e.producto === item.producto && (e.talle || '') === (item.talle || ''))
-            .reduce((sum, e) => sum + e.cantidades, 0);
+        const unidades = item.unidades || [];
+        const controladas = unidades.filter(u => u.controlada).length;
 
-        const resta = item.cantidades - entregadoTotalItem;
+        const resta = item.cantidades - controladas;
         if (resta > 0) {
             pendientesCalculados.push({
                 ...item,
