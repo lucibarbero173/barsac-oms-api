@@ -138,12 +138,22 @@ async function cargarTablaFichas() {
                 totalControladasFicha += unidades.filter(u => u.controlada).length;
             });
 
-            let badgeEstado = '<span class="badge badge-secondary">Pendiente</span>';
+            // Si el pedido ya se marcó como entregado (a mano, desde Alertas o desde
+            // Registrar Entregas), eso manda por sobre el progreso de escaneo: la ficha
+            // tiene que quedar ligada al estado real del pedido, no mostrar algo viejo.
+            const estadoOrden = ficha.orden ? ficha.orden.estado : null;
+            let badgeEstado;
 
-            if (totalPrendasFicha > 0 && totalControladasFicha >= totalPrendasFicha) {
-                badgeEstado = '<span class="badge badge-success">Listo para Entregar</span>';
+            if (estadoOrden === 2) { // EstadoOrden.Entregado
+                badgeEstado = '<span class="badge" style="background-color:#8BC34A;color:#fff;">Entregado</span>';
+            } else if (estadoOrden === 4) { // EstadoOrden.EntregadoParcial
+                badgeEstado = '<span class="badge" style="background-color:#FF9800;color:#fff;">Entrega Parcial</span>';
+            } else if (totalPrendasFicha > 0 && totalControladasFicha >= totalPrendasFicha) {
+                badgeEstado = '<span class="badge" style="background-color:#29ABE2;color:#fff;">Listo para Entregar</span>';
             } else if (totalControladasFicha > 0) {
-                badgeEstado = '<span class="badge badge-warning">Incompleto</span>';
+                badgeEstado = '<span class="badge" style="background-color:#ffc107;color:#212529;">Incompleto</span>';
+            } else {
+                badgeEstado = '<span class="badge" style="background-color:#dc3545;color:#fff;">Pendiente</span>';
             }
 
             const clienteNombre = ficha.orden ? ficha.orden.nombreCliente : '-';
