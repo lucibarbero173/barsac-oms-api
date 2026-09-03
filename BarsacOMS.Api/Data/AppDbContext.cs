@@ -25,6 +25,8 @@ namespace BarsacOMS.Api.Data
         public DbSet<CostoProducto> CostosProducto { get; set; }
         public DbSet<GastoGeneral> GastosGenerales { get; set; }
         public DbSet<ConfiguracionCostos> ConfiguracionCostos { get; set; }
+        public DbSet<SaldoInicialCuenta> SaldosInicialesCuenta { get; set; }
+        public DbSet<MovimientoManualCuenta> MovimientosManualesCuenta { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -322,6 +324,35 @@ namespace BarsacOMS.Api.Data
 
                 entity.Property(e => e.Id).HasColumnName("id");
                 entity.Property(e => e.ProduccionMensualEstimada).HasColumnName("produccion_mensual_estimada");
+            });
+
+            // =====================
+            // CONCILIACIÓN DE CUENTAS
+            // =====================
+            modelBuilder.Entity<SaldoInicialCuenta>(entity =>
+            {
+                entity.ToTable("saldo_inicial_cuenta");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Cuenta).HasColumnName("cuenta");
+                entity.Property(e => e.Fecha).HasColumnName("fecha");
+                entity.Property(e => e.Monto).HasColumnName("monto");
+
+                entity.HasIndex(e => e.Cuenta).IsUnique();
+            });
+
+            modelBuilder.Entity<MovimientoManualCuenta>(entity =>
+            {
+                entity.ToTable("movimiento_manual_cuenta");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Cuenta).HasColumnName("cuenta");
+                entity.Property(e => e.Fecha).HasColumnName("fecha");
+                entity.Property(e => e.Concepto).HasColumnName("concepto");
+                entity.Property(e => e.Monto).HasColumnName("monto");
+                entity.Property(e => e.EsIngreso).HasColumnName("es_ingreso");
+
+                entity.HasIndex(e => e.Cuenta);
             });
 
             // =====================

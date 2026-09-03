@@ -5,14 +5,13 @@
 
     <!-- Protección de sesión inmediata -->
     <script src="js/auth-guard.js"></script>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Barsac2 - Clientes</title>
+    <title>Barsac² - Conciliación de Cuentas</title>
 
     <!-- Custom fonts for this template -->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -21,12 +20,16 @@
     <!-- Custom styles for this template -->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
 
-    <!-- Custom styles for this page -->
-    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
-
     <!-- TU CSS PERSONALIZADO -->
     <link href="css/custom-theme.css" rel="stylesheet">
 
+    <style>
+        .tarjeta-cuenta { cursor: pointer; transition: transform .1s; }
+        .tarjeta-cuenta:hover { transform: translateY(-2px); }
+        .tarjeta-cuenta.activa { border: 2px solid #4e73df; }
+        .fila-saldo-inicial { background-color: rgba(0,0,0,0.04); font-weight: 700; }
+        .fila-manual { background-color: rgba(78,115,223,0.06); }
+    </style>
 </head>
 
 <body id="page-top">
@@ -44,9 +47,7 @@
             <hr class="sidebar-divider">
             <div class="sidebar-heading">Compras</div>
             <li class="nav-item"><a class="nav-link" href="proveedores.html"><i class="fas fa-fw fa-truck"></i><span>Proveedores</span></a></li>
-            <li class="nav-item active"><a class="nav-link" href="pagos.html"><i class="fas fa-fw fa-file-invoice-dollar"></i><span>Pagos</span></a></li>
-
-            <!-- Menú desplegable para Materias Primas -->
+            <li class="nav-item"><a class="nav-link" href="pagos.html"><i class="fas fa-fw fa-file-invoice-dollar"></i><span>Pagos</span></a></li>
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMateria" aria-expanded="false" aria-controls="collapseMateria">
                     <i class="fas fa-fw fa-box"></i><span>Materia Prima</span>
@@ -65,17 +66,16 @@
             <li class="nav-item"><a class="nav-link" href="productos.html"><i class="fas fa-fw fa-box"></i><span>Productos</span></a></li>
             <hr class="sidebar-divider">
             <div class="sidebar-heading">Gestion</div>
-            <li class="nav-item active"><a class="nav-link" href="clientes.html"><i class="fas fa-fw fa-users"></i><span>Clientes</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="clientes.html"><i class="fas fa-fw fa-users"></i><span>Clientes</span></a></li>
             <li class="nav-item"><a class="nav-link" href="pedidos.html"><i class="fas fa-fw fa-table"></i><span>Pedidos</span></a></li>
             <li class="nav-item"><a class="nav-link" href="fichaProduccion.html"><i class="fas fa-fw fa-cut"></i><span>Fichas Producción</span></a></li>
             <li class="nav-item"><a class="nav-link" href="cobros.html"><i class="fas fa-fw fa-hand-holding-usd"></i><span>Cobros</span></a></li>
-            <li class="nav-item" data-roles="admin"><a class="nav-link" href="conciliacion.html"><i class="fas fa-fw fa-balance-scale"></i><span>Conciliación</span></a></li>
+            <li class="nav-item active" data-roles="admin"><a class="nav-link" href="conciliacion.html"><i class="fas fa-fw fa-balance-scale"></i><span>Conciliación</span></a></li>
             <li class="nav-item"><a class="nav-link" href="estadisticas.html"><i class="fas fa-fw fa-chart-bar"></i><span>Estadisticas</span></a></li>
             <li class="nav-item"><a class="nav-link" href="alertas.html"><i class="fas fa-fw fa-bell"></i><span>Alertas</span></a></li>
             <li class="nav-item" data-roles="admin"><a class="nav-link" href="usuarios.html"><i class="fas fa-fw fa-user-cog"></i><span>Usuarios</span></a></li>
             <hr class="sidebar-divider d-none d-md-block">
 
-            <!-- Botón para retraer la barra lateral -->
             <div class="text-center d-none d-md-inline">
                 <button class="rounded-circle border-0" id="sidebarToggle"></button>
             </div>
@@ -89,25 +89,16 @@
 
                 <!-- Topbar -->
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-
-                    <!-- Botón para ocultar/mostrar sidebar en celulares -->
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
-
-                    <!-- Lado derecho -->
                     <ul class="navbar-nav ml-auto align-items-center">
-
-                        <!-- Botón Modo Oscuro / Claro -->
                         <li class="nav-item">
                             <button id="themeToggle" class="btn btn-link rounded-circle mr-3 border-0" title="Cambiar Tema">
                                 <i id="themeIcon" class="fas fa-moon text-gray-600 font-size-18"></i>
                             </button>
                         </li>
-
                         <div class="topbar-divider d-none d-sm-block"></div>
-
-                        <!-- Info de Usuario -->
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -118,66 +109,95 @@
                                     <i class="fas fa-user"></i>
                                 </div>
                             </a>
-
-                            <!-- Menú desplegable -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="perfil.html">
-                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Mi Perfil
-                                </a>
-                                <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="#" id="btnLogout">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Cerrar Sesión
                                 </a>
                             </div>
                         </li>
-
                     </ul>
-
                 </nav>
                 <!-- End of Topbar -->
-                <!-- Begin Page Content -->
+
                 <div class="container-fluid pt-2">
+                    <h1 class="h3 mb-4 font-weight-bold">Conciliación de Cuentas</h1>
 
-                    <!-- Page Heading -->
-                    <h1 class="h3 mb-4 font-weight-bold">Clientes</h1>
+                    <!-- Resumen de todas las cuentas -->
+                    <div class="row" id="resumenCuentas">
+                        <!-- Se carga dinámicamente vía JS -->
+                    </div>
 
-                    <!-- Tabla de Clientes -->
                     <div class="card shadow mb-4">
-                        <div class="card-header d-flex justify-content-between align-items-center py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Listado de Clientes</h6>
-                            <button class="btn btn-success" id="btnNuevoCliente" onclick="nuevoCliente()">
-                                <i class="fas fa-plus"></i> Nuevo Cliente
-                            </button>
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap">
+                            <h6 class="m-0 font-weight-bold text-primary" id="tituloCuentaActiva">Cuenta</h6>
+                            <div class="d-flex align-items-center flex-wrap">
+                                <form id="formSaldoInicial" class="form-inline mr-3">
+                                    <label class="mr-2 mb-0 small">Saldo Inicial:</label>
+                                    <input type="date" id="inputFechaSaldoInicial" class="form-control form-control-sm mr-2" required>
+                                    <input type="number" step="0.01" id="inputMontoSaldoInicial" class="form-control form-control-sm mr-2" style="width: 130px;" placeholder="$0" required>
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">Guardar</button>
+                                </form>
+                                <button class="btn btn-success btn-sm" onclick="mostrarFormularioMovimiento()">
+                                    <i class="fas fa-plus"></i> Movimiento Manual
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- Formulario de movimiento manual (oculto hasta que se pide) -->
+                        <div class="card-body border-bottom d-none" id="cardFormularioMovimiento">
+                            <form id="formMovimientoManual" class="form-row align-items-end">
+                                <input type="hidden" id="movimientoId">
+                                <div class="form-group col-md-3">
+                                    <label class="small mb-1">Fecha</label>
+                                    <input type="date" id="movFecha" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label class="small mb-1">Concepto</label>
+                                    <input type="text" id="movConcepto" class="form-control form-control-sm" placeholder="Ej: Rendimientos, Pase de Caja..." required>
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label class="small mb-1">Monto</label>
+                                    <input type="number" step="0.01" id="movMonto" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label class="small mb-1">Tipo</label>
+                                    <select id="movTipo" class="form-control form-control-sm custom-select">
+                                        <option value="ingreso">Ingreso</option>
+                                        <option value="egreso">Egreso</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-1">
+                                    <button type="submit" class="btn btn-primary btn-sm btn-block"><i class="fas fa-save"></i></button>
+                                </div>
+                            </form>
+                        </div>
+
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <table class="table table-bordered table-sm text-center" id="tablaLibroCuenta" width="100%">
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
-                                            <th>Nombre</th>
-                                            <th>Disciplina</th>
-                                            <th>Teléfono</th>
-                                            <th>Solicitante</th>
-                                            <th>Lista Precios</th>
-                                            <th>Localidad</th>
-                                            <th class="text-center">Acciones</th>
+                                            <th>Fecha</th>
+                                            <th class="text-left">Concepto</th>
+                                            <th>Ingresos</th>
+                                            <th>Egresos</th>
+                                            <th>Saldo</th>
+                                            <th>Origen</th>
+                                            <th></th>
                                         </tr>
                                     </thead>
-                                    <tbody id="clientesBody"></tbody>
+                                    <tbody id="tablaLibroCuentaBody">
+                                        <!-- Se carga dinámicamente vía JS -->
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
-
                 </div>
-                <!-- /.container-fluid -->
 
             </div>
             <!-- End of Main Content -->
-            <!-- Footer -->
             <footer class="sticky-footer">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
@@ -185,112 +205,22 @@
                     </div>
                 </div>
             </footer>
-            <!-- End of Footer -->
-
         </div>
-        <!-- End of Content Wrapper -->
-
     </div>
-    <!-- End of Page Wrapper -->
-    <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
 
-    <!-- Modal Nuevo / Editar Cliente -->
-    <div class="modal fade" id="modalCliente" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title d-flex align-items-center text-info font-weight-bold" id="tituloModal">
-                        <i class="fas fa-user-plus mr-2"></i> Nuevo Cliente
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" id="nombre" class="form-control">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Disciplina</label>
-                        <select id="disciplina" class="form-control">
-                            <option>Futbol</option>
-                            <option>Basquet</option>
-                            <option>Tenis</option>
-                            <option>Padel</option>
-                            <option>Rugby</option>
-                            <option>Automovilismo</option>
-                            <option>Hockey</option>
-                            <option>Golf</option>
-                            <option>Running</option>
-                            <option>Boxeo</option>
-                            <option>Gimnasio</option>
-                            <option>Patin</option>
-                            <option>Natacion</option>
-                            <option>Artes Marciales</option>
-                            <option>Voley</option>
-                            <option>Yoga</option>
-                            <option>Tela</option>
-                            <option>Turismo</option>
-                            <option>Ciclismo</option>
-                            <option>Pelota paleta</option>
-                            <option>Zumba</option>
-                            <option>Ajedrez</option>
-                            <option>Otros</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Teléfono</label>
-                        <input type="text" id="telefono" class="form-control">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Solicitante</label>
-                        <input type="text" id="solicitante" class="form-control">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Localidad</label>
-                        <input type="text" id="localidad" class="form-control">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Lista de Precios</label>
-                        <select id="listaPrecios" class="form-control">
-                            <option>GENERAL</option>
-                            <option>ESPECIAL</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-secondary px-4" data-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-success px-4" id="btnGuardarCliente">Guardar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts de Librerías -->
+    <!-- JS Scripts Base -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/sb-admin-2.min.js"></script>
 
-    <!-- Plugins DataTables -->
-    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
-    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
-    <script src="js/demo/datatables-demo.js"></script>
-
-    <!-- JS Propios -->
+    <!-- JS de la vista -->
+    <script src="js/conciliacion.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/clientes.js"></script>
+
 </body>
 
 </html>
