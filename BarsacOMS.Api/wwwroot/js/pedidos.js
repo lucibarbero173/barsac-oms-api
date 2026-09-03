@@ -74,7 +74,22 @@ function cargarOrdenes() {
             });
 
             $('#dataTable').DataTable({
-                "autoWidth": false
+                "autoWidth": false,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
+                        className: 'btn btn-success btn-sm',
+                        title: 'Pedidos',
+                        // Exporta solo las filas que quedaron visibles después del buscador/filtro,
+                        // y deja afuera la columna de Acciones (no tiene sentido en el Excel).
+                        exportOptions: {
+                            columns: ':not(.no-exportar)',
+                            modifier: { search: 'applied' }
+                        }
+                    }
+                ]
             });
         });
 }
