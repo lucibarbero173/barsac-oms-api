@@ -23,7 +23,7 @@ async function cargarTablaAlertas() {
         const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
 
         // ID del estado "Entregado"
-        const ESTADO_ENTREGADO = 3;
+        const ESTADO_ENTREGADO = 2;
 
         let filasHTML = ''; // Acumular todas las filas en una variable
 
