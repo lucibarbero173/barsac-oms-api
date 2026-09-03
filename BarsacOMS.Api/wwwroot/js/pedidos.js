@@ -53,10 +53,10 @@ function cargarOrdenes() {
                         <td>${o.solicitante}</td>
                         <td>${o.disciplina}</td>
                         <td>${o.cantidadPrendas}</td>
-                        <td>$ ${o.importeTotal}</td>
-                        <td>$ ${o.senas}</td>
-                        <td>$ ${o.otrosCobros ? o.otrosCobros.toLocaleString() : 0}</td>
-                        <td>$ ${o.saldo}</td>
+                        <td>$ ${(o.importeTotal || 0).toLocaleString('es-AR')}</td>
+                        <td>$ ${(o.senas || 0).toLocaleString('es-AR')}</td>
+                        <td>$ ${(o.otrosCobros || 0).toLocaleString('es-AR')}</td>
+                        <td>$ ${(o.saldo || 0).toLocaleString('es-AR')}</td>
                         <td>${formatearEstado(o.estado)}</td>
                         <td class="text-center">
                             <button class="btn btn-info btn-sm btn-ver" data-id="${o.id}" title="Ver Detalle">
