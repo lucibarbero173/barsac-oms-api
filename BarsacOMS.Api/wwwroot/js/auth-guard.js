@@ -41,7 +41,7 @@ window.fetch = async function (...args) {
 // 3. Control de acceso por rol: qué páginas puede ver cada rol.
 //    "admin" ve todo. Los demás roles solo ven las páginas listadas acá.
 const PAGINAS_POR_ROL = {
-    control: ['control.html']
+    control: ['control.html', 'perfil.html']
 };
 
 (function () {

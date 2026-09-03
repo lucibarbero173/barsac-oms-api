@@ -274,6 +274,7 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Rol).HasColumnName("rol");
                 entity.Property(e => e.Activo).HasColumnName("activo");
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.FotoBase64).HasColumnName("foto_base64");
             });
 
             // =====================

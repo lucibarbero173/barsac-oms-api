@@ -9,5 +9,6 @@
         public string Rol { get; set; } = "usuario";
         public bool Activo { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? FotoBase64 { get; set; }
     }
 }

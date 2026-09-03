@@ -7,6 +7,29 @@ document.addEventListener('DOMContentLoaded', () => {
         lblNombre.textContent = usuarioNombre;
     }
 
+    // 1.b Traer el perfil real (nombre actualizado + foto) del servidor
+    const token = localStorage.getItem('token');
+    if (token) {
+        fetch('/api/Perfil/me')
+            .then((res) => (res.ok ? res.json() : null))
+            .then((perfil) => {
+                if (!perfil) return;
+
+                if (lblNombre) lblNombre.textContent = perfil.nombre;
+                localStorage.setItem('usuarioNombre', perfil.nombre);
+
+                if (perfil.fotoBase64) {
+                    document.querySelectorAll('.img-profile').forEach((el) => {
+                        el.innerHTML = '';
+                        el.style.backgroundImage = `url(${perfil.fotoBase64})`;
+                        el.style.backgroundSize = 'cover';
+                        el.style.backgroundPosition = 'center';
+                    });
+                }
+            })
+            .catch(() => {});
+    }
+
     // 2. Manejo de Cierre de Sesión
     const btnLogout = document.getElementById('btnLogout');
     if (btnLogout) {
