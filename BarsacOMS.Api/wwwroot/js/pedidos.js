@@ -131,8 +131,8 @@ async function verOrden(id) {
                 const nombreProducto = d.producto ? d.producto.nombre : `Producto ID: ${d.productoId}`;
                 const valorTalle = d.talle || d.talleNombre || 'ADULTO';
 
-                const precioUnitario = (d.precioUnitario || 0).toLocaleString();
-                const totalDetalle = (d.total || 0).toLocaleString();
+                const precioUnitario = (d.precioUnitario || 0).toLocaleString('es-AR');
+                const totalDetalle = (d.total || 0).toLocaleString('es-AR');
 
                 tbody.innerHTML += `
             <tr>
@@ -154,10 +154,10 @@ async function verOrden(id) {
         }
 
         // Protección en los totales de la orden (Previene el error si vienen nulos)
-        const totalGen = (orden.importeTotal || 0).toLocaleString();
-        const senasVal = (orden.senas || 0).toLocaleString();
-        const otrosCobrosVal = (orden.otrosCobros || 0).toLocaleString();
-        const saldoVal = (orden.saldo || 0).toLocaleString();
+        const totalGen = (orden.importeTotal || 0).toLocaleString('es-AR');
+        const senasVal = (orden.senas || 0).toLocaleString('es-AR');
+        const otrosCobrosVal = (orden.otrosCobros || 0).toLocaleString('es-AR');
+        const saldoVal = (orden.saldo || 0).toLocaleString('es-AR');
 
         document.getElementById("viewTotalGeneral").innerText = `$${totalGen}`;
         document.getElementById("viewSenas").innerText = `-$${senasVal}`;

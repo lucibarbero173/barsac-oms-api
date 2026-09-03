@@ -37,11 +37,11 @@ async function cargarEstadisticas() {
 }
 
 function renderizarKpis(kpis) {
-    document.getElementById("kpiSaldosImpagos").innerText = `$${kpis.totalSaldoImpago.toLocaleString()}`;
+    document.getElementById("kpiSaldosImpagos").innerText = `$${kpis.totalSaldoImpago.toLocaleString('es-AR')}`;
     document.getElementById("kpiCantSaldos").innerText = `${kpis.cantOrdenesSaldo} Órdenes con saldo`;
     document.getElementById("kpiPrendasMes").innerText = `${kpis.prendasMes} Unids`;
-    document.getElementById("kpiEgresosTotales").innerText = `$${kpis.totalEgresosMes.toLocaleString()}`;
-    document.getElementById("kpiTotalCobrado").innerText = `$${kpis.totalCobradoMes.toLocaleString()}`;
+    document.getElementById("kpiEgresosTotales").innerText = `$${kpis.totalEgresosMes.toLocaleString('es-AR')}`;
+    document.getElementById("kpiTotalCobrado").innerText = `$${kpis.totalCobradoMes.toLocaleString('es-AR')}`;
 }
 
 function renderizarTablaSaldos(saldos) {
@@ -59,9 +59,9 @@ function renderizarTablaSaldos(saldos) {
             <td><strong>#${item.numeroOrden}</strong></td>
             <td>${item.clienteNombre}</td>
             <td>${item.fechaEntrega}</td>
-            <td>$${item.total.toLocaleString()}</td>
-            <td class="text-success">$${item.montoPagado.toLocaleString()}</td>
-            <td class="text-danger font-weight-bold">$${item.saldoPendiente.toLocaleString()}</td>
+            <td>$${item.total.toLocaleString('es-AR')}</td>
+            <td class="text-success">$${item.montoPagado.toLocaleString('es-AR')}</td>
+            <td class="text-danger font-weight-bold">$${item.saldoPendiente.toLocaleString('es-AR')}</td>
             <td class="text-center">
                 <a href="pedidos.html?id=${item.numeroOrden}" class="btn btn-sm btn-primary" title="Ver Pedido">
                     <i class="fas fa-eye"></i>
@@ -117,7 +117,7 @@ function renderizarGraficoFacturadoVsCobrado(data) {
                 yAxes: [{
                     ticks: {
                         beginAtZero: true,
-                        callback: function (value) { return '$' + value.toLocaleString(); }
+                        callback: function (value) { return '$' + value.toLocaleString('es-AR'); }
                     }
                 }]
             }
@@ -145,7 +145,7 @@ function renderizarGraficoGastos(gastos) {
                     label: function (tooltipItem, chart) {
                         var dataset = chart.datasets[tooltipItem.datasetIndex];
                         var currentValue = dataset.data[tooltipItem.index];
-                        return ' $' + currentValue.toLocaleString();
+                        return ' $' + currentValue.toLocaleString('es-AR');
                     }
                 }
             }

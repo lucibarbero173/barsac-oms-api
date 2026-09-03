@@ -82,9 +82,9 @@ async function cargarTablaAlertas() {
                     <td>${o.solicitante || '-'}</td>
                     <td>${o.disciplina || '-'}</td>
                     <td>${prendas}</td>
-                    <td>$ ${importe}</td>
-                    <td>$ ${o.senas || 0}</td>
-                    <td>$ ${o.saldo || 0}</td>
+                    <td>$ ${(importe || 0).toLocaleString('es-AR')}</td>
+                    <td>$ ${(o.senas || 0).toLocaleString('es-AR')}</td>
+                    <td>$ ${(o.saldo || 0).toLocaleString('es-AR')}</td>
                     <td>${obtenerBadgeEstado(o.estado)}</td>
                     <td class="text-center">
                         <button class="btn btn-info btn-sm" title="Ver Detalle" onclick="verDetallePedido(${o.id})">
@@ -190,17 +190,17 @@ async function verDetallePedido(id) {
                         <td>${d.cantidad}</td>
                         <td>${nombreProd}</td>
                         <td>${d.talle || '-'}</td>
-                        <td class="text-right">$ ${d.precioUnitario || d.precio_unitario || d.precio || 0}</td>
-                        <td class="text-right">$ ${d.total}</td>
+                        <td class="text-right">$ ${(d.precioUnitario || d.precio_unitario || d.precio || 0).toLocaleString('es-AR')}</td>
+                        <td class="text-right">$ ${(d.total || 0).toLocaleString('es-AR')}</td>
                     </tr>
                 `;
             });
         }
 
-        document.getElementById("viewTotalGeneral").textContent = `$ ${o.importeTotal || o.importe_total || 0}`;
-        document.getElementById("viewSenas").textContent = `-$ ${o.senas || 0}`;
-        document.getElementById("viewOtrosCobros").textContent = `-$ ${o.otrosCobros || o.otros_cobros || 0}`;
-        document.getElementById("viewSaldo").textContent = `$ ${o.saldo || 0}`;
+        document.getElementById("viewTotalGeneral").textContent = `$ ${(o.importeTotal || o.importe_total || 0).toLocaleString('es-AR')}`;
+        document.getElementById("viewSenas").textContent = `-$ ${(o.senas || 0).toLocaleString('es-AR')}`;
+        document.getElementById("viewOtrosCobros").textContent = `-$ ${(o.otrosCobros || o.otros_cobros || 0).toLocaleString('es-AR')}`;
+        document.getElementById("viewSaldo").textContent = `$ ${(o.saldo || 0).toLocaleString('es-AR')}`;
 
         $('#modalVerPedido').modal('show');
     } catch (e) {

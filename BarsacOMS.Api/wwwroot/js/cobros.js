@@ -50,7 +50,7 @@ function cargarCobros() {
             data.forEach(c => {
                 let fechaFormateada = c.fechaCobro ? new Date(c.fechaCobro).toLocaleDateString('es-AR') : "-";
                 let mes = c.fechaCobro ? new Date(c.fechaCobro).getMonth() + 1 : "-";
-                let importe = (c.importe || 0).toLocaleString();
+                let importe = (c.importe || 0).toLocaleString('es-AR');
 
                 tabla.append(`
                     <tr>
