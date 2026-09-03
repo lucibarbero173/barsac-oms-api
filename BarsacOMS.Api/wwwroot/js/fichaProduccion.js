@@ -472,6 +472,7 @@ function verFicha(idFicha) {
                 <td>${p.talle || '-'}</td>
                 <td>${p.numero || '-'}</td>
                 <td>${p.nombre || '-'}</td>
+                <td>${p.detalle || '-'}</td>
                 <td>${p.archivo ? checkIcon : timesIcon}</td>
                 <td>${p.impresion ? checkIcon : timesIcon}</td>
                 <td>${p.calandra ? checkIcon : timesIcon}</td>
@@ -599,6 +600,7 @@ function verFicha(idFicha) {
                     <td>${p.talle || '-'}</td>
                     <td>${p.numero || '-'}</td>
                     <td>${p.nombre || '-'}</td>
+                    <td>${p.detalle || '-'}</td>
                     <td>${p.archivo ? checkIcon : timesIcon}</td>
                     <td>${p.impresion ? checkIcon : timesIcon}</td>
                     <td>${p.calandra ? checkIcon : timesIcon}</td>
@@ -622,6 +624,7 @@ function verFicha(idFicha) {
                                 <th>Talle</th>
                                 <th>Número</th>
                                 <th>Nombre</th>
+                                <th>Detalle</th>
                                 <th>Archivo</th>
                                 <th>Impresión</th>
                                 <th>Calandra</th>
@@ -784,6 +787,7 @@ function imprimirFichaDesdeModal() {
                 <td></td>
                 <td></td>
                 <td></td>
+                <td></td>
             </tr>
         `;
     }
@@ -798,7 +802,8 @@ function imprimirFichaDesdeModal() {
                         <th class="text-left">Producto</th>
                         <th style="width: 10%;">Talle</th>
                         <th style="width: 10%;">Número</th>
-                        <th style="width: 18%;">Nombre</th>
+                        <th style="width: 14%;">Nombre</th>
+                        <th style="width: 12%;">Detalle</th>
                         <th style="width: 8%;">Arch.</th>
                         <th style="width: 8%;">Imp.</th>
                         <th style="width: 8%;">Cal.</th>
