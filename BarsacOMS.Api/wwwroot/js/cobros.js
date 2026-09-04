@@ -20,7 +20,7 @@ function buscarDatosPedido() {
 
     if (!ordenId || ordenId <= 0) return;
 
-    fetch(`https://barsac-oms-api-production.up.railway.app/api/Orden/${ordenId}`)
+    fetch(`/api/Orden/${ordenId}`)
         .then(res => {
             if (!res.ok) throw new Error("Orden no encontrada");
             return res.json();
@@ -54,7 +54,7 @@ function cargarCobros() {
 
                 tabla.append(`
                     <tr>
-                        <td class="font-weight-bold text-primary">${c.ordenId ? '#' + c.ordenId : '-'}</td>
+                        <td class="font-weight-bold text-primary">${c.ordenId || '-'}</td>
                         <td>${fechaFormateada}</td>
                         <td>${mes}</td>
                         <td>${c.clienteId || '-'}</td>
