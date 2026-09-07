@@ -685,11 +685,18 @@ function abrirModalEntrega(idFicha) {
 
             if (pendiente <= 0) return;
 
+            // Sugerimos lo que ya está escaneado en control.html (topeado por lo pendiente),
+            // para no tener que volver a cargarlo a mano si ya se controló.
+            const unidades = p.unidades || [];
+            const controladas = unidades.filter(u => u.controlada).length;
+            const sugerido = Math.min(pendiente, controladas);
+
             $tbody.append(`
                 <tr data-producto="${p.producto}" data-talle="${p.talle || ''}">
                     <td class="align-middle">
-                        <input type="number" class="form-control form-control-sm input-cant-entregar text-center font-weight-bold text-success" 
-                               value="${pendiente}" min="0" max="${pendiente}">
+                        <input type="number" class="form-control form-control-sm input-cant-entregar text-center font-weight-bold text-success"
+                               value="${sugerido}" min="0" max="${pendiente}">
+                        <div class="small text-muted">${controladas} escaneada${controladas === 1 ? '' : 's'}</div>
                     </td>
                     <td class="align-middle">
                         <span class="text-danger font-weight-bold">${pendiente}</span> / <span class="text-muted">${p.cantidades || 1}</span>
