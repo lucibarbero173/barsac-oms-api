@@ -574,14 +574,21 @@ function verFicha(idFicha) {
         });
     }
 
-    // "Falta Entregar" ahora refleja lo que falta ESCANEAR en control.html
-    // (PrendaUnidad.Controlada), no las entregas parciales manuales viejas.
+    // "Falta Entregar" cuenta lo que esté más avanzado entre las dos formas de
+    // marcar progreso: el escaneo en control.html (PrendaUnidad.Controlada) o una
+    // entrega parcial cargada a mano por el sistema viejo. Así no importa cuál
+    // de las dos uses, "Falta Entregar" siempre refleja la realidad.
     let pendientesCalculados = [];
     itemsOriginales.forEach(item => {
         const unidades = item.unidades || [];
         const controladas = unidades.filter(u => u.controlada).length;
 
-        const resta = item.cantidades - controladas;
+        const entregadoManualItem = entregasParciales
+            .filter(e => e.producto === item.producto && (e.talle || '') === (item.talle || ''))
+            .reduce((sum, e) => sum + e.cantidades, 0);
+
+        const cubierto = Math.max(controladas, entregadoManualItem);
+        const resta = item.cantidades - cubierto;
         if (resta > 0) {
             pendientesCalculados.push({
                 ...item,
