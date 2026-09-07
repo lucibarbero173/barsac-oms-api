@@ -18,7 +18,7 @@ $(document).ready(function () {
 // CARGAR TABLA
 // =======================
 function cargarClientes() {
-    fetch("https://barsac-oms-api-production.up.railway.app/api/Cliente")
+    fetch("/api/Cliente")
         .then(res => res.json())
         .then(clientes => {
             if ($.fn.dataTable.isDataTable('#dataTable')) {
@@ -51,7 +51,21 @@ function cargarClientes() {
                 `);
             });
 
-            $('#dataTable').DataTable();
+            $('#dataTable').DataTable({
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
+                        className: 'btn btn-success btn-sm',
+                        title: 'Clientes',
+                        exportOptions: {
+                            columns: ':not(.no-exportar)',
+                            modifier: { search: 'applied' }
+                        }
+                    }
+                ]
+            });
         });
 }
 

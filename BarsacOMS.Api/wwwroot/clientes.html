@@ -23,6 +23,7 @@
 
     <!-- Custom styles for this page -->
     <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap4.min.css" rel="stylesheet">
 
     <!-- TU CSS PERSONALIZADO -->
     <link href="css/custom-theme.css" rel="stylesheet">
@@ -163,7 +164,7 @@
                                             <th>Solicitante</th>
                                             <th>Lista Precios</th>
                                             <th>Localidad</th>
-                                            <th class="text-center">Acciones</th>
+                                            <th class="text-center no-exportar">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody id="clientesBody"></tbody>
@@ -287,6 +288,12 @@
     <script src="vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
     <script src="js/demo/datatables-demo.js"></script>
+
+    <!-- Exportar a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap4.min.js"></script>
 
     <!-- JS Propios -->
     <script src="js/app.js"></script>
