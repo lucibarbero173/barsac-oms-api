@@ -163,11 +163,11 @@ async function imprimirListaPrecios() {
         productos.forEach(p => {
             htmlRows += `
                 <tr>
-                    <td style="padding: 6px 10px; border-bottom: 1px solid #ddd; text-align: left;">${p.nombre}</td>
-                    <td style="padding: 6px 10px; border-bottom: 1px solid #ddd; text-align: right;">$${p.precioAdultoEfectivo.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
-                    <td style="padding: 6px 10px; border-bottom: 1px solid #ddd; text-align: right;">$${p.precioAdultoTransf.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
-                    <td style="padding: 6px 10px; border-bottom: 1px solid #ddd; text-align: right;">$${p.precioNinoEfectivo.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
-                    <td style="padding: 6px 10px; border-bottom: 1px solid #ddd; text-align: right;">$${p.precioNinoTransf.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td style="padding: 6px 10px; border-bottom: 2px solid #555; text-align: left;">${p.nombre}</td>
+                    <td style="padding: 6px 10px; border-bottom: 2px solid #555; text-align: right;">$${p.precioAdultoEfectivo.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td style="padding: 6px 10px; border-bottom: 2px solid #555; text-align: right;">$${p.precioAdultoTransf.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td style="padding: 6px 10px; border-bottom: 2px solid #555; text-align: right;">$${p.precioNinoEfectivo.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td style="padding: 6px 10px; border-bottom: 2px solid #555; text-align: right;">$${p.precioNinoTransf.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
                 </tr>
             `;
         });

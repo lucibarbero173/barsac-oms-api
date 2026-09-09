@@ -858,7 +858,7 @@ function imprimirFichaDesdeModal() {
                         border-bottom: 1.5px solid #666;
                     }
                     table, table th, table td {
-                        border: 1.5px solid #666 !important;
+                        border: 2.5px solid #000 !important;
                     }
                     table th, table td {
                         padding: 6px !important;
