@@ -71,16 +71,6 @@ namespace BarsacOMS.Api.Services
             };
         }
 
-        public async Task<bool> GuardarImagenAsync(int fichaId, string? imagenBase64)
-        {
-            var ficha = await _context.FichasProduccion.FindAsync(fichaId);
-            if (ficha == null) return false;
-
-            ficha.ImagenDisenoBase64 = imagenBase64;
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
         public async Task<ResultadoEtapaDto?> ToggleUnidadAsync(int unidadId, int? usuarioId)
         {
             var unidad = await _context.PrendasUnidad.FindAsync(unidadId);

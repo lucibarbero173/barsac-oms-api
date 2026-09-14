@@ -5,62 +5,11 @@ let prendasActuales = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarTodo();
-
-    document.getElementById('inputImagenDiseno').addEventListener('change', async function () {
-        const file = this.files[0];
-        if (!file || !fichaActualId) return;
-
-        try {
-            const base64 = await redimensionarImagen(file, 900);
-            await guardarImagen(base64);
-        } catch (error) {
-            console.error(error);
-            alert('No se pudo procesar esa imagen.');
-        }
-    });
-
-    document.getElementById('btnQuitarImagenDiseno').addEventListener('click', async () => {
-        if (!fichaActualId) return;
-        if (!confirm('¿Quitar la imagen de esta ficha?')) return;
-        await eliminarImagen();
-    });
 });
 
 function cargarTodo() {
     cargarFichas();
     cargarAlertasFaltantes();
-}
-
-function redimensionarImagen(file, maxDimension) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                let ancho = img.width;
-                let alto = img.height;
-
-                if (ancho > alto && ancho > maxDimension) {
-                    alto = Math.round(alto * (maxDimension / ancho));
-                    ancho = maxDimension;
-                } else if (alto > maxDimension) {
-                    ancho = Math.round(ancho * (maxDimension / alto));
-                    alto = maxDimension;
-                }
-
-                const canvas = document.createElement('canvas');
-                canvas.width = ancho;
-                canvas.height = alto;
-                canvas.getContext('2d').drawImage(img, 0, 0, ancho, alto);
-
-                resolve(canvas.toDataURL('image/jpeg', 0.85));
-            };
-            img.onerror = reject;
-            img.src = e.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
 }
 
 // =====================================================
@@ -253,36 +202,5 @@ async function togglePrenda(unidadId) {
     } catch (error) {
         console.error(error);
         alert('No se pudo actualizar esa prenda.');
-    }
-}
-
-// =====================================================
-// IMAGEN DE DISEÑO
-// =====================================================
-async function guardarImagen(base64) {
-    try {
-        const res = await fetch(`${API_DISENO}/fichas/${fichaActualId}/imagen`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imagenBase64: base64 })
-        });
-        if (!res.ok) throw new Error('No se pudo guardar la imagen');
-
-        mostrarImagen(base64);
-    } catch (error) {
-        console.error(error);
-        alert('No se pudo guardar la imagen.');
-    }
-}
-
-async function eliminarImagen() {
-    try {
-        const res = await fetch(`${API_DISENO}/fichas/${fichaActualId}/imagen`, { method: 'DELETE' });
-        if (!res.ok) throw new Error('No se pudo quitar la imagen');
-
-        mostrarImagen(null);
-    } catch (error) {
-        console.error(error);
-        alert('No se pudo quitar la imagen.');
     }
 }

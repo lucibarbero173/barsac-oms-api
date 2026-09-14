@@ -37,22 +37,6 @@ namespace BarsacOMS.Api.Controllers
             return Ok(ficha);
         }
 
-        [HttpPut("fichas/{id}/imagen")]
-        public async Task<IActionResult> PutImagen(int id, [FromBody] GuardarImagenDisenoDto dto)
-        {
-            var exito = await _disenoService.GuardarImagenAsync(id, dto.ImagenBase64);
-            if (!exito) return NotFound();
-            return NoContent();
-        }
-
-        [HttpDelete("fichas/{id}/imagen")]
-        public async Task<IActionResult> DeleteImagen(int id)
-        {
-            var exito = await _disenoService.GuardarImagenAsync(id, null);
-            if (!exito) return NotFound();
-            return NoContent();
-        }
-
         [HttpPost("unidad/{id}/toggle")]
         public async Task<IActionResult> ToggleUnidad(int id)
         {
@@ -66,10 +50,5 @@ namespace BarsacOMS.Api.Controllers
         {
             return Ok(await _disenoService.ObtenerAlertasFaltantesAsync());
         }
-    }
-
-    public class GuardarImagenDisenoDto
-    {
-        public string? ImagenBase64 { get; set; }
     }
 }

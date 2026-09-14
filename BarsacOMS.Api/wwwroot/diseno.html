@@ -35,8 +35,11 @@
         }
         #placeholderImagenDiseno {
             width: 100%;
-            height: 180px;
+            height: 120px;
             border-radius: .35rem;
+            border: 1px dashed rgba(133, 135, 150, 0.4);
+            text-align: center;
+            padding: 0 1rem;
         }
     </style>
 </head>
@@ -183,33 +186,26 @@
                     <h6 class="font-weight-bold text-primary">Imagen del Diseño</h6>
                     <div class="mb-3">
                         <img id="previewImagenDiseno" class="d-none mb-2">
-                        <div id="placeholderImagenDiseno" class="bg-light border d-flex align-items-center justify-content-center text-muted mb-2">
-                            <span><i class="fas fa-image mr-1"></i> Sin imagen todavía</span>
+                        <div id="placeholderImagenDiseno" class="d-flex align-items-center justify-content-center text-muted mb-2">
+                            <span><i class="fas fa-image mr-1"></i> Esta ficha todavía no tiene imagen (se carga desde Fichas de Producción)</span>
                         </div>
-                        <label for="inputImagenDiseno" class="btn btn-outline-primary btn-sm mb-0">
-                            <i class="fas fa-upload"></i> Subir / Cambiar Imagen
-                        </label>
-                        <button type="button" class="btn btn-outline-danger btn-sm mb-0" id="btnQuitarImagenDiseno">
-                            <i class="fas fa-trash"></i> Quitar
-                        </button>
-                        <input type="file" id="inputImagenDiseno" accept="image/*" class="d-none">
                     </div>
 
                     <hr>
 
                     <h6 class="font-weight-bold text-primary d-flex justify-content-between align-items-center">
                         <span>Prendas a Preparar</span>
-                        <span id="dsProgresoTexto" class="text-dark">0 / 0 prendas preparadas</span>
+                        <span id="dsProgresoTexto" class="font-weight-bold">0 / 0 prendas preparadas</span>
                     </h6>
                     <div class="progress mb-3" style="height: 18px;">
                         <div id="dsBarraProgreso" class="progress-bar bg-success" role="progressbar" style="width: 0%;">0%</div>
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered">
-                            <thead>
+                        <table class="table table-bordered table-sm text-center align-middle">
+                            <thead class="bg-white">
                                 <tr>
-                                    <th style="width: 40px;"></th>
+                                    <th style="width: 40px;">✓</th>
                                     <th class="text-left">Producto</th>
                                     <th>Talle</th>
                                     <th>Nombre / Número</th>

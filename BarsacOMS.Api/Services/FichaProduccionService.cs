@@ -99,6 +99,7 @@ namespace BarsacOMS.Api.Services
             // Sin conflictos: aplicar cambios
             fichaExistente.Modista = ficha.Modista;
             fichaExistente.OrdenId = ficha.OrdenId;
+            fichaExistente.ImagenDisenoBase64 = ficha.ImagenDisenoBase64;
 
             foreach (var existente in aBorrar)
             {

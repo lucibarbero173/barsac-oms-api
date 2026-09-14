@@ -2,6 +2,7 @@
 let ordenesDisponibles = [];
 let cargandoOrden = false;
 let fichaIdEnVista = null;
+let imagenDisenoActual = null;
 
 $(document).ready(function () {
     // Inicializar DataTable
@@ -26,7 +27,71 @@ $(document).ready(function () {
     $(document).on('input', '.input-cantidades', function () {
         actualizarTotalPrendasFicha();
     });
+
+    // Imagen del diseño (se carga al crear o editar la ficha)
+    $('#inputImagenFicha').on('change', async function () {
+        const file = this.files[0];
+        if (!file) return;
+
+        try {
+            imagenDisenoActual = await redimensionarImagenFicha(file, 900);
+            mostrarImagenFicha(imagenDisenoActual);
+        } catch (error) {
+            console.error(error);
+            alert('No se pudo procesar esa imagen.');
+        }
+    });
+
+    $('#btnQuitarImagenFicha').on('click', function () {
+        imagenDisenoActual = null;
+        mostrarImagenFicha(null);
+    });
 });
+
+function redimensionarImagenFicha(file, maxDimension) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                let ancho = img.width;
+                let alto = img.height;
+
+                if (ancho > alto && ancho > maxDimension) {
+                    alto = Math.round(alto * (maxDimension / ancho));
+                    ancho = maxDimension;
+                } else if (alto > maxDimension) {
+                    ancho = Math.round(ancho * (maxDimension / alto));
+                    alto = maxDimension;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = ancho;
+                canvas.height = alto;
+                canvas.getContext('2d').drawImage(img, 0, 0, ancho, alto);
+
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function mostrarImagenFicha(base64) {
+    const $img = $('#previewImagenFicha');
+    const $placeholder = $('#placeholderImagenFicha');
+
+    if (base64) {
+        $img.attr('src', base64).removeClass('d-none');
+        $placeholder.addClass('d-none');
+    } else {
+        $img.addClass('d-none');
+        $placeholder.removeClass('d-none');
+    }
+}
 
 async function cargarOrdenesParaSelect(fichaActualIdEnEdicion = null) {
     try {
@@ -205,6 +270,9 @@ function abrirModalGenerarFicha() {
     $('#modalFichaTitulo').text('Generar Ficha de Producción');
     $('#modalDetalleBody').empty();
 
+    imagenDisenoActual = null;
+    mostrarImagenFicha(null);
+
     $('#selectPedido').prop('disabled', false);
     actualizarTotalPrendasFicha();
     $('#modalFichaProduccion').modal('show');
@@ -372,6 +440,7 @@ async function guardarFicha() {
     const payload = {
         ordenId: ordenId,
         modista: modista || 'Sin asignar',
+        imagenDisenoBase64: imagenDisenoActual,
         items: items
     };
 
@@ -442,6 +511,9 @@ async function editarFicha(idFicha) {
     $('#selectModista').val(ficha.modista);
     $('#inputFechaPedido').val(ficha.orden && ficha.orden.fechaPedido ? ficha.orden.fechaPedido.split('T')[0] : '');
     $('#inputFechaEntrega').val(ficha.orden && ficha.orden.fechaEntrega ? ficha.orden.fechaEntrega.split('T')[0] : '');
+
+    imagenDisenoActual = ficha.imagenDisenoBase64 || null;
+    mostrarImagenFicha(imagenDisenoActual);
 
     const $body = $('#modalDetalleBody');
     $body.empty();
