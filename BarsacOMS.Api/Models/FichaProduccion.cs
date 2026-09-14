@@ -14,6 +14,9 @@ namespace BarsacOMS.Api.Models
 
         public string Modista { get; set; }
 
+        // Imagen del diseño, cargada por el diseñador (reemplaza el Word aparte).
+        public string? ImagenDisenoBase64 { get; set; }
+
         public List<DetalleFichaProduccion> Items { get; set; } = new();
 
         public List<EntregaParcial> EntregasParciales { get; set; } = new();

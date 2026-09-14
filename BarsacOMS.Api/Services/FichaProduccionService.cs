@@ -66,14 +66,17 @@ namespace BarsacOMS.Api.Services
             var payloadNuevos = ficha.Items.Where(i => i.Id == 0).ToList();
             var aBorrar = fichaExistente.Items.Where(existente => !payloadPorId.ContainsKey(existente.Id)).ToList();
 
-            // Validar ANTES de tocar nada: no se puede borrar ni reducir por debajo de lo ya controlado
+            // Validar ANTES de tocar nada: no se puede borrar ni reducir por debajo de lo que ya
+            // avanzó en cualquier etapa (Diseño, Corte o Control), para no perder trabajo hecho.
+            static bool TieneAvance(PrendaUnidad u) => u.Controlada || u.DisenoListo || u.CorteEstado != EstadoCorte.Pendiente;
+
             var conflictos = new List<string>();
 
             foreach (var existente in aBorrar)
             {
-                if (existente.Unidades.Any(u => u.Controlada))
+                if (existente.Unidades.Any(TieneAvance))
                 {
-                    conflictos.Add($"La línea \"{existente.Producto} - talle {existente.Talle}\" ya tiene prendas controladas y no puede eliminarse.");
+                    conflictos.Add($"La línea \"{existente.Producto} - talle {existente.Talle}\" ya tiene prendas con avance (Diseño/Corte/Control) y no puede eliminarse.");
                 }
             }
 
@@ -81,10 +84,10 @@ namespace BarsacOMS.Api.Services
             {
                 if (!payloadPorId.TryGetValue(existente.Id, out var nuevo)) continue;
 
-                int controladas = existente.Unidades.Count(u => u.Controlada);
-                if (nuevo.Cantidades < controladas)
+                int conAvance = existente.Unidades.Count(TieneAvance);
+                if (nuevo.Cantidades < conAvance)
                 {
-                    conflictos.Add($"La línea \"{existente.Producto} - talle {existente.Talle}\" tiene {controladas} prenda(s) ya controlada(s), no se puede bajar la cantidad a {nuevo.Cantidades}.");
+                    conflictos.Add($"La línea \"{existente.Producto} - talle {existente.Talle}\" tiene {conAvance} prenda(s) con avance (Diseño/Corte/Control), no se puede bajar la cantidad a {nuevo.Cantidades}.");
                 }
             }
 
@@ -129,7 +132,7 @@ namespace BarsacOMS.Api.Services
                 else if (delta < 0)
                 {
                     var sobrantes = existente.Unidades
-                        .Where(u => !u.Controlada)
+                        .Where(u => !TieneAvance(u))
                         .OrderByDescending(u => u.Id)
                         .Take(-delta)
                         .ToList();

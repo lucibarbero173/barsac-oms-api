@@ -8,7 +8,7 @@ namespace BarsacOMS.Api.Services
     public class UsuarioService : IUsuarioService
     {
         // Roles válidos hoy. Se amplía cuando se sumen los roles de las próximas fases (corte, preparacion).
-        private static readonly string[] RolesValidos = { "admin", "control" };
+        private static readonly string[] RolesValidos = { "admin", "control", "diseno", "corte" };
 
         private readonly AppDbContext _context;
 

@@ -50,7 +50,8 @@
                 localStorage.setItem('usuarioRol', rol);
             }
 
-            const destino = rol === 'control' ? 'control.html' : 'estadisticas.html';
+            const destinosPorRol = { control: 'control.html', diseno: 'diseno.html', corte: 'corte.html' };
+            const destino = destinosPorRol[rol] || 'estadisticas.html';
             console.log("Redirigiendo a " + destino + "...");
             window.location.replace(destino);
         } else {

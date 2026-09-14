@@ -38,6 +38,7 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Id).HasColumnName("id");
                 entity.Property(e => e.OrdenId).HasColumnName("orden_id");
                 entity.Property(e => e.Modista).HasColumnName("modista");
+                entity.Property(e => e.ImagenDisenoBase64).HasColumnName("imagen_diseno_base64");
 
                 entity.HasOne(e => e.Orden)
                       .WithMany()
@@ -89,6 +90,16 @@ namespace BarsacOMS.Api.Data
 
                 entity.Property(e => e.Id).HasColumnName("id");
                 entity.Property(e => e.DetalleFichaProduccionId).HasColumnName("detalle_ficha_produccion_id");
+
+                entity.Property(e => e.DisenoListo).HasColumnName("diseno_listo");
+                entity.Property(e => e.FechaDiseno).HasColumnName("fecha_diseno");
+                entity.Property(e => e.DisenoPorUsuarioId).HasColumnName("diseno_por_usuario_id");
+
+                entity.Property(e => e.CorteEstado).HasColumnName("corte_estado");
+                entity.Property(e => e.CorteDetalleFaltante).HasColumnName("corte_detalle_faltante");
+                entity.Property(e => e.FechaCorte).HasColumnName("fecha_corte");
+                entity.Property(e => e.CortadoPorUsuarioId).HasColumnName("cortado_por_usuario_id");
+
                 entity.Property(e => e.Controlada).HasColumnName("controlada");
                 entity.Property(e => e.FechaControl).HasColumnName("fecha_control");
                 entity.Property(e => e.ControladoPorUsuarioId).HasColumnName("controlado_por_usuario_id");
@@ -96,6 +107,16 @@ namespace BarsacOMS.Api.Data
                 entity.HasOne<Usuario>()
                       .WithMany()
                       .HasForeignKey(e => e.ControladoPorUsuarioId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne<Usuario>()
+                      .WithMany()
+                      .HasForeignKey(e => e.DisenoPorUsuarioId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne<Usuario>()
+                      .WithMany()
+                      .HasForeignKey(e => e.CortadoPorUsuarioId)
                       .OnDelete(DeleteBehavior.SetNull);
             });
 
