@@ -20,7 +20,7 @@ namespace BarsacOMS.Api.Services
                 .Include(f => f.Orden)
                 .Include(f => f.Items)
                     .ThenInclude(i => i.Unidades)
-                .Where(f => f.Orden.Estado == EstadoOrden.EnProceso)
+                .Where(f => f.Orden.Estado == EstadoOrden.Pendiente || f.Orden.Estado == EstadoOrden.EnProceso)
                 .ToListAsync();
 
             return fichas.Select(f => new FichaResumenEtapaDto
@@ -107,9 +107,16 @@ namespace BarsacOMS.Api.Services
             var (completadas, total) = await CalcularProgresoOrdenAsync(ordenId, u => u.DisenoListo);
 
             var orden = await _context.Ordenes.FindAsync(ordenId);
-            if (orden != null && orden.Estado == EstadoOrden.EnProceso && total > 0 && completadas == total)
+            if (orden != null && (orden.Estado == EstadoOrden.Pendiente || orden.Estado == EstadoOrden.EnProceso))
             {
-                orden.Estado = EstadoOrden.Corte;
+                if (total > 0 && completadas == total)
+                {
+                    orden.Estado = EstadoOrden.Corte;
+                }
+                else if (completadas > 0)
+                {
+                    orden.Estado = EstadoOrden.EnProceso; // ya se empezó a trabajar en el diseño
+                }
                 await _context.SaveChangesAsync();
             }
 
