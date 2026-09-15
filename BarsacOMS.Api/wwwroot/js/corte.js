@@ -80,7 +80,7 @@ async function abrirFicha(fichaId) {
         if (ficha.imagenDisenoBase64) {
             $zonaImagen.html(`
                 <h6 class="font-weight-bold text-primary">Imagen del Diseño</h6>
-                <img id="previewImagenCorte" src="${ficha.imagenDisenoBase64}">
+                <img id="previewImagenCorte" src="${ficha.imagenDisenoBase64}" style="cursor: zoom-in;" onclick="abrirZoomImagen(this.src)" title="Click para agrandar">
             `);
         } else {
             $zonaImagen.html('<div class="text-muted small"><i class="fas fa-image mr-1"></i> Esta ficha no tiene imagen de diseño cargada.</div>');
@@ -106,8 +106,10 @@ function renderPrendas() {
         let claseFila = '';
         let celdaEstado = '<span class="badge badge-secondary">Pendiente</span>';
         let celdaAcciones = `
-            <button class="btn btn-success btn-sm" onclick="completarUnidad(${p.id})"><i class="fas fa-check"></i> Completa</button>
-            <button class="btn btn-outline-danger btn-sm" onclick="mostrarFormFaltante(${p.id})"><i class="fas fa-exclamation-triangle"></i> Faltante</button>
+            <div class="d-flex flex-column" style="gap: 4px;">
+                <button class="btn btn-success btn-sm" onclick="completarUnidad(${p.id})"><i class="fas fa-check"></i> Completa</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="mostrarFormFaltante(${p.id})"><i class="fas fa-exclamation-triangle"></i> Faltante</button>
+            </div>
         `;
 
         if (p.corteEstado === 1) {
@@ -125,8 +127,8 @@ function renderPrendas() {
                 <td class="text-left">${p.producto}</td>
                 <td>${p.talle || '-'}</td>
                 <td>${nombreNumero}</td>
-                <td class="celda-estado-corte">${celdaEstado}</td>
-                <td class="celda-acciones-corte">${celdaAcciones}</td>
+                <td class="celda-estado-corte align-middle">${celdaEstado}</td>
+                <td class="celda-acciones-corte align-middle">${celdaAcciones}</td>
             </tr>
         `);
     });

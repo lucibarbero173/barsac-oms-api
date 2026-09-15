@@ -178,14 +178,14 @@
 
                     <h6 class="font-weight-bold text-primary">Prendas</h6>
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered">
-                            <thead>
+                        <table class="table table-bordered table-sm text-center align-middle">
+                            <thead class="bg-white">
                                 <tr>
                                     <th class="text-left">Producto</th>
                                     <th>Talle</th>
                                     <th>Nombre / Número</th>
                                     <th>Estado</th>
-                                    <th style="width: 220px;">Acciones</th>
+                                    <th style="width: 150px;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="ctPrendasBody">
@@ -197,6 +197,18 @@
                 <div class="modal-footer py-2">
                     <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Cerrar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ZOOM DE IMAGEN -->
+    <div class="modal fade" id="modalZoomImagen" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+            <div class="modal-content bg-dark border-0">
+                <button type="button" class="close text-white px-3 py-2" data-dismiss="modal" aria-label="Close" style="position: absolute; right: 0; top: 0; z-index: 10; opacity: .9;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <img id="imgZoomGrande" src="" style="width: 100%; max-height: 85vh; object-fit: contain;">
             </div>
         </div>
     </div>

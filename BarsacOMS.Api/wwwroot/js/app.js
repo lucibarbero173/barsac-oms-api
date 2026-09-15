@@ -1,4 +1,15 @@
 ﻿// js/app.js - Lógica Global (Topbar, Tema y Sesión)
+
+// Click en cualquier imagen para verla grande (requiere <div id="modalZoomImagen"> en la página)
+function abrirZoomImagen(src) {
+    if (!src) return;
+    const $modal = $('#modalZoomImagen');
+    if ($modal.length === 0) return;
+
+    $('#imgZoomGrande').attr('src', src);
+    $modal.modal('show');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Cargar Nombre de Usuario en la Topbar
     const usuarioNombre = localStorage.getItem('usuarioNombre');

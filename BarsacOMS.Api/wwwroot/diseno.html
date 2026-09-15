@@ -185,7 +185,7 @@
 
                     <h6 class="font-weight-bold text-primary">Imagen del Diseño</h6>
                     <div class="mb-3">
-                        <img id="previewImagenDiseno" class="d-none mb-2">
+                        <img id="previewImagenDiseno" class="d-none mb-2" style="cursor: zoom-in;" onclick="abrirZoomImagen(this.src)" title="Click para agrandar">
                         <div id="placeholderImagenDiseno" class="d-flex align-items-center justify-content-center text-muted mb-2">
                             <span><i class="fas fa-image mr-1"></i> Esta ficha todavía no tiene imagen (se carga desde Fichas de Producción)</span>
                         </div>
@@ -221,6 +221,18 @@
                 <div class="modal-footer py-2">
                     <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Cerrar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ZOOM DE IMAGEN -->
+    <div class="modal fade" id="modalZoomImagen" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+            <div class="modal-content bg-dark border-0">
+                <button type="button" class="close text-white px-3 py-2" data-dismiss="modal" aria-label="Close" style="position: absolute; right: 0; top: 0; z-index: 10; opacity: .9;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <img id="imgZoomGrande" src="" style="width: 100%; max-height: 85vh; object-fit: contain;">
             </div>
         </div>
     </div>
