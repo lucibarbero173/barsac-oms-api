@@ -45,8 +45,8 @@ async function cargarFichas() {
                         </div>
                     </td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="abrirFicha(${f.fichaId})">
-                            <i class="fas fa-pencil-ruler"></i> Abrir
+                        <button class="btn btn-primary btn-sm" onclick="abrirFicha(${f.fichaId})" title="Abrir">
+                            <i class="fas fa-pencil-ruler"></i>
                         </button>
                     </td>
                 </tr>
