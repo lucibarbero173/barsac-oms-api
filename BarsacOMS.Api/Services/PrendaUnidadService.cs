@@ -48,6 +48,31 @@ namespace BarsacOMS.Api.Services
             return await query.ToListAsync();
         }
 
+        public async Task<List<PrendaUnidadDto>> ObtenerPorOrdenAsync(int ordenId)
+        {
+            var query =
+                from pu in _context.PrendasUnidad
+                join d in _context.DetallesFichaProduccion on pu.DetalleFichaProduccionId equals d.Id
+                join f in _context.FichasProduccion on d.FichaProduccionId equals f.Id
+                where f.OrdenId == ordenId
+                orderby pu.Id
+                select new PrendaUnidadDto
+                {
+                    Id = pu.Id,
+                    DetalleFichaProduccionId = pu.DetalleFichaProduccionId,
+                    OrdenId = f.OrdenId,
+                    Producto = d.Producto,
+                    Talle = d.Talle,
+                    Numero = d.Numero,
+                    Nombre = d.Nombre,
+                    Detalle = d.Detalle,
+                    Controlada = pu.Controlada,
+                    FechaControl = pu.FechaControl
+                };
+
+            return await query.ToListAsync();
+        }
+
         public async Task<EscanearResultadoDto?> EscanearAsync(int prendaUnidadId, int? usuarioId)
         {
             var pu = await _context.PrendasUnidad.FindAsync(prendaUnidadId);

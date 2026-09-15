@@ -143,12 +143,14 @@ function mostrarImagen(base64) {
     const $img = $('#previewImagenDiseno');
     const $placeholder = $('#placeholderImagenDiseno');
 
+    // display inline además de la clase: así queda a prueba de cualquier CSS que
+    // choque con el d-none de Bootstrap y nunca se ven las dos cosas a la vez.
     if (base64) {
-        $img.attr('src', base64).removeClass('d-none');
-        $placeholder.addClass('d-none');
+        $img.attr('src', base64).removeClass('d-none').css('display', '');
+        $placeholder.addClass('d-none').css('display', 'none');
     } else {
-        $img.addClass('d-none');
-        $placeholder.removeClass('d-none');
+        $img.addClass('d-none').css('display', 'none');
+        $placeholder.removeClass('d-none').css('display', '');
     }
 }
 

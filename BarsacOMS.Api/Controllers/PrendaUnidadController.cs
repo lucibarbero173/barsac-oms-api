@@ -37,6 +37,13 @@ namespace BarsacOMS.Api.Controllers
             return Ok(resultado);
         }
 
+        [HttpGet("orden/{ordenId}")]
+        public async Task<IActionResult> GetPorOrden(int ordenId)
+        {
+            var unidades = await _service.ObtenerPorOrdenAsync(ordenId);
+            return Ok(unidades);
+        }
+
         [HttpGet("resumen-orden/{ordenId}")]
         public async Task<IActionResult> GetResumenOrden(int ordenId)
         {

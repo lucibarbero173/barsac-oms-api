@@ -9,6 +9,7 @@ namespace BarsacOMS.Api.Services
         Task GenerarUnidadesAsync(DetalleFichaProduccion item);
 
         Task<List<PrendaUnidadDto>> ObtenerPorFichaAsync(int fichaId);
+        Task<List<PrendaUnidadDto>> ObtenerPorOrdenAsync(int ordenId);
 
         Task<EscanearResultadoDto?> EscanearAsync(int prendaUnidadId, int? usuarioId);
 

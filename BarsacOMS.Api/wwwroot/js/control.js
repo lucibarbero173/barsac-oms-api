@@ -50,6 +50,7 @@ inputEscaneo.addEventListener('keypress', async (e) => {
             const tipo = data.yaEstabaControlada ? 'repetida' : 'ok';
             const detalle = `${data.prenda.producto} - Talle ${data.prenda.talle}`;
             agregarHistorial(tipo, `#${id} ${detalle}`);
+            cargarPedidoActual(data.prenda.ordenId, id);
         }
     } catch (error) {
         console.error('Error de conexión al escanear:', error);
@@ -90,6 +91,59 @@ function mostrarError(mensaje) {
         <h2><i class="fas fa-times-circle"></i> Error</h2>
         <p>${mensaje}</p>
     `;
+}
+
+// =====================================================
+// PANEL DERECHO: detalle completo del pedido que se está controlando
+// =====================================================
+async function cargarPedidoActual(ordenId, idRecienEscaneado) {
+    try {
+        const res = await fetch(`/api/PrendaUnidad/orden/${ordenId}`);
+        if (!res.ok) return;
+
+        const prendas = await res.json();
+        renderPedidoActual(ordenId, prendas, idRecienEscaneado);
+    } catch (error) {
+        console.error('Error al cargar el detalle del pedido:', error);
+    }
+}
+
+function renderPedidoActual(ordenId, prendas, idRecienEscaneado) {
+    document.getElementById('panelPedidoVacio').classList.add('d-none');
+    document.getElementById('panelPedidoContenido').classList.remove('d-none');
+
+    document.getElementById('pedidoActualId').textContent = ordenId;
+
+    const controladas = prendas.filter(p => p.controlada).length;
+    document.getElementById('pedidoActualControladas').textContent = controladas;
+    document.getElementById('pedidoActualTotal').textContent = prendas.length;
+
+    const $body = $('#pedidoActualBody');
+    $body.empty();
+
+    prendas.forEach(p => {
+        const nombreNumero = [p.nombre, p.numero ? '#' + p.numero : null].filter(Boolean).join(' ') || '-';
+        const claseFila = p.controlada ? 'fila-prenda-controlada' : '';
+        const estado = p.controlada
+            ? '<span class="badge badge-success">Controlada</span>'
+            : '<span class="badge badge-secondary">Pendiente</span>';
+
+        $body.append(`
+            <tr class="${claseFila}" data-id="${p.id}">
+                <td class="text-left">${p.producto}</td>
+                <td>${p.talle || '-'}</td>
+                <td>${nombreNumero}</td>
+                <td>${estado}</td>
+            </tr>
+        `);
+    });
+
+    if (idRecienEscaneado) {
+        const $filaEscaneada = $(`#pedidoActualBody tr[data-id="${idRecienEscaneado}"]`);
+        if ($filaEscaneada.length) {
+            $filaEscaneada[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+    }
 }
 
 function agregarHistorial(tipo, texto) {

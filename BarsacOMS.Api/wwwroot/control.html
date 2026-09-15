@@ -82,28 +82,84 @@
         .historial-ok { background-color: rgba(28, 124, 63, 0.2); }
         .historial-repetida { background-color: rgba(184, 134, 11, 0.2); }
         .historial-error { background-color: rgba(161, 46, 46, 0.2); }
+
+        .control-layout {
+            display: flex;
+            min-height: 100vh;
+            align-items: stretch;
+        }
+
+        .control-wrapper {
+            flex: 0 0 auto;
+            width: 640px;
+            max-width: 100%;
+        }
+
+        .panel-pedido {
+            flex: 1 1 auto;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .panel-pedido table { color: #dfe3ea; }
+        .panel-pedido thead th { color: #fff; border-bottom-color: rgba(255,255,255,0.15); }
+        .panel-pedido td, .panel-pedido th { border-color: rgba(255,255,255,0.08); }
+
+        tr.fila-prenda-controlada { background-color: rgba(28, 124, 63, 0.25) !important; }
+
+        .panel-pedido-vacio {
+            color: #aab2c5;
+            text-align: center;
+            margin-top: 60px;
+        }
     </style>
 </head>
 
 <body id="page-top">
 
-    <div class="control-wrapper">
-        <div class="control-topbar">
-            <span class="text-light mr-3" id="lblNombreUsuario"></span>
-            <a href="#" id="btnLogout" class="text-light"><i class="fas fa-sign-out-alt"></i> Salir</a>
+    <div class="control-layout">
+        <div class="control-wrapper">
+            <div class="control-topbar">
+                <span class="text-light mr-3" id="lblNombreUsuario"></span>
+                <a href="#" id="btnLogout" class="text-light"><i class="fas fa-sign-out-alt"></i> Salir</a>
+            </div>
+
+            <h1 class="text-light h3 mb-3">Control de Producción</h1>
+            <p class="text-light mb-4">Escaneá el código de la prenda con el lector</p>
+
+            <input type="text" id="inputEscaneo" class="form-control" autofocus autocomplete="off" placeholder="Esperando escaneo...">
+
+            <div class="feedback-box feedback-vacia" id="feedbackBox">
+                <h2><i class="fas fa-barcode"></i></h2>
+                <p>Escaneá una prenda para empezar</p>
+            </div>
+
+            <div class="historial" id="historial"></div>
         </div>
 
-        <h1 class="text-light h3 mb-3">Control de Producción</h1>
-        <p class="text-light mb-4">Escaneá el código de la prenda con el lector</p>
-
-        <input type="text" id="inputEscaneo" class="form-control" autofocus autocomplete="off" placeholder="Esperando escaneo...">
-
-        <div class="feedback-box feedback-vacia" id="feedbackBox">
-            <h2><i class="fas fa-barcode"></i></h2>
-            <p>Escaneá una prenda para empezar</p>
+        <div class="panel-pedido" id="panelPedido">
+            <div class="panel-pedido-vacio" id="panelPedidoVacio">
+                <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                <p>Escaneá una prenda para ver acá el detalle completo del pedido.</p>
+            </div>
+            <div id="panelPedidoContenido" class="d-none">
+                <h5 class="text-light mb-1">Pedido #<span id="pedidoActualId"></span></h5>
+                <p class="text-light mb-3"><span id="pedidoActualControladas">0</span> / <span id="pedidoActualTotal">0</span> prendas controladas</p>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Talle</th>
+                            <th>Nombre / Número</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pedidoActualBody"></tbody>
+                </table>
+            </div>
         </div>
-
-        <div class="historial" id="historial"></div>
     </div>
 
     <script src="vendor/jquery/jquery.min.js"></script>
