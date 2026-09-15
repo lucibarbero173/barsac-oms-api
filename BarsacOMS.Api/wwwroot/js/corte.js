@@ -106,10 +106,8 @@ function renderPrendas() {
         let claseFila = '';
         let celdaEstado = '<span class="badge badge-secondary">Pendiente</span>';
         let celdaAcciones = `
-            <div class="d-flex flex-column" style="gap: 4px;">
-                <button class="btn btn-success btn-sm" onclick="completarUnidad(${p.id})"><i class="fas fa-check"></i> Completa</button>
-                <button class="btn btn-outline-danger btn-sm" onclick="mostrarFormFaltante(${p.id})"><i class="fas fa-exclamation-triangle"></i> Faltante</button>
-            </div>
+            <button class="btn btn-success btn-sm" onclick="completarUnidad(${p.id})" title="Completa"><i class="fas fa-check"></i></button>
+            <button class="btn btn-outline-danger btn-sm" onclick="mostrarFormFaltante(${p.id})" title="Faltante"><i class="fas fa-times"></i></button>
         `;
 
         if (p.corteEstado === 1) {
@@ -119,7 +117,7 @@ function renderPrendas() {
         } else if (p.corteEstado === 2) {
             claseFila = 'fila-prenda-corte faltante';
             celdaEstado = `<span class="badge badge-danger">Faltante</span><div class="small text-danger">${p.corteDetalleFaltante || ''}</div>`;
-            celdaAcciones = `<button class="btn btn-success btn-sm" onclick="completarUnidad(${p.id})"><i class="fas fa-check"></i> Resolver</button>`;
+            celdaAcciones = `<button class="btn btn-success btn-sm" onclick="completarUnidad(${p.id})" title="Resolver"><i class="fas fa-check"></i></button>`;
         }
 
         $body.append(`
