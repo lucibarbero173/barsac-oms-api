@@ -177,13 +177,12 @@ namespace BarsacOMS.Api.Services
 
             return ordenes.Where(o =>
             {
-                var mapa = repartidoPorOrden.GetValueOrDefault(o.Id) ?? new Dictionary<(string, string), int>();
-                return o.Detalles.Any(d =>
-                {
-                    var key = (d.Producto?.Nombre ?? "", d.Talle ?? "");
-                    var repartido = mapa.GetValueOrDefault(key);
-                    return d.Cantidad > repartido;
-                });
+                var mapa = repartidoPorOrden.GetValueOrDefault(o.Id) ?? new Dictionary<string, int>();
+                var pedidoPorProducto = o.Detalles
+                    .GroupBy(d => d.Producto?.Nombre ?? "")
+                    .Select(g => new { Producto = g.Key, Cantidad = g.Sum(d => d.Cantidad) });
+
+                return pedidoPorProducto.Any(p => p.Cantidad > mapa.GetValueOrDefault(p.Producto));
             }).ToList();
         }
 
@@ -205,30 +204,32 @@ namespace BarsacOMS.Api.Services
                 ? todasLasFichas.Where(f => f.Id != excluirFichaId.Value)
                 : todasLasFichas;
 
-            var repartido = new Dictionary<(string, string), int>();
+            // Se compara solo por producto: el "talle" del pedido es una categoría de precio
+            // (ej. "NIÑO"/"ADULTO") que no tiene por qué coincidir con el talle real de
+            // fabricación que se carga en la ficha (ej. "12", "14", "M").
+            var repartido = new Dictionary<string, int>();
             foreach (var f in fichasParaRepartir)
             {
                 foreach (var item in f.Items)
                 {
-                    var key = (item.Producto, item.Talle ?? "");
-                    repartido[key] = repartido.GetValueOrDefault(key) + item.Cantidades;
+                    repartido[item.Producto] = repartido.GetValueOrDefault(item.Producto) + item.Cantidades;
                 }
             }
 
-            var lineas = orden.Detalles.Select(d =>
-            {
-                var nombreProducto = d.Producto?.Nombre ?? "";
-                var key = (nombreProducto, d.Talle ?? "");
-                var yaRepartido = repartido.GetValueOrDefault(key);
-                return new DisponibilidadLineaDto
+            var lineas = orden.Detalles
+                .GroupBy(d => d.Producto?.Nombre ?? "")
+                .Select(g =>
                 {
-                    Producto = nombreProducto,
-                    Talle = d.Talle,
-                    CantidadPedida = d.Cantidad,
-                    CantidadRepartida = yaRepartido,
-                    Disponible = Math.Max(0, d.Cantidad - yaRepartido)
-                };
-            }).ToList();
+                    var cantidadPedida = g.Sum(d => d.Cantidad);
+                    var yaRepartido = repartido.GetValueOrDefault(g.Key);
+                    return new DisponibilidadLineaDto
+                    {
+                        Producto = g.Key,
+                        CantidadPedida = cantidadPedida,
+                        CantidadRepartida = yaRepartido,
+                        Disponible = Math.Max(0, cantidadPedida - yaRepartido)
+                    };
+                }).ToList();
 
             var fichasExistentes = todasLasFichas
                 .Where(f => !excluirFichaId.HasValue || f.Id != excluirFichaId.Value)
@@ -270,20 +271,19 @@ namespace BarsacOMS.Api.Services
             return true;
         }
 
-        private static Dictionary<int, Dictionary<(string, string), int>> ConstruirMapaRepartidoPorOrden(List<FichaProduccion> fichas)
+        private static Dictionary<int, Dictionary<string, int>> ConstruirMapaRepartidoPorOrden(List<FichaProduccion> fichas)
         {
-            var mapaPorOrden = new Dictionary<int, Dictionary<(string, string), int>>();
+            var mapaPorOrden = new Dictionary<int, Dictionary<string, int>>();
             foreach (var f in fichas)
             {
                 if (!mapaPorOrden.TryGetValue(f.OrdenId, out var mapa))
                 {
-                    mapa = new Dictionary<(string, string), int>();
+                    mapa = new Dictionary<string, int>();
                     mapaPorOrden[f.OrdenId] = mapa;
                 }
                 foreach (var item in f.Items)
                 {
-                    var key = (item.Producto, item.Talle ?? "");
-                    mapa[key] = mapa.GetValueOrDefault(key) + item.Cantidades;
+                    mapa[item.Producto] = mapa.GetValueOrDefault(item.Producto) + item.Cantidades;
                 }
             }
             return mapaPorOrden;

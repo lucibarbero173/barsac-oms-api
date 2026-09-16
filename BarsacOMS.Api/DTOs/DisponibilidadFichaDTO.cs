@@ -1,11 +1,12 @@
 namespace BarsacOMS.Api.DTOs
 {
-    // Cuánto queda por repartir de cada línea del pedido entre sus fichas
+    // Cuánto queda por repartir de cada producto del pedido entre sus fichas
     // (un pedido puede tener varias fichas = varias tandas de producción).
+    // Se agrupa solo por producto: el talle del pedido es una categoría de precio
+    // (ej. "NIÑO"/"ADULTO") que no coincide con el talle real de fabricación de la ficha.
     public class DisponibilidadLineaDto
     {
         public string Producto { get; set; } = string.Empty;
-        public string? Talle { get; set; }
         public int CantidadPedida { get; set; }
         public int CantidadRepartida { get; set; }
         public int Disponible { get; set; }

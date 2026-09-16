@@ -153,7 +153,9 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
 
         disponibilidadActual.forEach(linea => {
             if (linea.disponible > 0) {
-                agregarFilaPrendaDesgloseModal(linea.disponible, linea.producto, linea.talle || '', null, '');
+                // El talle real de fabricación no viene del pedido (ahí es una categoría de
+                // precio, no el talle de la prenda) — se carga a mano en cada línea.
+                agregarFilaPrendaDesgloseModal(linea.disponible, linea.producto, '', null, '');
             }
         });
 
@@ -447,10 +449,11 @@ async function guardarFicha() {
 
     // "disponibilidadActual" ya descuenta lo que otras fichas de este mismo pedido
     // se llevaron (y, si estás editando, excluye esta misma ficha de esa resta).
+    // Se compara solo por producto: el talle del pedido es una categoría de precio,
+    // no el talle real de fabricación que se carga acá.
     const limitesPermitidos = {};
     disponibilidadActual.forEach(linea => {
-        const key = `${linea.producto}||${linea.talle || ''}`;
-        limitesPermitidos[key] = linea.disponible;
+        limitesPermitidos[linea.producto] = linea.disponible;
     });
 
     const items = [];
@@ -464,14 +467,13 @@ async function guardarFicha() {
         const parsedCant = parseInt(row.find('.input-cantidades').val()) || 0;
         const valNumero = row.find('.input-numero').val();
         const itemId = parseInt(row.attr('data-item-id')) || 0;
-        const claveLimite = `${productoFila}||${talleFila || ''}`;
 
-        if (!productoFila || !(claveLimite in limitesPermitidos)) {
+        if (!productoFila || !(productoFila in limitesPermitidos)) {
             productoInvalido = true;
             return;
         }
 
-        cantidadesAcumuladas[claveLimite] = (cantidadesAcumuladas[claveLimite] || 0) + parsedCant;
+        cantidadesAcumuladas[productoFila] = (cantidadesAcumuladas[productoFila] || 0) + parsedCant;
 
         items.push({
             id: itemId,
@@ -494,12 +496,10 @@ async function guardarFicha() {
         return;
     }
 
-    for (const [clave, cantTotal] of Object.entries(cantidadesAcumuladas)) {
-        const [prod, talle] = clave.split('||');
-        const maximo = limitesPermitidos[clave] || 0;
+    for (const [prod, cantTotal] of Object.entries(cantidadesAcumuladas)) {
+        const maximo = limitesPermitidos[prod] || 0;
         if (cantTotal > maximo) {
-            const etiquetaTalle = talle ? ` talle ${talle}` : '';
-            alert(`Error de cantidad: Estás intentando fabricar ${cantTotal} unidades de "${prod}"${etiquetaTalle}, pero el pedido solo tiene ${maximo} disponibles sin repartir (puede que otra ficha de este mismo pedido ya se haya llevado el resto).`);
+            alert(`Error de cantidad: Estás intentando fabricar ${cantTotal} unidades de "${prod}", pero el pedido solo tiene ${maximo} disponibles sin repartir (puede que otra ficha de este mismo pedido ya se haya llevado el resto).`);
             return;
         }
     }
