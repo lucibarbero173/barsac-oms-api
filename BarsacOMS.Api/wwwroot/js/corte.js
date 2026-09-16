@@ -129,6 +129,7 @@ function renderPrendas() {
                 <td class="text-left">${p.producto}</td>
                 <td>${p.talle || '-'}</td>
                 <td>${nombreNumero}</td>
+                <td>${p.detalle || '-'}</td>
                 <td class="celda-estado-corte align-middle">${celdaEstado}</td>
                 <td class="celda-acciones-corte align-middle">${celdaAcciones}</td>
             </tr>
