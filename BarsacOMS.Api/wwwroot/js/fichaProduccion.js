@@ -148,6 +148,9 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
         // Si el pedido ya tiene otras fichas (se dividió en tandas), "disponible" descuenta
         // lo que esas fichas ya se llevaron — así cada ficha nueva arranca con lo que sobra.
         const disponibilidad = await obtenerDisponibilidad(ordenId, null);
+        if (disponibilidad.error) {
+            alert('No se pudo verificar la disponibilidad de este pedido (falló la consulta al servidor). Volvé a elegirlo; si vuelve a pasar, avisame.');
+        }
         disponibilidadActual = disponibilidad.lineas || [];
         mostrarFichasExistentes(disponibilidad.fichasExistentes || []);
 
@@ -171,11 +174,15 @@ async function obtenerDisponibilidad(ordenId, excluirFichaId) {
     try {
         const url = `/api/FichaProduccion/disponibilidad/${ordenId}` + (excluirFichaId ? `?excluirFichaId=${excluirFichaId}` : '');
         const res = await fetch(url);
-        if (!res.ok) throw new Error('No se pudo obtener la disponibilidad del pedido');
-        return await res.json();
+        if (!res.ok) {
+            console.error(`GET ${url} respondió ${res.status}`);
+            return { lineas: [], fichasExistentes: [], error: true };
+        }
+        const data = await res.json();
+        return { lineas: data.lineas || [], fichasExistentes: data.fichasExistentes || [], error: false };
     } catch (error) {
         console.error(error);
-        return { lineas: [], fichasExistentes: [] };
+        return { lineas: [], fichasExistentes: [], error: true };
     }
 }
 
@@ -459,6 +466,7 @@ async function guardarFicha() {
     const items = [];
     const cantidadesAcumuladas = {};
     let productoInvalido = false;
+    const detalleInvalidos = [];
 
     $('#modalDetalleBody tr').each(function () {
         const row = $(this);
@@ -470,6 +478,7 @@ async function guardarFicha() {
 
         if (!productoFila || !(productoFila in limitesPermitidos)) {
             productoInvalido = true;
+            detalleInvalidos.push(`"${productoFila || '(vacío)'}" — productos válidos para este pedido: ${Object.keys(limitesPermitidos).map(p => `"${p}"`).join(', ') || '(ninguno, no se pudo consultar el pedido)'}`);
             return;
         }
 
@@ -492,7 +501,7 @@ async function guardarFicha() {
     });
 
     if (productoInvalido) {
-        alert('Hay productos seleccionados que no corresponden a la Orden de Trabajo o están vacíos.');
+        alert('Hay productos seleccionados que no corresponden a la Orden de Trabajo o están vacíos:\n\n' + detalleInvalidos.join('\n'));
         return;
     }
 
@@ -586,6 +595,9 @@ async function editarFicha(idFicha) {
     // Disponible = lo que queda del pedido sin contar esta misma ficha, para poder
     // subir cantidades hasta ese tope sin chocar con otras fichas del mismo pedido.
     const disponibilidad = await obtenerDisponibilidad(ficha.ordenId, ficha.id);
+    if (disponibilidad.error) {
+        alert('No se pudo verificar la disponibilidad de este pedido (falló la consulta al servidor). Cerrá y volvé a intentar; si vuelve a pasar, avisame.');
+    }
     disponibilidadActual = disponibilidad.lineas || [];
     mostrarFichasExistentes(disponibilidad.fichasExistentes || []);
 
