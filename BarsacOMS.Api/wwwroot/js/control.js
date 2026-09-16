@@ -133,6 +133,7 @@ function renderPedidoActual(ordenId, prendas, idRecienEscaneado) {
                 <td class="text-left">${p.producto}</td>
                 <td>${p.talle || '-'}</td>
                 <td>${nombreNumero}</td>
+                <td>${p.detalle || '-'}</td>
                 <td>${estado}</td>
             </tr>
         `);
