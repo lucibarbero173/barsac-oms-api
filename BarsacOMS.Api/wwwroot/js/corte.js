@@ -119,7 +119,7 @@ function renderPrendas() {
             celdaEstado = `<span class="badge badge-danger">Faltante</span><div class="small text-danger">${p.corteDetalleFaltante || ''}</div>`;
             celdaAcciones = `
                 <button class="btn btn-success btn-sm" onclick="completarUnidad(${p.id})" title="Resolver"><i class="fas fa-check"></i></button>
-                <button class="btn btn-outline-warning btn-sm" onclick="mostrarFormFaltante(${p.id}, ${JSON.stringify(p.corteDetalleFaltante || '')})" title="Editar el faltante"><i class="fas fa-pencil-alt"></i></button>
+                <button class="btn btn-outline-warning btn-sm" onclick="mostrarFormFaltante(${p.id})" title="Editar el faltante"><i class="fas fa-pencil-alt"></i></button>
                 <button class="btn btn-outline-secondary btn-sm" onclick="deshacerUnidad(${p.id})" title="Deshacer (me equivoqué)"><i class="fas fa-undo"></i></button>
             `;
         }
@@ -137,7 +137,10 @@ function renderPrendas() {
     });
 }
 
-function mostrarFormFaltante(unidadId, valorActual) {
+function mostrarFormFaltante(unidadId) {
+    const prenda = prendasActuales.find(p => p.id === unidadId);
+    const valorActual = prenda ? prenda.corteDetalleFaltante : '';
+
     const $fila = $(`tr[data-id="${unidadId}"]`);
     $fila.find('.celda-acciones-corte').html(`
         <div class="input-group input-group-sm">
