@@ -17,6 +17,10 @@ namespace BarsacOMS.Api.Models
         // Imagen del diseño, cargada por el diseñador (reemplaza el Word aparte).
         public string? ImagenDisenoBase64 { get; set; }
 
+        // Entrega de esta tanda puntual (un pedido puede tener varias fichas = varias tandas).
+        public bool Entregada { get; set; } = false;
+        public DateTime? FechaEntregaFicha { get; set; }
+
         public List<DetalleFichaProduccion> Items { get; set; } = new();
 
         public List<EntregaParcial> EntregasParciales { get; set; } = new();

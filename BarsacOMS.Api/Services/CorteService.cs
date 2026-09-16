@@ -97,6 +97,19 @@ namespace BarsacOMS.Api.Services
             return await GuardarYRecalcularAsync(unidad);
         }
 
+        public async Task<ResultadoEtapaDto?> DeshacerUnidadAsync(int unidadId)
+        {
+            var unidad = await _context.PrendasUnidad.FindAsync(unidadId);
+            if (unidad == null) return null;
+
+            unidad.CorteEstado = EstadoCorte.Pendiente;
+            unidad.CorteDetalleFaltante = null;
+            unidad.FechaCorte = null;
+            unidad.CortadoPorUsuarioId = null;
+
+            return await GuardarYRecalcularAsync(unidad);
+        }
+
         private async Task<ResultadoEtapaDto> GuardarYRecalcularAsync(PrendaUnidad unidad)
         {
             var detalle = await _context.DetallesFichaProduccion.FindAsync(unidad.DetalleFichaProduccionId);
@@ -118,7 +131,7 @@ namespace BarsacOMS.Api.Services
             var faltantes = unidadesOrden.Count(u => u.CorteEstado == EstadoCorte.Faltante);
 
             var orden = await _context.Ordenes.FindAsync(ordenId);
-            if (orden != null && (orden.Estado == EstadoOrden.Corte || orden.Estado == EstadoOrden.CorteFaltantes))
+            if (orden != null && (orden.Estado == EstadoOrden.Corte || orden.Estado == EstadoOrden.CorteFaltantes || orden.Estado == EstadoOrden.AptoConfeccion))
             {
                 if (faltantes > 0)
                 {

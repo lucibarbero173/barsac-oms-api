@@ -63,12 +63,30 @@ namespace BarsacOMS.Api.Controllers
             return NoContent();
         }
 
-        // GET: api/FichaProduccion/sin-ficha
-        [HttpGet("sin-ficha")]
-        public async Task<IActionResult> GetOrdenesSinFicha()
+        // GET: api/FichaProduccion/con-saldo-pendiente
+        [HttpGet("con-saldo-pendiente")]
+        public async Task<IActionResult> GetOrdenesConSaldoPendiente()
         {
-            var ordenes = await _fichaService.GetOrdenesSinFichaAsync();
+            var ordenes = await _fichaService.GetOrdenesConSaldoPendienteAsync();
             return Ok(ordenes);
+        }
+
+        // GET: api/FichaProduccion/disponibilidad/5?excluirFichaId=3
+        [HttpGet("disponibilidad/{ordenId}")]
+        public async Task<IActionResult> GetDisponibilidad(int ordenId, [FromQuery] int? excluirFichaId)
+        {
+            var disponibilidad = await _fichaService.ObtenerDisponibilidadAsync(ordenId, excluirFichaId);
+            return Ok(disponibilidad);
+        }
+
+        // PUT: api/FichaProduccion/5/entregar
+        [Authorize(Roles = "admin")]
+        [HttpPut("{id}/entregar")]
+        public async Task<IActionResult> Entregar(int id)
+        {
+            var exito = await _fichaService.MarcarEntregadaAsync(id);
+            if (!exito) return NotFound();
+            return NoContent();
         }
 
         // DELETE: api/FichaProduccion/5

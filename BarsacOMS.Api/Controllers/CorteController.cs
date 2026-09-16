@@ -55,5 +55,13 @@ namespace BarsacOMS.Api.Controllers
             if (resultado == null) return NotFound();
             return Ok(resultado);
         }
+
+        [HttpPost("unidad/{id}/deshacer")]
+        public async Task<IActionResult> Deshacer(int id)
+        {
+            var resultado = await _corteService.DeshacerUnidadAsync(id);
+            if (resultado == null) return NotFound();
+            return Ok(resultado);
+        }
     }
 }

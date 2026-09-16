@@ -39,6 +39,8 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.OrdenId).HasColumnName("orden_id");
                 entity.Property(e => e.Modista).HasColumnName("modista");
                 entity.Property(e => e.ImagenDisenoBase64).HasColumnName("imagen_diseno_base64");
+                entity.Property(e => e.Entregada).HasColumnName("entregada");
+                entity.Property(e => e.FechaEntregaFicha).HasColumnName("fecha_entrega_ficha");
 
                 entity.HasOne(e => e.Orden)
                       .WithMany()

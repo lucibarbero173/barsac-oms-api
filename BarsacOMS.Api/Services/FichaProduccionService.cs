@@ -162,15 +162,131 @@ namespace BarsacOMS.Api.Services
             return new ResultadoActualizacionFicha { Exito = true };
         }
 
-        public async Task<List<OrdenTrabajo>> GetOrdenesSinFichaAsync()
+        public async Task<List<OrdenTrabajo>> GetOrdenesConSaldoPendienteAsync()
         {
-            var ordenesConFichaIds = await _context.FichasProduccion
-                .Select(f => f.OrdenId)
+            var ordenes = await _context.Ordenes
+                .Include(o => o.Detalles)
+                    .ThenInclude(d => d.Producto)
                 .ToListAsync();
 
-            return await _context.Ordenes
-                .Where(o => !ordenesConFichaIds.Contains(o.Id))
+            var fichas = await _context.FichasProduccion
+                .Include(f => f.Items)
                 .ToListAsync();
+
+            var repartidoPorOrden = ConstruirMapaRepartidoPorOrden(fichas);
+
+            return ordenes.Where(o =>
+            {
+                var mapa = repartidoPorOrden.GetValueOrDefault(o.Id) ?? new Dictionary<(string, string), int>();
+                return o.Detalles.Any(d =>
+                {
+                    var key = (d.Producto?.Nombre ?? "", d.Talle ?? "");
+                    var repartido = mapa.GetValueOrDefault(key);
+                    return d.Cantidad > repartido;
+                });
+            }).ToList();
+        }
+
+        public async Task<DisponibilidadOrdenDto> ObtenerDisponibilidadAsync(int ordenId, int? excluirFichaId)
+        {
+            var orden = await _context.Ordenes
+                .Include(o => o.Detalles)
+                    .ThenInclude(d => d.Producto)
+                .FirstOrDefaultAsync(o => o.Id == ordenId);
+
+            if (orden == null) return new DisponibilidadOrdenDto();
+
+            var todasLasFichas = await _context.FichasProduccion
+                .Include(f => f.Items)
+                .Where(f => f.OrdenId == ordenId)
+                .ToListAsync();
+
+            var fichasParaRepartir = excluirFichaId.HasValue
+                ? todasLasFichas.Where(f => f.Id != excluirFichaId.Value)
+                : todasLasFichas;
+
+            var repartido = new Dictionary<(string, string), int>();
+            foreach (var f in fichasParaRepartir)
+            {
+                foreach (var item in f.Items)
+                {
+                    var key = (item.Producto, item.Talle ?? "");
+                    repartido[key] = repartido.GetValueOrDefault(key) + item.Cantidades;
+                }
+            }
+
+            var lineas = orden.Detalles.Select(d =>
+            {
+                var nombreProducto = d.Producto?.Nombre ?? "";
+                var key = (nombreProducto, d.Talle ?? "");
+                var yaRepartido = repartido.GetValueOrDefault(key);
+                return new DisponibilidadLineaDto
+                {
+                    Producto = nombreProducto,
+                    Talle = d.Talle,
+                    CantidadPedida = d.Cantidad,
+                    CantidadRepartida = yaRepartido,
+                    Disponible = Math.Max(0, d.Cantidad - yaRepartido)
+                };
+            }).ToList();
+
+            var fichasExistentes = todasLasFichas
+                .Where(f => !excluirFichaId.HasValue || f.Id != excluirFichaId.Value)
+                .Select(f => new FichaResumenSimpleDto
+                {
+                    FichaId = f.Id,
+                    Modista = f.Modista,
+                    Entregada = f.Entregada,
+                    Lineas = f.Items
+                        .Select(i => $"{i.Cantidades} {i.Producto}{(string.IsNullOrEmpty(i.Talle) ? "" : " talle " + i.Talle)}")
+                        .ToList()
+                }).ToList();
+
+            return new DisponibilidadOrdenDto { Lineas = lineas, FichasExistentes = fichasExistentes };
+        }
+
+        public async Task<bool> MarcarEntregadaAsync(int fichaId)
+        {
+            var ficha = await _context.FichasProduccion.FindAsync(fichaId);
+            if (ficha == null) return false;
+
+            ficha.Entregada = true;
+            ficha.FechaEntregaFicha = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            var todasLasFichas = await _context.FichasProduccion
+                .Where(f => f.OrdenId == ficha.OrdenId)
+                .ToListAsync();
+
+            var orden = await _context.Ordenes.FindAsync(ficha.OrdenId);
+            if (orden != null)
+            {
+                orden.Estado = todasLasFichas.All(f => f.Entregada)
+                    ? EstadoOrden.Entregado
+                    : EstadoOrden.EntregadoParcial;
+                await _context.SaveChangesAsync();
+            }
+
+            return true;
+        }
+
+        private static Dictionary<int, Dictionary<(string, string), int>> ConstruirMapaRepartidoPorOrden(List<FichaProduccion> fichas)
+        {
+            var mapaPorOrden = new Dictionary<int, Dictionary<(string, string), int>>();
+            foreach (var f in fichas)
+            {
+                if (!mapaPorOrden.TryGetValue(f.OrdenId, out var mapa))
+                {
+                    mapa = new Dictionary<(string, string), int>();
+                    mapaPorOrden[f.OrdenId] = mapa;
+                }
+                foreach (var item in f.Items)
+                {
+                    var key = (item.Producto, item.Talle ?? "");
+                    mapa[key] = mapa.GetValueOrDefault(key) + item.Cantidades;
+                }
+            }
+            return mapaPorOrden;
         }
 
         public async Task<FichaProduccion?> ObtenerFichaPorOrdenAsync(int ordenId)

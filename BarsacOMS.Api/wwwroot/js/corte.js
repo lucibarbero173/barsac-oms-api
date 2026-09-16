@@ -113,11 +113,15 @@ function renderPrendas() {
         if (p.corteEstado === 1) {
             claseFila = 'fila-prenda-corte completa';
             celdaEstado = '<span class="badge badge-success">Completa</span>';
-            celdaAcciones = '<span class="text-muted small">Ya registrada</span>';
+            celdaAcciones = `<button class="btn btn-outline-secondary btn-sm" onclick="deshacerUnidad(${p.id})" title="Deshacer (me equivoqué)"><i class="fas fa-undo"></i></button>`;
         } else if (p.corteEstado === 2) {
             claseFila = 'fila-prenda-corte faltante';
             celdaEstado = `<span class="badge badge-danger">Faltante</span><div class="small text-danger">${p.corteDetalleFaltante || ''}</div>`;
-            celdaAcciones = `<button class="btn btn-success btn-sm" onclick="completarUnidad(${p.id})" title="Resolver"><i class="fas fa-check"></i></button>`;
+            celdaAcciones = `
+                <button class="btn btn-success btn-sm" onclick="completarUnidad(${p.id})" title="Resolver"><i class="fas fa-check"></i></button>
+                <button class="btn btn-outline-warning btn-sm" onclick="mostrarFormFaltante(${p.id}, ${JSON.stringify(p.corteDetalleFaltante || '')})" title="Editar el faltante"><i class="fas fa-pencil-alt"></i></button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="deshacerUnidad(${p.id})" title="Deshacer (me equivoqué)"><i class="fas fa-undo"></i></button>
+            `;
         }
 
         $body.append(`
@@ -132,17 +136,30 @@ function renderPrendas() {
     });
 }
 
-function mostrarFormFaltante(unidadId) {
+function mostrarFormFaltante(unidadId, valorActual) {
     const $fila = $(`tr[data-id="${unidadId}"]`);
     $fila.find('.celda-acciones-corte').html(`
         <div class="input-group input-group-sm">
-            <input type="text" class="form-control form-control-sm input-detalle-faltante" placeholder="¿Qué falta?">
+            <input type="text" class="form-control form-control-sm input-detalle-faltante" placeholder="¿Qué falta?" value="${valorActual ? String(valorActual).replace(/"/g, '&quot;') : ''}">
             <div class="input-group-append">
                 <button class="btn btn-danger btn-sm" onclick="guardarFaltante(${unidadId})"><i class="fas fa-save"></i></button>
             </div>
         </div>
     `);
     $fila.find('.input-detalle-faltante').focus();
+}
+
+async function deshacerUnidad(unidadId) {
+    if (!confirm('¿Volver esta prenda a Pendiente?')) return;
+
+    try {
+        const res = await fetch(`${API_CORTE}/unidad/${unidadId}/deshacer`, { method: 'POST' });
+        if (!res.ok) throw new Error('No se pudo deshacer');
+        await procesarResultado(unidadId, await res.json(), 0, null);
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo deshacer esa prenda.');
+    }
 }
 
 async function completarUnidad(unidadId) {

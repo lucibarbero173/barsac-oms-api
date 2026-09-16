@@ -3,6 +3,7 @@ let ordenesDisponibles = [];
 let cargandoOrden = false;
 let fichaIdEnVista = null;
 let imagenDisenoActual = null;
+let disponibilidadActual = []; // [{producto, talle, disponible}] del pedido seleccionado, ya descontando otras fichas
 
 $(document).ready(function () {
     // Inicializar DataTable
@@ -95,7 +96,7 @@ function mostrarImagenFicha(base64) {
 
 async function cargarOrdenesParaSelect(fichaActualIdEnEdicion = null) {
     try {
-        const response = await fetch('/api/FichaProduccion/sin-ficha');
+        const response = await fetch('/api/FichaProduccion/con-saldo-pendiente');
         if (!response.ok) throw new Error('Error al obtener las órdenes disponibles');
 
         ordenesDisponibles = await response.json();
@@ -124,6 +125,7 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
         $('#inputFechaPedido').val('');
         $('#inputFechaEntrega').val('');
         actualizarTotalPrendasFicha();
+        mostrarFichasExistentes([]);
         cargandoOrden = false;
         return;
     }
@@ -143,15 +145,17 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
             ordenEnLista.detalles = orden.detalles;
         }
 
-        if (orden.detalles && Array.isArray(orden.detalles)) {
-            orden.detalles.forEach(d => {
-                const nombreProducto = (d.producto && d.producto.nombre) ? d.producto.nombre : (d.producto || '');
-                const cantidadOrden = d.cantidad || 1;
-                const talleOrden = d.talle || '';
+        // Si el pedido ya tiene otras fichas (se dividió en tandas), "disponible" descuenta
+        // lo que esas fichas ya se llevaron — así cada ficha nueva arranca con lo que sobra.
+        const disponibilidad = await obtenerDisponibilidad(ordenId, null);
+        disponibilidadActual = disponibilidad.lineas || [];
+        mostrarFichasExistentes(disponibilidad.fichasExistentes || []);
 
-                agregarFilaPrendaDesgloseModal(cantidadOrden, nombreProducto, talleOrden, null, '');
-            });
-        }
+        disponibilidadActual.forEach(linea => {
+            if (linea.disponible > 0) {
+                agregarFilaPrendaDesgloseModal(linea.disponible, linea.producto, linea.talle || '', null, '');
+            }
+        });
 
         actualizarTotalPrendasFicha();
     } catch (error) {
@@ -159,6 +163,40 @@ async function cargarDatosOrdenSeleccionada(ordenId) {
     } finally {
         cargandoOrden = false;
     }
+}
+
+async function obtenerDisponibilidad(ordenId, excluirFichaId) {
+    try {
+        const url = `/api/FichaProduccion/disponibilidad/${ordenId}` + (excluirFichaId ? `?excluirFichaId=${excluirFichaId}` : '');
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('No se pudo obtener la disponibilidad del pedido');
+        return await res.json();
+    } catch (error) {
+        console.error(error);
+        return { lineas: [], fichasExistentes: [] };
+    }
+}
+
+function mostrarFichasExistentes(fichasExistentes) {
+    const $info = $('#infoFichasExistentes');
+
+    if (!fichasExistentes || fichasExistentes.length === 0) {
+        $info.empty();
+        return;
+    }
+
+    let filas = '';
+    fichasExistentes.forEach(f => {
+        const estadoTexto = f.entregada ? '<span class="badge badge-success">Entregada</span>' : '<span class="badge badge-secondary">Sin entregar</span>';
+        filas += `<li>Ficha #${f.fichaId} (${f.modista || 'Sin asignar'}) ${estadoTexto} — ${f.lineas.join(', ') || 'sin prendas'}</li>`;
+    });
+
+    $info.html(`
+        <div class="alert alert-info py-2 px-3 mb-3">
+            <strong><i class="fas fa-info-circle"></i> Este pedido ya está dividido en otras fichas:</strong>
+            <ul class="mb-0 mt-1">${filas}</ul>
+        </div>
+    `);
 }
 
 // Alias para evitar el ReferenceError del inline onchange en HTML
@@ -209,7 +247,9 @@ async function cargarTablaFichas() {
             const estadoOrden = ficha.orden ? ficha.orden.estado : null;
             let badgeEstado;
 
-            if (estadoOrden === 2) { // EstadoOrden.Entregado
+            if (ficha.entregada) { // esta tanda puntual ya se entregó, manda por sobre todo lo demás
+                badgeEstado = '<span class="badge" style="background-color:#8BC34A;color:#fff;">Entregada</span>';
+            } else if (estadoOrden === 2) { // EstadoOrden.Entregado
                 badgeEstado = '<span class="badge" style="background-color:#8BC34A;color:#fff;">Entregado</span>';
             } else if (estadoOrden === 4) { // EstadoOrden.EntregadoParcial
                 badgeEstado = '<span class="badge" style="background-color:#FF9800;color:#fff;">Entrega Parcial</span>';
@@ -233,6 +273,12 @@ async function cargarTablaFichas() {
             const fechaPedido = ficha.orden ? (ficha.orden.fechaPedido ? ficha.orden.fechaPedido.split('T')[0] : '-') : '-';
             const fechaEntrega = ficha.orden ? (ficha.orden.fechaEntrega ? ficha.orden.fechaEntrega.split('T')[0] : '-') : '-';
 
+            const botonEntregarFicha = ficha.entregada
+                ? '<span class="badge badge-success" title="Esta tanda ya se le entregó al cliente"><i class="fas fa-check"></i> Entregada</span>'
+                : `<button class="btn btn-primary btn-circle btn-sm" onclick="marcarFichaEntregada(${ficha.id})" title="Marcar esta ficha (tanda) como entregada al cliente">
+                        <i class="fas fa-truck"></i>
+                   </button>`;
+
             const acciones = `
                 <button class="btn btn-info btn-circle btn-sm mr-1" onclick="verFicha(${ficha.id})" title="Ver / Imprimir">
                     <i class="fas fa-eye"></i>
@@ -240,9 +286,10 @@ async function cargarTablaFichas() {
                 <button class="btn btn-warning btn-circle btn-sm mr-1" onclick="editarFicha(${ficha.id})" title="Editar">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-success btn-circle btn-sm" onclick="abrirModalEntrega(${ficha.id})" title="Registrar Entregas">
+                <button class="btn btn-success btn-circle btn-sm mr-1" onclick="abrirModalEntrega(${ficha.id})" title="Registrar Entregas">
                     <i class="fas fa-boxes"></i>
                 </button>
+                ${botonEntregarFicha}
             `;
 
             table.row.add([
@@ -263,6 +310,20 @@ async function cargarTablaFichas() {
     }
 }
 
+async function marcarFichaEntregada(idFicha) {
+    if (!confirm(`¿Confirmás que le entregaste al cliente lo de la Ficha #${idFicha}?`)) return;
+
+    try {
+        const res = await fetch(`/api/FichaProduccion/${idFicha}/entregar`, { method: 'PUT' });
+        if (!res.ok) throw new Error('No se pudo marcar la ficha como entregada.');
+
+        await cargarTablaFichas();
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo marcar la ficha como entregada.');
+    }
+}
+
 // Abrir el Modal para Generar una Nueva Ficha
 function abrirModalGenerarFicha() {
     $('#formFichaProduccion')[0].reset();
@@ -272,6 +333,8 @@ function abrirModalGenerarFicha() {
 
     imagenDisenoActual = null;
     mostrarImagenFicha(null);
+    disponibilidadActual = [];
+    mostrarFichasExistentes([]);
 
     $('#selectPedido').prop('disabled', false);
     actualizarTotalPrendasFicha();
@@ -382,10 +445,12 @@ async function guardarFicha() {
         return;
     }
 
+    // "disponibilidadActual" ya descuenta lo que otras fichas de este mismo pedido
+    // se llevaron (y, si estás editando, excluye esta misma ficha de esa resta).
     const limitesPermitidos = {};
-    (ordenAsociada.detalles || []).forEach(d => {
-        const nomProd = (d.producto && d.producto.nombre) ? d.producto.nombre : (d.producto || '');
-        limitesPermitidos[nomProd] = (limitesPermitidos[nomProd] || 0) + (d.cantidad || 0);
+    disponibilidadActual.forEach(linea => {
+        const key = `${linea.producto}||${linea.talle || ''}`;
+        limitesPermitidos[key] = linea.disponible;
     });
 
     const items = [];
@@ -399,13 +464,14 @@ async function guardarFicha() {
         const parsedCant = parseInt(row.find('.input-cantidades').val()) || 0;
         const valNumero = row.find('.input-numero').val();
         const itemId = parseInt(row.attr('data-item-id')) || 0;
+        const claveLimite = `${productoFila}||${talleFila || ''}`;
 
-        if (!productoFila || !(productoFila in limitesPermitidos)) {
+        if (!productoFila || !(claveLimite in limitesPermitidos)) {
             productoInvalido = true;
             return;
         }
 
-        cantidadesAcumuladas[productoFila] = (cantidadesAcumuladas[productoFila] || 0) + parsedCant;
+        cantidadesAcumuladas[claveLimite] = (cantidadesAcumuladas[claveLimite] || 0) + parsedCant;
 
         items.push({
             id: itemId,
@@ -428,10 +494,12 @@ async function guardarFicha() {
         return;
     }
 
-    for (const [prod, cantTotal] of Object.entries(cantidadesAcumuladas)) {
-        const maximo = limitesPermitidos[prod] || 0;
+    for (const [clave, cantTotal] of Object.entries(cantidadesAcumuladas)) {
+        const [prod, talle] = clave.split('||');
+        const maximo = limitesPermitidos[clave] || 0;
         if (cantTotal > maximo) {
-            alert(`Error de cantidad: Estás intentando fabricar ${cantTotal} unidades de "${prod}", pero la Orden solo permite un máximo de ${maximo}. Modifica primero la orden si necesitas agregar más.`);
+            const etiquetaTalle = talle ? ` talle ${talle}` : '';
+            alert(`Error de cantidad: Estás intentando fabricar ${cantTotal} unidades de "${prod}"${etiquetaTalle}, pero el pedido solo tiene ${maximo} disponibles sin repartir (puede que otra ficha de este mismo pedido ya se haya llevado el resto).`);
             return;
         }
     }
@@ -514,6 +582,12 @@ async function editarFicha(idFicha) {
 
     imagenDisenoActual = ficha.imagenDisenoBase64 || null;
     mostrarImagenFicha(imagenDisenoActual);
+
+    // Disponible = lo que queda del pedido sin contar esta misma ficha, para poder
+    // subir cantidades hasta ese tope sin chocar con otras fichas del mismo pedido.
+    const disponibilidad = await obtenerDisponibilidad(ficha.ordenId, ficha.id);
+    disponibilidadActual = disponibilidad.lineas || [];
+    mostrarFichasExistentes(disponibilidad.fichasExistentes || []);
 
     const $body = $('#modalDetalleBody');
     $body.empty();
