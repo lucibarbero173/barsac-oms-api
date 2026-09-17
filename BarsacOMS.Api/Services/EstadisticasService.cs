@@ -145,5 +145,84 @@ namespace BarsacOMS.Api.Services
                 }
             };
         }
+
+        // Cada PrendaUnidad con CorteParteFaltante cargado es un defecto que realmente ocurrió,
+        // sin importar si después se resolvió (CorteService ya no borra esos campos al completar).
+        public async Task<EstadisticasFaltantesDto> ObtenerEstadisticasFaltantesAsync()
+        {
+            var registros = await (
+                from u in _context.PrendasUnidad
+                where u.CorteParteFaltante != null
+                join d in _context.DetallesFichaProduccion on u.DetalleFichaProduccionId equals d.Id
+                join f in _context.FichasProduccion on d.FichaProduccionId equals f.Id
+                join o in _context.Ordenes on f.OrdenId equals o.Id
+                select new
+                {
+                    OrdenId = o.Id,
+                    Cliente = o.Cliente != null ? o.Cliente.Nombre : o.NombreCliente,
+                    d.Producto,
+                    Parte = u.CorteParteFaltante!.Value
+                }
+            ).ToListAsync();
+
+            var porPedido = registros
+                .GroupBy(r => new { r.OrdenId, r.Cliente })
+                .Select(g => new FaltantesPorPedidoDto
+                {
+                    OrdenId = g.Key.OrdenId,
+                    Cliente = g.Key.Cliente ?? "Sin cliente",
+                    Total = g.Count(),
+                    Partes = g.GroupBy(x => x.Parte)
+                        .Select(pg => new ConteoParteDto { Parte = pg.Key, Cantidad = pg.Count() })
+                        .OrderByDescending(pg => pg.Cantidad)
+                        .ToList()
+                })
+                .OrderByDescending(x => x.OrdenId)
+                .ToList();
+
+            var porTela = registros
+                .GroupBy(r => DetectarTelaPorProducto(r.Producto))
+                .Select(g => new FaltantesPorTelaDto
+                {
+                    Tela = g.Key,
+                    Total = g.Count(),
+                    Partes = g.GroupBy(x => x.Parte)
+                        .Select(pg => new ConteoParteDto { Parte = pg.Key, Cantidad = pg.Count() })
+                        .OrderByDescending(pg => pg.Cantidad)
+                        .ToList()
+                })
+                .OrderByDescending(x => x.Total)
+                .ToList();
+
+            return new EstadisticasFaltantesDto { PorPedido = porPedido, PorTela = porTela };
+        }
+
+        // Mismo criterio que detectarCategoriaPorProducto en corte.js: el nombre del producto
+        // ya suele traer la tela adentro (ej. "Remera Dryfit"), así que se busca por palabra
+        // clave en vez de pedir que se cargue la tela en otro lado.
+        private static readonly (string Clave, string Etiqueta)[] TelasConocidas = new[]
+        {
+            ("cool elastic", "Cool Elastic"),
+            ("softshell", "SoftShell"),
+            ("soft shell", "SoftShell"),
+            ("microfibra", "Microfibra"),
+            ("dry fit", "Dryfit"),
+            ("dryfit", "Dryfit"),
+            ("lycra", "Lycra"),
+            ("energy", "Energy"),
+            ("trucker", "Trucker"),
+            ("truker", "Trucker"),
+            ("spum", "Spum"),
+        };
+
+        private static string DetectarTelaPorProducto(string? producto)
+        {
+            var n = (producto ?? string.Empty).ToLowerInvariant();
+            foreach (var (clave, etiqueta) in TelasConocidas)
+            {
+                if (n.Contains(clave)) return etiqueta;
+            }
+            return "Sin tela detectada";
+        }
     }
 }

@@ -1,6 +1,94 @@
 ﻿document.addEventListener("DOMContentLoaded", function () {
     cargarEstadisticas();
+    cargarEstadisticasFaltantes();
 });
+
+// Mismo catálogo de partes que usan Diseño y Corte.
+const PARTES_FALTANTE = {
+    0: 'Frente',
+    1: 'Espalda',
+    2: 'Manga',
+    3: 'Cuello/Puño',
+    4: 'Completa',
+    5: 'Frente Derecho',
+    6: 'Frente Izquierdo',
+    7: 'Cuello/Tapita',
+    8: 'Capucha',
+    9: 'Culo Derecho',
+    10: 'Culo Izquierdo',
+    11: 'Lado Derecho',
+    12: 'Lado Izquierdo',
+    13: 'Short Derecho',
+    14: 'Short Izquierdo'
+};
+
+async function cargarEstadisticasFaltantes() {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch('/api/Estadisticas/faltantes', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error("Error al obtener las estadísticas de faltantes.");
+
+        const data = await response.json();
+        renderizarFaltantesPorPedido(data.porPedido);
+        renderizarFaltantesPorTela(data.porTela);
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
+function armarDetallePartes(partes) {
+    return partes
+        .map(p => `<span class="badge badge-light border mr-1 mb-1">${PARTES_FALTANTE[p.parte] || 'Faltante'} × ${p.cantidad}</span>`)
+        .join('');
+}
+
+function renderizarFaltantesPorPedido(lista) {
+    const tbody = document.getElementById("tablaFaltantesPedidoBody");
+    tbody.innerHTML = "";
+
+    if (!lista || lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No hay faltantes registrados todavía.</td></tr>`;
+        return;
+    }
+
+    lista.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="font-weight-bold">#${item.ordenId}</td>
+            <td>${item.cliente}</td>
+            <td class="text-center font-weight-bold">${item.total}</td>
+            <td>${armarDetallePartes(item.partes)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function renderizarFaltantesPorTela(lista) {
+    const tbody = document.getElementById("tablaFaltantesTelaBody");
+    tbody.innerHTML = "";
+
+    if (!lista || lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">No hay faltantes registrados todavía.</td></tr>`;
+        return;
+    }
+
+    lista.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="font-weight-bold">${item.tela}</td>
+            <td class="text-center font-weight-bold">${item.total}</td>
+            <td>${armarDetallePartes(item.partes)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
 async function cargarEstadisticas() {
     try {

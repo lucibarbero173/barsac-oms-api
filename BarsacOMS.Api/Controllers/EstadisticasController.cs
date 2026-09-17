@@ -29,5 +29,19 @@ namespace BarsacOMS.Api.Controllers
                 return StatusCode(500, new { mensaje = "Error al obtener las estadísticas", error = ex.Message });
             }
         }
+
+        [HttpGet("faltantes")]
+        public async Task<IActionResult> GetFaltantes()
+        {
+            try
+            {
+                var data = await _estadisticasService.ObtenerEstadisticasFaltantesAsync();
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error al obtener las estadísticas de faltantes", error = ex.Message });
+            }
+        }
     }
 }

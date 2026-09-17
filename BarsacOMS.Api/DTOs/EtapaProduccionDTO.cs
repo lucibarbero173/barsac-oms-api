@@ -73,4 +73,32 @@ namespace BarsacOMS.Api.DTOs
         public ParteFaltante Parte { get; set; }
         public string? DetalleFaltante { get; set; }
     }
+
+    // Cantidad de veces que salió mal una parte puntual (para desgloses por pedido o por tela).
+    public class ConteoParteDto
+    {
+        public ParteFaltante Parte { get; set; }
+        public int Cantidad { get; set; }
+    }
+
+    public class FaltantesPorPedidoDto
+    {
+        public int OrdenId { get; set; }
+        public string Cliente { get; set; } = string.Empty;
+        public int Total { get; set; }
+        public List<ConteoParteDto> Partes { get; set; } = new();
+    }
+
+    public class FaltantesPorTelaDto
+    {
+        public string Tela { get; set; } = string.Empty;
+        public int Total { get; set; }
+        public List<ConteoParteDto> Partes { get; set; } = new();
+    }
+
+    public class EstadisticasFaltantesDto
+    {
+        public List<FaltantesPorPedidoDto> PorPedido { get; set; } = new();
+        public List<FaltantesPorTelaDto> PorTela { get; set; } = new();
+    }
 }

@@ -78,8 +78,9 @@ namespace BarsacOMS.Api.Services
             if (unidad == null) return null;
 
             unidad.CorteEstado = EstadoCorte.Completo;
-            unidad.CorteParteFaltante = null;
-            unidad.CorteDetalleFaltante = null;
+            // OJO: no se limpian CorteParteFaltante/CorteDetalleFaltante acá. Si la unidad
+            // venía de un Faltante ya resuelto, se conservan como registro histórico para
+            // poder sacar estadísticas de scrap aunque la prenda ya haya quedado bien.
             unidad.FechaCorte = DateTime.UtcNow;
             unidad.CortadoPorUsuarioId = usuarioId;
 

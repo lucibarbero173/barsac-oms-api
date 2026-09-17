@@ -311,6 +311,58 @@
                         </div>
                     </div>
 
+                    <!-- Faltantes de Corte: por pedido y por tela -->
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-cut mr-1"></i> Faltantes de Corte por Pedido</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm" id="tablaFaltantesPedido" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>N° Orden</th>
+                                                    <th>Cliente</th>
+                                                    <th class="text-center">Total</th>
+                                                    <th>Detalle</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tablaFaltantesPedidoBody">
+                                                <!-- Se carga dinámicamente vía JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-tshirt mr-1"></i> Faltantes de Corte por Tela</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm" id="tablaFaltantesTela" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tela</th>
+                                                    <th class="text-center">Total</th>
+                                                    <th>Detalle</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tablaFaltantesTelaBody">
+                                                <!-- Se carga dinámicamente vía JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <!-- /.container-fluid -->
 
