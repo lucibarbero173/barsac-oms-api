@@ -64,6 +64,7 @@ namespace BarsacOMS.Api.Services
                         Detalle = i.Detalle,
                         DisenoListo = u.DisenoListo,
                         CorteEstado = u.CorteEstado,
+                        CorteParteFaltante = u.CorteParteFaltante,
                         CorteDetalleFaltante = u.CorteDetalleFaltante
                     }))
                     .OrderBy(p => p.Id)
@@ -142,7 +143,8 @@ namespace BarsacOMS.Api.Services
                             Talle = i.Talle,
                             Nombre = i.Nombre,
                             Detalle = i.Detalle,
-                            DetalleFaltante = u.CorteDetalleFaltante ?? ""
+                            Parte = u.CorteParteFaltante ?? ParteFaltante.Completa,
+                            DetalleFaltante = u.CorteDetalleFaltante
                         }))
                     .ToList()
             }).Where(a => a.Faltantes.Count > 0).ToList();

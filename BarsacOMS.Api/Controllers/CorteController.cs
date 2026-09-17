@@ -49,9 +49,7 @@ namespace BarsacOMS.Api.Controllers
         [HttpPost("unidad/{id}/faltante")]
         public async Task<IActionResult> Faltante(int id, [FromBody] RegistrarFaltanteDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Detalle)) return BadRequest(new { mensaje = "Describí qué falta." });
-
-            var resultado = await _corteService.RegistrarFaltanteAsync(id, dto.Detalle, ObtenerUsuarioIdActual());
+            var resultado = await _corteService.RegistrarFaltanteAsync(id, dto.Parte, dto.Detalle, ObtenerUsuarioIdActual());
             if (resultado == null) return NotFound();
             return Ok(resultado);
         }

@@ -64,6 +64,7 @@ namespace BarsacOMS.Api.Services
                         Detalle = i.Detalle,
                         DisenoListo = u.DisenoListo,
                         CorteEstado = u.CorteEstado,
+                        CorteParteFaltante = u.CorteParteFaltante,
                         CorteDetalleFaltante = u.CorteDetalleFaltante
                     }))
                     .OrderBy(p => p.Id)
@@ -77,6 +78,7 @@ namespace BarsacOMS.Api.Services
             if (unidad == null) return null;
 
             unidad.CorteEstado = EstadoCorte.Completo;
+            unidad.CorteParteFaltante = null;
             unidad.CorteDetalleFaltante = null;
             unidad.FechaCorte = DateTime.UtcNow;
             unidad.CortadoPorUsuarioId = usuarioId;
@@ -84,13 +86,14 @@ namespace BarsacOMS.Api.Services
             return await GuardarYRecalcularAsync(unidad);
         }
 
-        public async Task<ResultadoEtapaDto?> RegistrarFaltanteAsync(int unidadId, string detalle, int? usuarioId)
+        public async Task<ResultadoEtapaDto?> RegistrarFaltanteAsync(int unidadId, ParteFaltante parte, string? detalle, int? usuarioId)
         {
             var unidad = await _context.PrendasUnidad.FindAsync(unidadId);
             if (unidad == null) return null;
 
             unidad.CorteEstado = EstadoCorte.Faltante;
-            unidad.CorteDetalleFaltante = detalle;
+            unidad.CorteParteFaltante = parte;
+            unidad.CorteDetalleFaltante = string.IsNullOrWhiteSpace(detalle) ? null : detalle.Trim();
             unidad.FechaCorte = DateTime.UtcNow;
             unidad.CortadoPorUsuarioId = usuarioId;
 
@@ -103,6 +106,7 @@ namespace BarsacOMS.Api.Services
             if (unidad == null) return null;
 
             unidad.CorteEstado = EstadoCorte.Pendiente;
+            unidad.CorteParteFaltante = null;
             unidad.CorteDetalleFaltante = null;
             unidad.FechaCorte = null;
             unidad.CortadoPorUsuarioId = null;

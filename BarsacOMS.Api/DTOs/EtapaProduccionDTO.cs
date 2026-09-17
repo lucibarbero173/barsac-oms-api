@@ -37,6 +37,7 @@ namespace BarsacOMS.Api.DTOs
 
         public bool DisenoListo { get; set; }
         public EstadoCorte CorteEstado { get; set; }
+        public ParteFaltante? CorteParteFaltante { get; set; }
         public string? CorteDetalleFaltante { get; set; }
     }
 
@@ -50,7 +51,8 @@ namespace BarsacOMS.Api.DTOs
 
     public class RegistrarFaltanteDto
     {
-        public string Detalle { get; set; } = string.Empty;
+        public ParteFaltante Parte { get; set; }
+        public string? Detalle { get; set; }
     }
 
     // Para el banner de alertas en la pantalla de Diseño.
@@ -68,6 +70,7 @@ namespace BarsacOMS.Api.DTOs
         public string? Talle { get; set; }
         public string? Nombre { get; set; }
         public string? Detalle { get; set; }
-        public string DetalleFaltante { get; set; } = string.Empty;
+        public ParteFaltante Parte { get; set; }
+        public string? DetalleFaltante { get; set; }
     }
 }

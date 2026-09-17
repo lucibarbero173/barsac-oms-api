@@ -12,6 +12,25 @@ function cargarTodo() {
     cargarAlertasFaltantes();
 }
 
+// Mismo catálogo de partes que usa Corte, para poder mostrar qué falta.
+const PARTES = {
+    0: 'Frente',
+    1: 'Espalda',
+    2: 'Manga',
+    3: 'Cuello/Puño',
+    4: 'Completa',
+    5: 'Frente Derecho',
+    6: 'Frente Izquierdo',
+    7: 'Cuello/Tapita',
+    8: 'Capucha',
+    9: 'Culo Derecho',
+    10: 'Culo Izquierdo',
+    11: 'Lado Derecho',
+    12: 'Lado Izquierdo',
+    13: 'Short Derecho',
+    14: 'Short Izquierdo'
+};
+
 // =====================================================
 // LISTADO
 // =====================================================
@@ -76,12 +95,13 @@ async function cargarAlertasFaltantes() {
         alertas.forEach(a => {
             a.faltantes.forEach(p => {
                 const detalleLinea = [p.talle ? `Talle ${p.talle}` : null, p.nombre, p.detalle].filter(Boolean).join(' · ');
+                const queFalta = [PARTES[p.parte] || 'Faltante', p.detalleFaltante].filter(Boolean).join(' — ');
                 filas += `
                     <tr>
                         <td>#${a.ordenId}</td>
                         <td class="text-left">${a.cliente}</td>
                         <td class="text-left">${p.producto}${detalleLinea ? ' — ' + detalleLinea : ''}</td>
-                        <td class="text-left text-danger font-weight-bold">${p.detalleFaltante}</td>
+                        <td class="text-left text-danger font-weight-bold">${queFalta}</td>
                     </tr>
                 `;
             });

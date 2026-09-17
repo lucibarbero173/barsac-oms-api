@@ -98,6 +98,7 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.DisenoPorUsuarioId).HasColumnName("diseno_por_usuario_id");
 
                 entity.Property(e => e.CorteEstado).HasColumnName("corte_estado");
+                entity.Property(e => e.CorteParteFaltante).HasColumnName("corte_parte_faltante");
                 entity.Property(e => e.CorteDetalleFaltante).HasColumnName("corte_detalle_faltante");
                 entity.Property(e => e.FechaCorte).HasColumnName("fecha_corte");
                 entity.Property(e => e.CortadoPorUsuarioId).HasColumnName("cortado_por_usuario_id");
