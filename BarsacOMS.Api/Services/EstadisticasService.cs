@@ -36,6 +36,7 @@ namespace BarsacOMS.Api.Services
                     NumeroOrden = o.Id.ToString(),
                     ClienteNombre = o.Cliente != null ? o.Cliente.Nombre : (o.NombreCliente ?? "Sin Cliente"),
                     FechaEntrega = o.FechaEntrega != null ? o.FechaEntrega.ToString("dd/MM/yyyy") : "-",
+                    FechaEntregaIso = o.FechaEntrega.ToString("yyyy-MM-dd"),
                     Total = o.ImporteTotal,
                     MontoPagado = o.ImporteTotal - o.Saldo,
                     SaldoPendiente = o.Saldo,

@@ -21,6 +21,9 @@
         public string NumeroOrden { get; set; } = string.Empty;
         public string ClienteNombre { get; set; } = string.Empty;
         public string FechaEntrega { get; set; } = string.Empty;
+        // Mismo valor en formato yyyy-MM-dd, para poder ordenar la tabla cronológicamente
+        // (el "dd/MM/yyyy" de arriba, ordenado como texto, queda en un orden raro).
+        public string FechaEntregaIso { get; set; } = string.Empty;
         public decimal Total { get; set; }
         public decimal MontoPagado { get; set; }
         public decimal SaldoPendiente { get; set; }

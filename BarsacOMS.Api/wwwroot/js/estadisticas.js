@@ -146,7 +146,7 @@ function renderizarTablaSaldos(saldos) {
         tr.innerHTML = `
             <td><strong>#${item.numeroOrden}</strong></td>
             <td>${item.clienteNombre}</td>
-            <td>${item.fechaEntrega}</td>
+            <td data-order="${item.fechaEntregaIso}">${item.fechaEntrega}</td>
             <td>$${item.total.toLocaleString('es-AR')}</td>
             <td class="text-success">$${item.montoPagado.toLocaleString('es-AR')}</td>
             <td class="text-danger font-weight-bold">$${item.saldoPendiente.toLocaleString('es-AR')}</td>
