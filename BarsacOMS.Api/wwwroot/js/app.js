@@ -84,4 +84,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // 4. Menú lateral plegado por defecto (solo íconos); recuerda si se despliega,
+    // así queda igual al navegar entre pantallas en vez de resetearse en cada carga.
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        const sidebarState = localStorage.getItem('sidebarState') || 'colapsada';
+        if (sidebarState === 'colapsada') {
+            document.body.classList.add('sidebar-toggled');
+            sidebar.classList.add('toggled');
+        }
+
+        ['sidebarToggle', 'sidebarToggleTop'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    const quedoColapsada = sidebar.classList.contains('toggled');
+                    localStorage.setItem('sidebarState', quedoColapsada ? 'colapsada' : 'desplegada');
+                });
+            }
+        });
+    }
 });

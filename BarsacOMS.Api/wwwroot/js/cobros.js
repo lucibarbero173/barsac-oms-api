@@ -49,13 +49,14 @@ function cargarCobros() {
 
             data.forEach(c => {
                 let fechaFormateada = c.fechaCobro ? new Date(c.fechaCobro).toLocaleDateString('es-AR') : "-";
+                let fechaIso = c.fechaCobro ? c.fechaCobro.split('T')[0] : '';
                 let mes = c.fechaCobro ? new Date(c.fechaCobro).getMonth() + 1 : "-";
                 let importe = (c.importe || 0).toLocaleString('es-AR');
 
                 tabla.append(`
                     <tr>
                         <td class="font-weight-bold text-primary">${c.ordenId || '-'}</td>
-                        <td>${fechaFormateada}</td>
+                        <td data-order="${fechaIso}">${fechaFormateada}</td>
                         <td>${mes}</td>
                         <td>${c.clienteId || '-'}</td>
                         <td class="font-weight-bold">${c.nombreCliente || '-'}</td>
