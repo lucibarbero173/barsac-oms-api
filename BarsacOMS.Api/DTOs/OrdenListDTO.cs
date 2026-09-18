@@ -22,5 +22,10 @@ namespace BarsacOMS.Api.DTOs
         public decimal Saldo { get; set; }
 
         public EstadoOrden Estado { get; set; }
+
+        // Cantidad de PrendaUnidad ya escaneadas en Control para esta orden. Sirve para
+        // mostrar un estado "Control" mientras el escaneo está en progreso (todavía no
+        // llegó al 100%, que es cuando el Estado ya pasa solo a ListoParaEntregar).
+        public int PrendasControladas { get; set; }
     }
 }

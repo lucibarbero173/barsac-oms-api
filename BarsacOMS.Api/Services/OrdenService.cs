@@ -143,6 +143,17 @@ namespace BarsacOMS.Api.Services
                 .AsNoTracking()
                 .ToListAsync();
 
+            // 1.b Cantidad de prendas ya escaneadas en Control, por orden (para el estado "Control" en progreso)
+            var controladasPorOrden = await (
+                from f in _context.FichasProduccion
+                join d in _context.DetallesFichaProduccion on f.Id equals d.FichaProduccionId
+                join p in _context.PrendasUnidad on d.Id equals p.DetalleFichaProduccionId
+                where p.Controlada
+                group p by f.OrdenId into g
+                select new { OrdenId = g.Key, Cantidad = g.Count() }
+            ).ToListAsync();
+            var controladasDict = controladasPorOrden.ToDictionary(x => x.OrdenId, x => x.Cantidad);
+
             // 2. Mapeamos a DTO en memoria para evitar errores de traducción LINQ/EF Core
             return ordenes.Select(o => new OrdenListDTO
             {
@@ -158,7 +169,8 @@ namespace BarsacOMS.Api.Services
                 Senas = o.Senas ?? 0,
                 OtrosCobros = o.OtrosCobros,
                 Saldo = o.Saldo,
-                Estado = o.Estado
+                Estado = o.Estado,
+                PrendasControladas = controladasDict.TryGetValue(o.Id, out var cantidadControlada) ? cantidadControlada : 0
             });
         }
 

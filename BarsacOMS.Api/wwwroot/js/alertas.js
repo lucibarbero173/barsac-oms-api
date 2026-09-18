@@ -85,7 +85,7 @@ async function cargarTablaAlertas() {
                     <td>$ ${(importe || 0).toLocaleString('es-AR')}</td>
                     <td>$ ${(o.senas || 0).toLocaleString('es-AR')}</td>
                     <td>$ ${(o.saldo || 0).toLocaleString('es-AR')}</td>
-                    <td>${obtenerBadgeEstado(o.estado)}</td>
+                    <td>${obtenerBadgeEstado(o.estado, o.prendasControladas)}</td>
                     <td class="text-center">
                         <button class="btn btn-info btn-sm" title="Ver Detalle" onclick="verDetallePedido(${o.id})">
                             <i class="fas fa-eye"></i>
@@ -143,7 +143,10 @@ async function marcarComoEntregado(id) {
     }
 }
 
-function obtenerBadgeEstado(estado) {
+function obtenerBadgeEstado(estado, prendasControladas) {
+    if (prendasControladas > 0 && [5, 6, 7].includes(estado)) {
+        return '<span class="badge" style="background-color:#FF9800;color:#fff;">Control</span>';
+    }
     switch (estado) {
         case 0: return '<span class="badge" style="background-color:#dc3545;color:#fff;">Pendiente</span>';
         case 1: return '<span class="badge" style="background-color:#6c757d;color:#fff;">Diseño</span>';

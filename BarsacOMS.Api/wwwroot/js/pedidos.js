@@ -57,7 +57,7 @@ function cargarOrdenes() {
                         <td>$ ${(o.senas || 0).toLocaleString('es-AR')}</td>
                         <td>$ ${(o.otrosCobros || 0).toLocaleString('es-AR')}</td>
                         <td>$ ${(o.saldo || 0).toLocaleString('es-AR')}</td>
-                        <td>${formatearEstado(o.estado)}</td>
+                        <td>${formatearEstado(o.estado, o.prendasControladas)}</td>
                         <td class="text-center">
                             <button class="btn btn-info btn-sm btn-ver" data-id="${o.id}" title="Ver Detalle">
                                 <i class="fas fa-eye"></i>
@@ -94,7 +94,13 @@ function cargarOrdenes() {
         });
 }
 
-function formatearEstado(estado) {
+function formatearEstado(estado, prendasControladas) {
+    // Si ya se escaneó al menos una prenda en Control pero todavía no está al 100%
+    // (si llegara al 100% el backend ya la pasa sola a "Listo para Entregar"), mostramos
+    // ese progreso en vez del estado de Corte, aunque el pedido siga ahí por dentro.
+    if (prendasControladas > 0 && [5, 6, 7].includes(estado)) {
+        return `<span class="badge" style="background-color:#FF9800;color:#fff;">Control</span>`;
+    }
     switch (estado) {
         case 0: return `<span class="badge" style="background-color:#dc3545;color:#fff;">Pendiente</span>`;
         case 1: return `<span class="badge" style="background-color:#6c757d;color:#fff;">Diseño</span>`;
