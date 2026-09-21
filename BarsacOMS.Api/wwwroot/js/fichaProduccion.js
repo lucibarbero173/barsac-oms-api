@@ -951,6 +951,15 @@ function imprimirFichaDesdeModal() {
         $spanModista.html('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
     }
 
+    // Foto del diseño en el hueco vacío del membrete, si la ficha tiene una cargada.
+    const fichaEnVista = fichasProduccion.find(f => f.id === fichaIdEnVista);
+    const imagenFicha = fichaEnVista ? fichaEnVista.imagenDisenoBase64 : null;
+    if (imagenFicha) {
+        $contenidoOriginal.find('.card').first().css('position', 'relative').append(`
+            <img src="${imagenFicha}" style="position:absolute; top:8px; right:15px; max-height:95px; max-width:160px; object-fit:contain; border:1px solid #999; background:#fff;">
+        `);
+    }
+
     const contenidoLimpio = $contenidoOriginal.html();
 
     let filasVaciasHtml = '';
