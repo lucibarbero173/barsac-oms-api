@@ -106,6 +106,7 @@ namespace BarsacOMS.Api.Services
             fichaExistente.Modista = ficha.Modista;
             fichaExistente.OrdenId = ficha.OrdenId;
             fichaExistente.ImagenDisenoBase64 = ficha.ImagenDisenoBase64;
+            fichaExistente.EstadoFicha = ficha.EstadoFicha;
 
             foreach (var existente in aBorrar)
             {
@@ -164,6 +165,10 @@ namespace BarsacOMS.Api.Services
             }
 
             await _context.SaveChangesAsync();
+
+            // Si se cambió el estado de la ficha a mano, la orden tiene que reflejarlo
+            // (usando siempre la ficha más atrasada de todas las suyas).
+            await RecalcularEstadoOrdenAsync(fichaExistente.OrdenId);
 
             return new ResultadoActualizacionFicha { Exito = true };
         }

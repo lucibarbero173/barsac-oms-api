@@ -445,6 +445,7 @@ function eliminarFilaPrenda(filaId) {
 async function guardarFicha() {
     const ordenId = parseInt($('#selectPedido').val());
     const modista = $('#selectModista').val();
+    const estadoFicha = parseInt($('#selectEstadoFicha').val());
 
     if (!ordenId) {
         alert('Por favor selecciona una orden de trabajo.');
@@ -520,6 +521,7 @@ async function guardarFicha() {
     const payload = {
         ordenId: ordenId,
         modista: modista || 'Sin asignar',
+        estadoFicha: isNaN(estadoFicha) ? 0 : estadoFicha,
         imagenDisenoBase64: imagenDisenoActual,
         items: items
     };
@@ -589,6 +591,7 @@ async function editarFicha(idFicha) {
 
     $('#inputCliente').val(ficha.orden ? ficha.orden.nombreCliente : '');
     $('#selectModista').val(ficha.modista);
+    $('#selectEstadoFicha').val(ficha.estadoFicha);
     $('#inputFechaPedido').val(ficha.orden && ficha.orden.fechaPedido ? ficha.orden.fechaPedido.split('T')[0] : '');
     $('#inputFechaEntrega').val(ficha.orden && ficha.orden.fechaEntrega ? ficha.orden.fechaEntrega.split('T')[0] : '');
 
