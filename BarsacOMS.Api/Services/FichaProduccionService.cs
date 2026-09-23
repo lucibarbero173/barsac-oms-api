@@ -47,6 +47,12 @@ namespace BarsacOMS.Api.Services
             }
 
             await _context.SaveChangesAsync();
+
+            // La ficha nueva arranca en Pendiente (EstadoFicha por defecto), así que la
+            // orden tiene que reflejar eso YA, aunque ya tuviera otra ficha más avanzada
+            // (o hasta ya entregada) — si se le agrega trabajo nuevo, deja de estar lista.
+            await RecalcularEstadoOrdenAsync(ficha.OrdenId, ignorarEstadoActual: true);
+
             return ficha;
         }
 
@@ -307,6 +313,29 @@ namespace BarsacOMS.Api.Services
             _context.FichasProduccion.Remove(ficha);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        // Solo estos valores son estados de PRODUCCIÓN (los que puede tomar una ficha).
+        private static readonly HashSet<EstadoOrden> EstadosDeProduccion = new()
+        {
+            EstadoOrden.Pendiente, EstadoOrden.EnProceso, EstadoOrden.Corte, EstadoOrden.CorteFaltantes, EstadoOrden.AptoConfeccion
+        };
+
+        // El estado de la ORDEN pasa a ser el de su ficha más atrasada: así nunca se ve
+        // más avanzada de lo que en realidad está. ignorarEstadoActual=true se usa al
+        // crear una ficha nueva, para que "des-entregue" una orden que ya se había dado
+        // por lista/entregada si le agregan trabajo nuevo.
+        private async Task RecalcularEstadoOrdenAsync(int ordenId, bool ignorarEstadoActual = false)
+        {
+            var orden = await _context.Ordenes.FindAsync(ordenId);
+            if (orden == null) return;
+            if (!ignorarEstadoActual && !EstadosDeProduccion.Contains(orden.Estado)) return;
+
+            var fichas = await _context.FichasProduccion.Where(f => f.OrdenId == ordenId).ToListAsync();
+            if (fichas.Count == 0) return;
+
+            orden.Estado = (EstadoOrden)fichas.Min(f => (int)f.EstadoFicha);
+            await _context.SaveChangesAsync();
         }
     }
 }

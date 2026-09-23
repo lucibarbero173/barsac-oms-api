@@ -20,7 +20,7 @@ namespace BarsacOMS.Api.Services
                 .Include(f => f.Orden)
                 .Include(f => f.Items)
                     .ThenInclude(i => i.Unidades)
-                .Where(f => f.Orden.Estado == EstadoOrden.Pendiente || f.Orden.Estado == EstadoOrden.EnProceso)
+                .Where(f => f.EstadoFicha == EstadoOrden.Pendiente || f.EstadoFicha == EstadoOrden.EnProceso)
                 .ToListAsync();
 
             return fichas.Select(f => new FichaResumenEtapaDto
@@ -31,7 +31,7 @@ namespace BarsacOMS.Api.Services
                 FechaEntrega = f.Orden.FechaEntrega,
                 Total = f.Items.Sum(i => i.Unidades.Count),
                 Completadas = f.Items.Sum(i => i.Unidades.Count(u => u.DisenoListo)),
-                Estado = f.Orden.Estado
+                Estado = f.EstadoFicha
             }).ToList();
         }
 
@@ -52,7 +52,7 @@ namespace BarsacOMS.Api.Services
                 Cliente = ficha.Orden.NombreCliente,
                 FechaEntrega = ficha.Orden.FechaEntrega,
                 ImagenDisenoBase64 = ficha.ImagenDisenoBase64,
-                Estado = ficha.Orden.Estado,
+                Estado = ficha.EstadoFicha,
                 Prendas = ficha.Items
                     .SelectMany(i => i.Unidades.Select(u => new PrendaEtapaDto
                     {
@@ -95,21 +95,25 @@ namespace BarsacOMS.Api.Services
 
             await _context.SaveChangesAsync();
 
-            var (completadas, total) = await CalcularProgresoOrdenAsync(ordenId, u => u.DisenoListo);
+            // El progreso y el cambio de estado son de ESTA ficha nada más, no de toda la
+            // orden: si la orden tiene otra ficha ya más avanzada, no se debe tocar.
+            var (completadas, total) = await CalcularProgresoFichaAsync(ficha.Id, u => u.DisenoListo);
 
-            var orden = await _context.Ordenes.FindAsync(ordenId);
-            if (orden != null && (orden.Estado == EstadoOrden.Pendiente || orden.Estado == EstadoOrden.EnProceso))
+            if (ficha.EstadoFicha == EstadoOrden.Pendiente || ficha.EstadoFicha == EstadoOrden.EnProceso)
             {
                 if (total > 0 && completadas == total)
                 {
-                    orden.Estado = EstadoOrden.Corte;
+                    ficha.EstadoFicha = EstadoOrden.Corte;
                 }
                 else if (completadas > 0)
                 {
-                    orden.Estado = EstadoOrden.EnProceso; // ya se empezó a trabajar en el diseño
+                    ficha.EstadoFicha = EstadoOrden.EnProceso; // ya se empezó a trabajar en el diseño
                 }
                 await _context.SaveChangesAsync();
             }
+
+            await RecalcularEstadoOrdenAsync(ordenId);
+            var orden = await _context.Ordenes.FindAsync(ordenId);
 
             return new ResultadoEtapaDto
             {
@@ -126,7 +130,7 @@ namespace BarsacOMS.Api.Services
                 .Include(f => f.Orden)
                 .Include(f => f.Items)
                     .ThenInclude(i => i.Unidades)
-                .Where(f => f.Orden.Estado == EstadoOrden.CorteFaltantes)
+                .Where(f => f.EstadoFicha == EstadoOrden.CorteFaltantes)
                 .ToListAsync();
 
             return fichas.Select(f => new AlertaFaltanteDto
@@ -150,18 +154,39 @@ namespace BarsacOMS.Api.Services
             }).Where(a => a.Faltantes.Count > 0).ToList();
         }
 
-        private async Task<(int Completadas, int Total)> CalcularProgresoOrdenAsync(int ordenId, Func<PrendaUnidad, bool> completadaPredicado)
+        private async Task<(int Completadas, int Total)> CalcularProgresoFichaAsync(int fichaId, Func<PrendaUnidad, bool> completadaPredicado)
         {
             var query =
-                from f in _context.FichasProduccion
-                where f.OrdenId == ordenId
-                join d in _context.DetallesFichaProduccion on f.Id equals d.FichaProduccionId
+                from d in _context.DetallesFichaProduccion
+                where d.FichaProduccionId == fichaId
                 join p in _context.PrendasUnidad on d.Id equals p.DetalleFichaProduccionId
                 select p;
 
             var unidades = await query.ToListAsync();
             var completadas = unidades.Count(completadaPredicado);
             return (completadas, unidades.Count);
+        }
+
+        // Solo estos valores son estados de PRODUCCIÓN (los que puede tomar una ficha).
+        // Si la orden ya está en un estado de entrega (Entregado/EntregadoParcial/
+        // ListoParaEntregar), un toggle de diseño en una ficha no debe pisarlo.
+        private static readonly HashSet<EstadoOrden> EstadosDeProduccion = new()
+        {
+            EstadoOrden.Pendiente, EstadoOrden.EnProceso, EstadoOrden.Corte, EstadoOrden.CorteFaltantes, EstadoOrden.AptoConfeccion
+        };
+
+        // El estado de la ORDEN pasa a ser el de su ficha más atrasada: así nunca se ve
+        // más avanzada de lo que en realidad está, aunque tenga otra ficha ya lista.
+        private async Task RecalcularEstadoOrdenAsync(int ordenId)
+        {
+            var orden = await _context.Ordenes.FindAsync(ordenId);
+            if (orden == null || !EstadosDeProduccion.Contains(orden.Estado)) return;
+
+            var fichas = await _context.FichasProduccion.Where(f => f.OrdenId == ordenId).ToListAsync();
+            if (fichas.Count == 0) return;
+
+            orden.Estado = (EstadoOrden)fichas.Min(f => (int)f.EstadoFicha);
+            await _context.SaveChangesAsync();
         }
     }
 }

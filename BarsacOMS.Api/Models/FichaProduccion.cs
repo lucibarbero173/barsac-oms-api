@@ -14,6 +14,14 @@ namespace BarsacOMS.Api.Models
 
         public string Modista { get; set; }
 
+        // Estado de PRODUCCIÓN de esta ficha en particular (Diseño/Corte/Apto Confección),
+        // independiente de las demás fichas de la misma orden. Antes este progreso se
+        // calculaba mezclando las prendas de TODAS las fichas de la orden, así que una
+        // ficha recién creada podía "heredar" el estado avanzado de otra ficha vieja de la
+        // misma orden. Orden.Estado ahora se recalcula como agregado (la ficha más
+        // atrasada) cada vez que el estado de una ficha cambia.
+        public EstadoOrden EstadoFicha { get; set; } = EstadoOrden.Pendiente;
+
         // Imagen del diseño, cargada por el diseñador (reemplaza el Word aparte).
         public string? ImagenDisenoBase64 { get; set; }
 

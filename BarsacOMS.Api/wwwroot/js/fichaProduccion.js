@@ -253,7 +253,10 @@ async function cargarTablaFichas() {
             // Si el pedido ya se marcó como entregado (a mano, desde Alertas o desde
             // Registrar Entregas), eso manda por sobre el progreso de escaneo: la ficha
             // tiene que quedar ligada al estado real del pedido, no mostrar algo viejo.
+            // El resto (Diseño/Corte/Faltantes/Apto Confección) sale de estadoFicha, que es
+            // el progreso de ESTA ficha en particular — no el de otra ficha de la misma orden.
             const estadoOrden = ficha.orden ? ficha.orden.estado : null;
+            const estadoFicha = ficha.estadoFicha;
             let badgeEstado;
 
             if (ficha.entregada) { // esta tanda puntual ya se entregó, manda por sobre todo lo demás
@@ -262,13 +265,13 @@ async function cargarTablaFichas() {
                 badgeEstado = '<span class="badge" style="background-color:#8BC34A;color:#fff;">Entregado</span>';
             } else if (estadoOrden === 4) { // EstadoOrden.EntregadoParcial
                 badgeEstado = '<span class="badge" style="background-color:#FF9800;color:#fff;">Entrega Parcial</span>';
-            } else if (estadoOrden === 1) { // EstadoOrden.EnProceso ("Diseño")
+            } else if (estadoFicha === 1) { // EstadoOrden.EnProceso ("Diseño")
                 badgeEstado = '<span class="badge" style="background-color:#6c757d;color:#fff;">Diseño</span>';
-            } else if (estadoOrden === 5) { // EstadoOrden.Corte
+            } else if (estadoFicha === 5) { // EstadoOrden.Corte
                 badgeEstado = '<span class="badge" style="background-color:#6f42c1;color:#fff;">Corte</span>';
-            } else if (estadoOrden === 6) { // EstadoOrden.CorteFaltantes
+            } else if (estadoFicha === 6) { // EstadoOrden.CorteFaltantes
                 badgeEstado = '<span class="badge" style="background-color:#c0392b;color:#fff;">Faltantes</span>';
-            } else if (estadoOrden === 7) { // EstadoOrden.AptoConfeccion
+            } else if (estadoFicha === 7) { // EstadoOrden.AptoConfeccion
                 badgeEstado = '<span class="badge" style="background-color:#17a2b8;color:#fff;">Apto Confección</span>';
             } else if (totalPrendasFicha > 0 && totalControladasFicha >= totalPrendasFicha) {
                 badgeEstado = '<span class="badge" style="background-color:#29ABE2;color:#fff;">Listo para Entregar</span>';
