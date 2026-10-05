@@ -32,10 +32,10 @@ namespace BarsacOMS.Api.Services
             _context.Cobros.Add(cobro);
             await _context.SaveChangesAsync();
 
-            // ⚡ RECALCULAR EL SALDO DE LA ORDEN SI ESTÁ ASOCIADA
+            // Sumamos ESTE cobro a la orden (si está asociada), sin tocar nada más.
             if (cobro.OrdenId.HasValue)
             {
-                await RecalcularSaldoOrdenAsync(cobro.OrdenId.Value);
+                await AplicarDeltaAOrdenAsync(cobro.OrdenId.Value, cobro.Concepto, cobro.Importe);
             }
 
             return cobro;
@@ -47,64 +47,46 @@ namespace BarsacOMS.Api.Services
             if (cobro == null) return false;
 
             int? ordenId = cobro.OrdenId;
+            var concepto = cobro.Concepto;
+            var importe = cobro.Importe;
 
             _context.Cobros.Remove(cobro);
             await _context.SaveChangesAsync();
 
-            // ⚡ RECALCULAR EL SALDO SI SE BORRA UN COBRO
+            // Restamos ESTE cobro de la orden, sin tocar el resto.
             if (ordenId.HasValue)
             {
-                await RecalcularSaldoOrdenAsync(ordenId.Value);
+                await AplicarDeltaAOrdenAsync(ordenId.Value, concepto, -importe);
             }
 
             return true;
         }
 
-        // Método privado para recalcular la orden separando por concepto
-        private async Task RecalcularSaldoOrdenAsync(int ordenId)
+        // Suma (o resta, si delta es negativo) un importe puntual al campo que corresponda
+        // de la orden (Seña si el concepto menciona "seña"/"refuerzo", si no Otros Cobros) y
+        // recalcula el saldo. A propósito NO recalcula desde cero sumando toda la tabla de
+        // Cobros: la orden puede tener una Seña/Otros Cobros cargada a mano al crear el
+        // pedido (sin un Cobro asociado todavía), y recalcular desde cero la pisaba a 0.
+        private async Task AplicarDeltaAOrdenAsync(int ordenId, string? concepto, decimal delta)
         {
+            if (delta == 0) return;
+
             var orden = await _context.Ordenes.FindAsync(ordenId);
             if (orden == null) return;
 
-            // 1. Traemos todos los cobros asociados a la orden
-            var cobros = await _context.Cobros
-                .Where(c => c.OrdenId == ordenId)
-                .ToListAsync();
+            var c = (concepto ?? "").Trim().ToUpper();
+            bool esSena = c.Contains("SEÑA") || c.Contains("SENA") || c.Contains("REFUERZO");
 
-            // 2. Sumamos las señas (Comprueba si el concepto CONTIENE "SEÑA" o "SENA", ignorando mayúsculas)
-            decimal totalRefuerzoSenas = cobros
-                .Where(c => !string.IsNullOrWhiteSpace(c.Concepto) &&
-                           c.Concepto.Trim().ToUpper().Contains("SE") &&
-                           (c.Concepto.Trim().ToUpper().Contains("A")))
-                // O más directo:
-                // .Where(c => !string.IsNullOrWhiteSpace(c.Concepto) && c.Concepto.ToUpper().Contains("SE") && c.Concepto.ToUpper().Contains("A"))
-                .Sum(c => c.Importe);
-
-            // Método más limpio y seguro para comparar strings:
-            decimal totalSenas = 0m;
-            decimal totalOtros = 0m;
-
-            foreach (var c in cobros)
+            if (esSena)
             {
-                var concepto = (c.Concepto ?? "").Trim().ToUpper();
-                if (concepto.Contains("SEÑA") || concepto.Contains("SENA") || concepto.Contains("REFUERZO"))
-                {
-                    totalSenas += c.Importe;
-                }
-                else
-                {
-                    totalOtros += c.Importe;
-                }
+                orden.Senas = (orden.Senas ?? 0m) + delta;
+            }
+            else
+            {
+                orden.OtrosCobros = (orden.OtrosCobros ?? 0m) + delta;
             }
 
-            // 3. Asignamos los valores recalculados
-            orden.Senas = totalSenas;
-            orden.OtrosCobros = totalOtros;
-
-            // 4. Saldo final
             orden.Saldo = orden.ImporteTotal - (orden.Senas ?? 0m) - (orden.OtrosCobros ?? 0m);
-
-            _context.Ordenes.Update(orden);
             await _context.SaveChangesAsync();
         }
 
@@ -114,6 +96,8 @@ namespace BarsacOMS.Api.Services
             if (cobroExistente == null) return false;
 
             int? ordenIdAnterior = cobroExistente.OrdenId;
+            var conceptoAnterior = cobroExistente.Concepto;
+            var importeAnterior = cobroExistente.Importe;
 
             // Actualizamos los datos
             cobroExistente.OrdenId = cobro.OrdenId;
@@ -127,16 +111,16 @@ namespace BarsacOMS.Api.Services
 
             await _context.SaveChangesAsync();
 
-            // ⚡ RECALCULAR LA ORDEN ACTUAL
-            if (cobroExistente.OrdenId.HasValue)
+            // Deshacemos el efecto viejo en la orden de origen...
+            if (ordenIdAnterior.HasValue)
             {
-                await RecalcularSaldoOrdenAsync(cobroExistente.OrdenId.Value);
+                await AplicarDeltaAOrdenAsync(ordenIdAnterior.Value, conceptoAnterior, -importeAnterior);
             }
 
-            // Si cambió de número de orden, recalculamos la anterior también
-            if (ordenIdAnterior.HasValue && ordenIdAnterior != cobroExistente.OrdenId)
+            // ...y aplicamos el nuevo en la orden de destino (puede ser la misma).
+            if (cobroExistente.OrdenId.HasValue)
             {
-                await RecalcularSaldoOrdenAsync(ordenIdAnterior.Value);
+                await AplicarDeltaAOrdenAsync(cobroExistente.OrdenId.Value, cobroExistente.Concepto, cobroExistente.Importe);
             }
 
             return true;

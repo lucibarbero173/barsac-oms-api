@@ -57,7 +57,7 @@ namespace BarsacOMS.Api.Services
                     ClienteId = orden.ClienteId,
                     NombreCliente = orden.NombreCliente,
                     NombreOrdenante = orden.Solicitante,
-                    Concepto = "ENTREGA", // o "REFUERZO SEÑA" según tus categorías
+                    Concepto = "REFUERZO SEÑA", // tiene que incluir "SEÑA" para que Cobros la siga contando como seña
                     MedioCobro = medioPago,
                     Importe = orden.Senas.Value
                 };
