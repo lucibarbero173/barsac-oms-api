@@ -130,6 +130,7 @@ function renderPedidoActual(ordenId, prendas, idRecienEscaneado) {
 
         $body.append(`
             <tr class="${claseFila}" data-id="${p.id}">
+                <td class="font-weight-bold">${p.id}</td>
                 <td class="text-left">${p.producto}</td>
                 <td>${p.talle || '-'}</td>
                 <td>${nombreNumero}</td>
