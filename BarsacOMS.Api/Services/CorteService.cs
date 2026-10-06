@@ -35,6 +35,43 @@ namespace BarsacOMS.Api.Services
             }).ToList();
         }
 
+        // Fichas que ya terminaron el corte (Apto Confección), para poder consultarlas
+        // rápido aunque ya hayan desaparecido de la lista de pendientes de Corte.
+        public async Task<List<FichaResumenEtapaDto>> ObtenerFichasRecienTerminadasAsync()
+        {
+            var fichas = await _context.FichasProduccion
+                .Include(f => f.Orden)
+                .Include(f => f.Items)
+                    .ThenInclude(i => i.Unidades)
+                .Where(f => f.EstadoFicha == EstadoOrden.AptoConfeccion)
+                .ToListAsync();
+
+            return fichas
+                .Select(f =>
+                {
+                    var fechas = f.Items.SelectMany(i => i.Unidades)
+                        .Where(u => u.FechaCorte.HasValue)
+                        .Select(u => u.FechaCorte!.Value)
+                        .ToList();
+
+                    return new FichaResumenEtapaDto
+                    {
+                        FichaId = f.Id,
+                        OrdenId = f.OrdenId,
+                        Cliente = f.Orden.NombreCliente,
+                        FechaEntrega = f.Orden.FechaEntrega,
+                        Total = f.Items.Sum(i => i.Unidades.Count),
+                        Completadas = f.Items.Sum(i => i.Unidades.Count(u => u.CorteEstado == EstadoCorte.Completo)),
+                        Estado = f.EstadoFicha,
+                        FechaCompletado = fechas.Count > 0 ? fechas.Max() : (DateTime?)null
+                    };
+                })
+                .Where(f => f.FechaCompletado.HasValue)
+                .OrderByDescending(f => f.FechaCompletado)
+                .Take(20)
+                .ToList();
+        }
+
         public async Task<FichaDetalleEtapaDto?> ObtenerFichaAsync(int fichaId)
         {
             var ficha = await _context.FichasProduccion

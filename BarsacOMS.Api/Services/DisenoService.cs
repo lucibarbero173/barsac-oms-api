@@ -35,6 +35,44 @@ namespace BarsacOMS.Api.Services
             }).ToList();
         }
 
+        // Fichas que ya salieron de Diseño (están en Corte/Faltantes/Apto Confección), para
+        // poder consultarlas rápido ("¿qué tenía esa ficha que acabo de terminar?") aunque
+        // ya hayan desaparecido de la lista de pendientes.
+        public async Task<List<FichaResumenEtapaDto>> ObtenerFichasRecienTerminadasAsync()
+        {
+            var fichas = await _context.FichasProduccion
+                .Include(f => f.Orden)
+                .Include(f => f.Items)
+                    .ThenInclude(i => i.Unidades)
+                .Where(f => f.EstadoFicha != EstadoOrden.Pendiente && f.EstadoFicha != EstadoOrden.EnProceso)
+                .ToListAsync();
+
+            return fichas
+                .Select(f =>
+                {
+                    var fechas = f.Items.SelectMany(i => i.Unidades)
+                        .Where(u => u.FechaDiseno.HasValue)
+                        .Select(u => u.FechaDiseno!.Value)
+                        .ToList();
+
+                    return new FichaResumenEtapaDto
+                    {
+                        FichaId = f.Id,
+                        OrdenId = f.OrdenId,
+                        Cliente = f.Orden.NombreCliente,
+                        FechaEntrega = f.Orden.FechaEntrega,
+                        Total = f.Items.Sum(i => i.Unidades.Count),
+                        Completadas = f.Items.Sum(i => i.Unidades.Count(u => u.DisenoListo)),
+                        Estado = f.EstadoFicha,
+                        FechaCompletado = fechas.Count > 0 ? fechas.Max() : (DateTime?)null
+                    };
+                })
+                .Where(f => f.FechaCompletado.HasValue)
+                .OrderByDescending(f => f.FechaCompletado)
+                .Take(20)
+                .ToList();
+        }
+
         public async Task<FichaDetalleEtapaDto?> ObtenerFichaAsync(int fichaId)
         {
             var ficha = await _context.FichasProduccion

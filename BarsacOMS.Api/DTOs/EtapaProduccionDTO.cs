@@ -12,6 +12,10 @@ namespace BarsacOMS.Api.DTOs
         public int Total { get; set; }
         public int Completadas { get; set; }
         public EstadoOrden Estado { get; set; }
+
+        // Solo se completa en el listado de "recién terminadas": cuándo se marcó la
+        // última prenda de esta ficha en la etapa correspondiente.
+        public DateTime? FechaCompletado { get; set; }
     }
 
     // Detalle completo de una ficha para trabajar en Diseño o Corte.

@@ -30,6 +30,12 @@ namespace BarsacOMS.Api.Controllers
             return Ok(await _corteService.ObtenerFichasPendientesAsync());
         }
 
+        [HttpGet("fichas/recien-terminadas")]
+        public async Task<IActionResult> GetFichasRecienTerminadas()
+        {
+            return Ok(await _corteService.ObtenerFichasRecienTerminadasAsync());
+        }
+
         [HttpGet("fichas/{id}")]
         public async Task<IActionResult> GetFicha(int id)
         {

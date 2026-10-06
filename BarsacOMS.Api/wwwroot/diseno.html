@@ -140,6 +140,35 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Fichas que recién terminaron Diseño y ya pasaron a Corte (por si hay que consultarlas) -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3" data-toggle="collapse" data-target="#colapsoRecienTerminadasDiseno" style="cursor: pointer;" role="button" aria-expanded="false">
+                            <h6 class="m-0 font-weight-bold text-muted">
+                                <i class="fas fa-chevron-right mr-1"></i> Recién Terminadas
+                            </h6>
+                        </div>
+                        <div class="collapse" id="colapsoRecienTerminadasDiseno">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm text-center" id="tablaRecienTerminadasDiseno" width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th>N° Ficha</th>
+                                                <th>N° Orden</th>
+                                                <th class="text-left">Cliente</th>
+                                                <th>Terminada el</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tablaRecienTerminadasDisenoBody">
+                                            <!-- Se carga dinámicamente vía JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>

@@ -6,6 +6,7 @@ namespace BarsacOMS.Api.Services
     public interface ICorteService
     {
         Task<List<FichaResumenEtapaDto>> ObtenerFichasPendientesAsync();
+        Task<List<FichaResumenEtapaDto>> ObtenerFichasRecienTerminadasAsync();
         Task<FichaDetalleEtapaDto?> ObtenerFichaAsync(int fichaId);
         Task<ResultadoEtapaDto?> CompletarUnidadAsync(int unidadId, int? usuarioId);
         Task<ResultadoEtapaDto?> RegistrarFaltanteAsync(int unidadId, ParteFaltante parte, string? detalle, int? usuarioId);

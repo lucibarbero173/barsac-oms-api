@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function cargarTodo() {
     cargarFichas();
     cargarAlertasFaltantes();
+    cargarRecienTerminadas();
 }
 
 // Mismo catálogo de partes que usa Corte, para poder mostrar qué falta.
@@ -74,6 +75,45 @@ async function cargarFichas() {
     } catch (error) {
         console.error(error);
         alert('No se pudieron cargar las fichas de diseño.');
+    }
+}
+
+// =====================================================
+// RECIÉN TERMINADAS (ya pasaron a Corte, para poder consultarlas)
+// =====================================================
+async function cargarRecienTerminadas() {
+    try {
+        const res = await fetch(`${API_DISENO}/fichas/recien-terminadas`);
+        if (!res.ok) throw new Error('No se pudieron obtener las fichas recién terminadas');
+        const fichas = await res.json();
+
+        const $body = $('#tablaRecienTerminadasDisenoBody');
+        $body.empty();
+
+        if (fichas.length === 0) {
+            $body.append('<tr><td colspan="5" class="text-center text-muted">Todavía no hay fichas recién terminadas.</td></tr>');
+            return;
+        }
+
+        fichas.forEach(f => {
+            const fechaCompletado = f.fechaCompletado ? f.fechaCompletado.split('T')[0] : '-';
+
+            $body.append(`
+                <tr>
+                    <td class="font-weight-bold">${f.fichaId}</td>
+                    <td>${f.ordenId}</td>
+                    <td class="text-left">${f.cliente}</td>
+                    <td>${fechaCompletado}</td>
+                    <td>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="abrirFicha(${f.fichaId})" title="Ver">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+    } catch (error) {
+        console.error(error);
     }
 }
 
