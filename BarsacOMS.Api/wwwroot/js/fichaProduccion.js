@@ -2,6 +2,8 @@
 let ordenesDisponibles = [];
 let cargandoOrden = false;
 let fichaIdEnVista = null;
+let fichaEnVistaCompleta = null; // la ficha abierta con el ojito, con imagen (para imprimir)
+let fichaEntregaCompleta = null; // la ficha abierta en Registrar Entregas, con sus items
 let imagenDisenoActual = null;
 let disponibilidadActual = []; // [{producto, talle, disponible}] del pedido seleccionado, ya descontando otras fichas
 
@@ -236,26 +238,18 @@ async function cargarTablaFichas() {
         table.clear();
 
         fichasProduccion.forEach(ficha => {
-            const items = ficha.items || [];
-
             // El estado de la ficha se calcula en base a lo escaneado en control.html
             // (PrendaUnidad.Controlada), no a las entregas parciales manuales viejas.
-            let totalPrendasFicha = 0;
-            let totalControladasFicha = 0;
-
-            items.forEach(item => {
-                const cantItem = item.cantidades || 1;
-                totalPrendasFicha += cantItem;
-                const unidades = item.unidades || [];
-                totalControladasFicha += unidades.filter(u => u.controlada).length;
-            });
+            // Los conteos ya vienen calculados del backend (la lista no trae las prendas).
+            const totalPrendasFicha = ficha.totalPrendas || 0;
+            const totalControladasFicha = ficha.totalControladas || 0;
 
             // Si el pedido ya se marcó como entregado (a mano, desde Alertas o desde
             // Registrar Entregas), eso manda por sobre el progreso de escaneo: la ficha
             // tiene que quedar ligada al estado real del pedido, no mostrar algo viejo.
             // El resto (Diseño/Corte/Faltantes/Apto Confección) sale de estadoFicha, que es
             // el progreso de ESTA ficha en particular — no el de otra ficha de la misma orden.
-            const estadoOrden = ficha.orden ? ficha.orden.estado : null;
+            const estadoOrden = ficha.estadoOrden;
             const estadoFicha = ficha.estadoFicha;
             let badgeEstado;
 
@@ -281,9 +275,9 @@ async function cargarTablaFichas() {
                 badgeEstado = '<span class="badge" style="background-color:#dc3545;color:#fff;">Pendiente</span>';
             }
 
-            const clienteNombre = ficha.orden ? ficha.orden.nombreCliente : '-';
-            const fechaPedido = ficha.orden ? (ficha.orden.fechaPedido ? ficha.orden.fechaPedido.split('T')[0] : '-') : '-';
-            const fechaEntrega = ficha.orden ? (ficha.orden.fechaEntrega ? ficha.orden.fechaEntrega.split('T')[0] : '-') : '-';
+            const clienteNombre = ficha.nombreCliente || '-';
+            const fechaPedido = ficha.fechaPedido ? ficha.fechaPedido.split('T')[0] : '-';
+            const fechaEntrega = ficha.fechaEntrega ? ficha.fechaEntrega.split('T')[0] : '-';
 
             const botonEntregarFicha = ficha.entregada
                 ? '<span class="badge badge-success" title="Esta tanda ya se le entregó al cliente"><i class="fas fa-check"></i> Entregada</span>'
@@ -319,6 +313,20 @@ async function cargarTablaFichas() {
         table.draw();
     } catch (error) {
         console.error('Error al cargar la tabla de fichas:', error);
+    }
+}
+
+// La lista solo trae lo de la tabla; la ficha completa (imagen, items, prendas, entregas)
+// se pide recién al abrirla.
+async function obtenerFichaCompleta(idFicha) {
+    try {
+        const res = await fetch(`/api/FichaProduccion/${idFicha}`);
+        if (!res.ok) throw new Error('No se pudo obtener la ficha.');
+        return await res.json();
+    } catch (error) {
+        console.error('Error al obtener la ficha:', error);
+        alert('No se pudo abrir la ficha (falló la consulta al servidor). Volvé a intentar.');
+        return null;
     }
 }
 
@@ -566,7 +574,7 @@ async function guardarFicha() {
 
 // Abrir Modal de Edición
 async function editarFicha(idFicha) {
-    const ficha = fichasProduccion.find(f => f.id === idFicha);
+    const ficha = await obtenerFichaCompleta(idFicha);
     if (!ficha) return;
 
     $('#fichaId').val(ficha.id);
@@ -620,11 +628,12 @@ async function editarFicha(idFicha) {
 }
 
 // Abrir Modal de Previsualización
-function verFicha(idFicha) {
-    const ficha = fichasProduccion.find(f => f.id === idFicha);
+async function verFicha(idFicha) {
+    const ficha = await obtenerFichaCompleta(idFicha);
     if (!ficha) return;
 
     fichaIdEnVista = ficha.id;
+    fichaEnVistaCompleta = ficha;
     $('#viewIdFicha').text(ficha.id);
     $('#viewNumOrden').text(`#${ficha.ordenId}`);
     $('#viewCliente').text(ficha.orden ? ficha.orden.nombreCliente : '-');
@@ -830,11 +839,12 @@ function verFicha(idFicha) {
 
 let fichaActualEntregaId = null;
 
-function abrirModalEntrega(idFicha) {
-    const ficha = fichasProduccion.find(f => f.id === idFicha);
+async function abrirModalEntrega(idFicha) {
+    const ficha = await obtenerFichaCompleta(idFicha);
     if (!ficha) return;
 
     fichaActualEntregaId = ficha.id;
+    fichaEntregaCompleta = ficha;
     $('#entregaIdFicha').text(ficha.id);
     $('#entregaNumOrden').text(`#${ficha.ordenId}`);
     $('#entregaCliente').text(ficha.orden ? ficha.orden.nombreCliente : '-');
@@ -903,7 +913,7 @@ async function guardarEntregaParcial() {
             const cantidadIngresada = parseInt(inputCant.val()) || 0;
 
             if (cantidadIngresada > 0) {
-                const ficha = fichasProduccion.find(f => f.id === fichaActualEntregaId);
+                const ficha = fichaEntregaCompleta;
                 const itemOriginal = ficha.items.find(i => i.producto === producto && String(i.talle || '') === String(talle || ''));
 
                 entregasNuevas.push({
@@ -958,7 +968,7 @@ function imprimirFichaDesdeModal() {
     }
 
     // Foto del diseño en el hueco vacío del membrete, si la ficha tiene una cargada.
-    const fichaEnVista = fichasProduccion.find(f => f.id === fichaIdEnVista);
+    const fichaEnVista = fichaEnVistaCompleta;
     const imagenFicha = fichaEnVista ? fichaEnVista.imagenDisenoBase64 : null;
     if (imagenFicha) {
         $contenidoOriginal.find('.card').first().css('position', 'relative').append(`

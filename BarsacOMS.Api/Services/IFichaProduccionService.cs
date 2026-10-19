@@ -5,7 +5,7 @@ namespace BarsacOMS.Api.Services
 {
     public interface IFichaProduccionService
     {
-        Task<List<FichaProduccion>> GetAllAsync();
+        Task<List<FichaProduccionListDTO>> GetAllAsync();
         Task<FichaProduccion?> GetByIdAsync(int id);
         Task<FichaProduccion?> ObtenerFichaPorOrdenAsync(int ordenId); // <--- Agrega esta línea
         Task<FichaProduccion> CreateAsync(FichaProduccion ficha);

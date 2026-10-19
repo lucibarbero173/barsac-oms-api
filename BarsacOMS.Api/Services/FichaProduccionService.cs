@@ -16,19 +16,35 @@ namespace BarsacOMS.Api.Services
             _prendaUnidadService = prendaUnidadService;
         }
 
-        public async Task<List<FichaProduccion>> GetAllAsync()
+        public async Task<List<FichaProduccionListDTO>> GetAllAsync()
         {
+            // Proyección directa a SQL: no baja la imagen ni las prendas, solo los conteos.
             return await _context.FichasProduccion
-                .Include(f => f.Orden)
-                .Include(f => f.Items)
-                    .ThenInclude(i => i.Unidades)
-                .Include(f => f.EntregasParciales)
+                .AsNoTracking()
+                .OrderByDescending(f => f.Id)
+                .Select(f => new FichaProduccionListDTO
+                {
+                    Id = f.Id,
+                    OrdenId = f.OrdenId,
+                    NombreCliente = f.Orden.NombreCliente,
+                    FechaPedido = f.Orden.FechaPedido,
+                    FechaEntrega = f.Orden.FechaEntrega,
+                    EstadoOrden = f.Orden.Estado,
+                    Modista = f.Modista,
+                    EstadoFicha = f.EstadoFicha,
+                    Entregada = f.Entregada,
+                    // Un item con Cantidades = 0 cuenta como 1 (igual que hacía el front).
+                    TotalPrendas = f.Items.Sum(i => i.Cantidades > 0 ? i.Cantidades : 1),
+                    TotalControladas = f.Items.SelectMany(i => i.Unidades).Count(u => u.Controlada)
+                })
                 .ToListAsync();
         }
 
         public async Task<FichaProduccion?> GetByIdAsync(int id)
         {
             return await _context.FichasProduccion
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(f => f.Orden)
                 .Include(f => f.Items)
                     .ThenInclude(i => i.Unidades)
