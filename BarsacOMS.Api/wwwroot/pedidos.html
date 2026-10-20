@@ -206,6 +206,86 @@
         <i class="fas fa-angle-up"></i>
     </a>
 
+    <!-- MODAL REGISTRAR COBRO DEL PEDIDO (mismo formulario que la pantalla Cobros) -->
+    <div class="modal fade" id="modalCobroPedido" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center text-info font-weight-bold">
+                        <i class="fas fa-hand-holding-usd mr-2"></i> Registrar Cobro — Pedido #<span id="cpOrdenIdTitulo"></span>
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="formCobroPedido">
+                        <input type="hidden" id="cpOrdenId">
+
+                        <div class="alert alert-info py-2 d-flex justify-content-between align-items-center">
+                            <span>Saldo actual del pedido: <strong id="cpSaldo"></strong></span>
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="usarSaldoComoImporte()">Cobrar el saldo completo</button>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">Fecha Cobro</label>
+                                <input type="date" id="cpFecha" class="form-control" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">Importe ($)</label>
+                                <input type="number" step="0.01" min="0" id="cpImporte" class="form-control" placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label class="font-weight-bold">Número Cliente</label>
+                                <input type="number" id="cpClienteId" class="form-control">
+                            </div>
+                            <div class="form-group col-md-8">
+                                <label class="font-weight-bold">Nombre Cliente</label>
+                                <input type="text" id="cpNombreCliente" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">Nombre Ordenante Pago</label>
+                                <input type="text" id="cpOrdenante" class="form-control" placeholder="Quien realiza la transferencia">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label class="font-weight-bold">Concepto</label>
+                                <select id="cpConcepto" class="form-control">
+                                    <option value="ENTREGA">ENTREGA</option>
+                                    <option value="REFUERZO SEÑA">REFUERZO SEÑA</option>
+                                    <option value="SALDO FINAL">SALDO FINAL</option>
+                                    <option value="OTRO">OTRO</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label class="font-weight-bold">Medio de Cobro</label>
+                                <select id="cpMedio" class="form-control">
+                                    <option value="EFECTIVO">EFECTIVO</option>
+                                    <option value="CHEQUE">CHEQUE</option>
+                                    <option value="MERCADO PAGO">MERCADO PAGO</option>
+                                    <option value="UALA">UALA</option>
+                                    <option value="ICBC">ICBC</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary px-4" data-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-success px-4" onclick="guardarCobroPedido()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL PARA VER DETALLES DEL PEDIDO -->
     <div class="modal fade" id="modalVerPedido" tabindex="-1" role="dialog" aria-labelledby="modalVerPedidoLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">

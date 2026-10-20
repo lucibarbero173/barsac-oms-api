@@ -24,7 +24,15 @@ $(document).ready(function () {
         const id = $(this).data('id');
         eliminarOrden(id);
     });
+
+    // Botón Registrar Cobro
+    $('#ordenesBody').on('click', '.btn-cobro', function () {
+        abrirModalCobroPedido($(this).data('id'));
+    });
 });
+
+// Las órdenes cargadas en la tabla, para tomar cliente y saldo al registrar un cobro
+let ordenesPorId = {};
 
 // =================
 // CARGAR ORDENES
@@ -33,14 +41,19 @@ function cargarOrdenes() {
     fetch("/api/Orden")
         .then(res => res.json())
         .then(data => {
+            // Al recargar (ej. después de registrar un cobro) se conserva lo que estaba buscado
+            let busqueda = '';
             if ($.fn.dataTable.isDataTable('#dataTable')) {
+                busqueda = $('#dataTable').DataTable().search();
                 $('#dataTable').DataTable().destroy();
             }
 
             const tabla = $("#ordenesBody");
             tabla.empty();
+            ordenesPorId = {};
 
             data.forEach(o => {
+                ordenesPorId[o.id] = o;
                 let fecha = o.fechaPedido?.split("T")[0];
                 let anio = fecha ? fecha.split("-")[0] : "";
 
@@ -64,6 +77,9 @@ function cargarOrdenes() {
                             </button>
                             <button class="btn btn-primary btn-sm btn-editar" data-id="${o.id}" title="Editar">
                                 <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-success btn-sm btn-cobro" data-id="${o.id}" title="Registrar Cobro">
+                                <i class="fas fa-dollar-sign"></i>
                             </button>
                             <button class="btn btn-danger btn-sm btn-eliminar" data-id="${o.id}" title="Eliminar">
                                 <i class="fas fa-trash"></i>
@@ -91,6 +107,76 @@ function cargarOrdenes() {
                     }
                 ]
             });
+
+            if (busqueda) $('#dataTable').DataTable().search(busqueda).draw();
+        });
+}
+
+// =================
+// REGISTRAR COBRO DESDE EL PEDIDO
+// =================
+function abrirModalCobroPedido(ordenId) {
+    const o = ordenesPorId[ordenId];
+    if (!o) return;
+
+    $('#formCobroPedido')[0].reset();
+    $('#cpOrdenId').val(o.id);
+    $('#cpOrdenIdTitulo').text(o.id);
+    $('#cpFecha').val(new Date().toISOString().split('T')[0]);
+    $('#cpClienteId').val(o.clienteId ?? '');
+    $('#cpNombreCliente').val(o.nombreCliente || '');
+    $('#cpOrdenante').val(o.solicitante || '');
+    $('#cpSaldo').text(`$ ${(o.saldo || 0).toLocaleString('es-AR')}`);
+
+    $('#modalCobroPedido').modal('show');
+}
+
+function usarSaldoComoImporte() {
+    const o = ordenesPorId[$('#cpOrdenId').val()];
+    if (!o) return;
+    $('#cpImporte').val(o.saldo || 0);
+    $('#cpConcepto').val('SALDO FINAL');
+}
+
+function guardarCobroPedido() {
+    const importe = parseFloat($('#cpImporte').val() || 0);
+    if (!importe || importe <= 0) {
+        alert('Ingresá el importe del cobro.');
+        return;
+    }
+    if (!$('#cpNombreCliente').val().trim()) {
+        alert('Falta el nombre del cliente.');
+        return;
+    }
+
+    const cobroDto = {
+        id: 0,
+        ordenId: parseInt($('#cpOrdenId').val()),
+        fechaCobro: $('#cpFecha').val(),
+        importe: importe,
+        clienteId: $('#cpClienteId').val() ? parseInt($('#cpClienteId').val()) : null,
+        nombreCliente: $('#cpNombreCliente').val(),
+        nombreOrdenante: $('#cpOrdenante').val(),
+        concepto: $('#cpConcepto').val(),
+        medioCobro: $('#cpMedio').val()
+    };
+
+    fetch('/api/Cobros', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cobroDto)
+    })
+        .then(res => {
+            if (res.ok) {
+                $('#modalCobroPedido').modal('hide');
+                cargarOrdenes(); // el cobro actualiza Señas/Otros Cobros y Saldo del pedido
+            } else {
+                alert('Error al guardar el cobro');
+            }
+        })
+        .catch(err => {
+            console.error('Error al guardar el cobro:', err);
+            alert('Error de conexión al guardar el cobro.');
         });
 }
 
