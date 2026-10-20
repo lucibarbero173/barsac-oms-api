@@ -488,6 +488,36 @@ namespace BarsacOMS.Api.Migrations
                     b.ToTable("materias_primas", (string)null);
                 });
 
+            modelBuilder.Entity("BarsacOMS.Api.Models.Modista", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activa");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nombre");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId")
+                        .IsUnique();
+
+                    b.ToTable("modista", (string)null);
+                });
+
             modelBuilder.Entity("BarsacOMS.Api.Models.MovimientoManualCuenta", b =>
                 {
                     b.Property<int>("Id")
@@ -827,6 +857,38 @@ namespace BarsacOMS.Api.Migrations
                     b.ToTable("saldo_inicial_cuenta", (string)null);
                 });
 
+            modelBuilder.Entity("BarsacOMS.Api.Models.TarifaModista", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ModistaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("modista_id");
+
+                    b.Property<decimal>("Precio")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("precio");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("producto_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("ModistaId", "ProductoId")
+                        .IsUnique();
+
+                    b.ToTable("tarifa_modista", (string)null);
+                });
+
             modelBuilder.Entity("BarsacOMS.Api.Models.Usuario", b =>
                 {
                     b.Property<int>("Id")
@@ -960,6 +1022,14 @@ namespace BarsacOMS.Api.Migrations
                     b.Navigation("Proveedor");
                 });
 
+            modelBuilder.Entity("BarsacOMS.Api.Models.Modista", b =>
+                {
+                    b.HasOne("BarsacOMS.Api.Models.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
             modelBuilder.Entity("BarsacOMS.Api.Models.OrdenTrabajo", b =>
                 {
                     b.HasOne("BarsacOMS.Api.Models.Cliente", "Cliente")
@@ -1006,6 +1076,23 @@ namespace BarsacOMS.Api.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 
+            modelBuilder.Entity("BarsacOMS.Api.Models.TarifaModista", b =>
+                {
+                    b.HasOne("BarsacOMS.Api.Models.Modista", null)
+                        .WithMany("Tarifas")
+                        .HasForeignKey("ModistaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BarsacOMS.Api.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+                });
+
             modelBuilder.Entity("BarsacOMS.Api.Models.Cliente", b =>
                 {
                     b.Navigation("Ordenes");
@@ -1021,6 +1108,11 @@ namespace BarsacOMS.Api.Migrations
                     b.Navigation("EntregasParciales");
 
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("BarsacOMS.Api.Models.Modista", b =>
+                {
+                    b.Navigation("Tarifas");
                 });
 
             modelBuilder.Entity("BarsacOMS.Api.Models.OrdenTrabajo", b =>

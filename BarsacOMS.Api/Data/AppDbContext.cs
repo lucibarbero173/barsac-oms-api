@@ -27,6 +27,8 @@ namespace BarsacOMS.Api.Data
         public DbSet<ConfiguracionCostos> ConfiguracionCostos { get; set; }
         public DbSet<SaldoInicialCuenta> SaldosInicialesCuenta { get; set; }
         public DbSet<MovimientoManualCuenta> MovimientosManualesCuenta { get; set; }
+        public DbSet<Modista> Modistas { get; set; }
+        public DbSet<TarifaModista> TarifasModista { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -394,6 +396,48 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Talle).HasColumnName("talle");
                 entity.Property(e => e.TipoPago).HasColumnName("tipo_pago");
                 entity.Property(e => e.Precio).HasColumnName("precio");
+            });
+
+            // =====================
+            // MODISTAS Y TARIFAS
+            // =====================
+            modelBuilder.Entity<Modista>(entity =>
+            {
+                entity.ToTable("modista");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Nombre).HasColumnName("nombre");
+                entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+                entity.Property(e => e.Activa).HasColumnName("activa");
+
+                entity.HasIndex(e => e.UsuarioId).IsUnique();
+
+                entity.HasOne<Usuario>()
+                      .WithMany()
+                      .HasForeignKey(e => e.UsuarioId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasMany(e => e.Tarifas)
+                      .WithOne()
+                      .HasForeignKey(t => t.ModistaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<TarifaModista>(entity =>
+            {
+                entity.ToTable("tarifa_modista");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.ModistaId).HasColumnName("modista_id");
+                entity.Property(e => e.ProductoId).HasColumnName("producto_id");
+                entity.Property(e => e.Precio).HasColumnName("precio").HasPrecision(18, 2);
+
+                entity.HasIndex(e => new { e.ModistaId, e.ProductoId }).IsUnique();
+
+                entity.HasOne(e => e.Producto)
+                      .WithMany()
+                      .HasForeignKey(e => e.ProductoId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

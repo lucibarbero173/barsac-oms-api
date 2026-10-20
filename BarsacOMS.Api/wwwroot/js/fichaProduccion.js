@@ -387,7 +387,8 @@ function agregarFilaPrendaDesgloseModal(cantidades = 1, producto = '', talle = '
     const opcionesProd = obtenerOpcionesProductosOrden();
 
     const tr = `
-        <tr id="fila-${filaId}" data-item-id="${itemId || 0}">
+        <tr id="fila-${filaId}" data-item-id="${itemId || 0}"
+            data-archivo="${!!archivo}" data-impresion="${!!impresion}" data-calandra="${!!calandra}" data-corte="${!!corte}" data-entregado="${!!entregado}">
             <td>
                 <input type="number" class="form-control form-control-sm input-cantidades text-center" value="${cantVal}" min="1">
             </td>
@@ -407,21 +408,6 @@ function agregarFilaPrendaDesgloseModal(cantidades = 1, producto = '', talle = '
             </td>
             <td>
                 <input type="text" class="form-control form-control-sm input-detalle" value="${detalle || ''}" placeholder="Color/modelo">
-            </td>
-            <td class="align-middle">
-                <input type="checkbox" class="chk-arch" ${archivo ? 'checked' : ''}>
-            </td>
-            <td class="align-middle">
-                <input type="checkbox" class="chk-imp" ${impresion ? 'checked' : ''}>
-            </td>
-            <td class="align-middle">
-                <input type="checkbox" class="chk-cal" ${calandra ? 'checked' : ''}>
-            </td>
-            <td class="align-middle">
-                <input type="checkbox" class="chk-corte" ${corte ? 'checked' : ''}>
-            </td>
-            <td class="align-middle bg-warning-soft">
-                <input type="checkbox" class="chk-entregado" ${entregado ? 'checked' : ''}>
             </td>
             <td class="align-middle text-center">
                 <button type="button" class="btn btn-outline-danger btn-sm border-0" onclick="eliminarFilaPrenda('${filaId}')">
@@ -504,11 +490,13 @@ async function guardarFicha() {
             numero: valNumero !== "" && !isNaN(parseInt(valNumero)) ? parseInt(valNumero) : null,
             nombre: row.find('.input-nombre').val() || null,
             detalle: row.find('.input-detalle').val() || null,
-            archivo: row.find('.chk-arch').is(':checked'),
-            impresion: row.find('.chk-imp').is(':checked'),
-            calandra: row.find('.chk-cal').is(':checked'),
-            corte: row.find('.chk-corte').is(':checked'),
-            entregado: row.find('.chk-entregado').is(':checked')
+            // Ya no se editan desde el modal; se reenvía lo que tenía guardado la fila
+            // para no pisar datos de fichas viejas.
+            archivo: row.attr('data-archivo') === 'true',
+            impresion: row.attr('data-impresion') === 'true',
+            calandra: row.attr('data-calandra') === 'true',
+            corte: row.attr('data-corte') === 'true',
+            entregado: row.attr('data-entregado') === 'true'
         });
     });
 
@@ -654,11 +642,6 @@ async function verFicha(idFicha) {
                 <td>${p.numero || '-'}</td>
                 <td>${p.nombre || '-'}</td>
                 <td>${p.detalle || '-'}</td>
-                <td>${p.archivo ? checkIcon : timesIcon}</td>
-                <td>${p.impresion ? checkIcon : timesIcon}</td>
-                <td>${p.calandra ? checkIcon : timesIcon}</td>
-                <td>${p.corte ? checkIcon : timesIcon}</td>
-                <td>${p.entregado ? 'Entregada' : 'Pendiente'}</td>
             </tr>
         `;
     });
@@ -706,10 +689,6 @@ async function verFicha(idFicha) {
                         <td>${entrega.talle || '-'}</td>
                         <td>${entrega.numero || '-'}</td>
                         <td>${entrega.nombre || '-'}</td>
-                        <td>${itemOriginal && itemOriginal.archivo ? checkIcon : timesIcon}</td>
-                        <td>${itemOriginal && itemOriginal.impresion ? checkIcon : timesIcon}</td>
-                        <td>${itemOriginal && itemOriginal.calandra ? checkIcon : timesIcon}</td>
-                        <td>${itemOriginal && itemOriginal.corte ? checkIcon : timesIcon}</td>
                         <td>${estadoBadge}</td>
                     </tr>
                 `;
@@ -738,10 +717,6 @@ async function verFicha(idFicha) {
                                     <th>Talle</th>
                                     <th>Número</th>
                                     <th>Nombre</th>
-                                    <th>Archivo</th>
-                                    <th>Impresión</th>
-                                    <th>Calandra</th>
-                                    <th>Corte</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
@@ -789,10 +764,6 @@ async function verFicha(idFicha) {
                     <td>${p.numero || '-'}</td>
                     <td>${p.nombre || '-'}</td>
                     <td>${p.detalle || '-'}</td>
-                    <td>${p.archivo ? checkIcon : timesIcon}</td>
-                    <td>${p.impresion ? checkIcon : timesIcon}</td>
-                    <td>${p.calandra ? checkIcon : timesIcon}</td>
-                    <td>${p.corte ? checkIcon : timesIcon}</td>
                     <td><span class="badge badge-danger">Pendiente</span></td>
                 </tr>
             `;
@@ -813,10 +784,6 @@ async function verFicha(idFicha) {
                                 <th>Número</th>
                                 <th>Nombre</th>
                                 <th>Detalle</th>
-                                <th>Archivo</th>
-                                <th>Impresión</th>
-                                <th>Calandra</th>
-                                <th>Corte</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
@@ -989,10 +956,6 @@ function imprimirFichaDesdeModal() {
                 <td></td>
                 <td></td>
                 <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
             </tr>
         `;
     }
@@ -1009,10 +972,6 @@ function imprimirFichaDesdeModal() {
                         <th style="width: 10%;">Número</th>
                         <th style="width: 14%;">Nombre</th>
                         <th style="width: 12%;">Detalle</th>
-                        <th style="width: 8%;">Arch.</th>
-                        <th style="width: 8%;">Imp.</th>
-                        <th style="width: 8%;">Cal.</th>
-                        <th style="width: 8%;">Corte</th>
                         <th style="width: 12%;">Estado</th>
                     </tr>
                 </thead>
