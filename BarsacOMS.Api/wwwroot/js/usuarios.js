@@ -6,7 +6,39 @@ $(document).ready(function () {
     });
 
     obtenerUsuarios();
+
+    $('#usrRol').on('change', mostrarGrupoModista);
 });
+
+function mostrarGrupoModista() {
+    const esModista = $('#usrRol').val() === 'modista';
+    $('#grupoModista').toggle(esModista);
+    $('#usrModista').prop('required', esModista);
+}
+
+// Llena el select de modistas. Las que ya tienen otro usuario quedan deshabilitadas.
+async function cargarSelectModistas(usuarioId, modistaIdActual) {
+    const $select = $('#usrModista');
+    $select.html('<option value="">-- Elegir modista --</option>');
+
+    try {
+        const response = await fetch('/api/Modista');
+        if (!response.ok) throw new Error('No se pudieron traer las modistas');
+        const modistas = await response.json();
+
+        modistas
+            .filter(m => m.activa || m.id === modistaIdActual)
+            .forEach(m => {
+                const ocupada = m.usuarioId && m.usuarioId !== usuarioId;
+                const texto = ocupada ? `${m.nombre} (ya tiene usuario: ${m.usuarioEmail})` : m.nombre;
+                $select.append($('<option>').val(m.id).text(texto).prop('disabled', ocupada));
+            });
+    } catch (error) {
+        console.error('Error al cargar modistas:', error);
+    }
+
+    $select.val(modistaIdActual ? String(modistaIdActual) : '');
+}
 
 async function obtenerUsuarios() {
     try {
@@ -26,7 +58,7 @@ async function obtenerUsuarios() {
                     <td>${u.id}</td>
                     <td class="font-weight-bold">${u.nombre}</td>
                     <td>${u.email}</td>
-                    <td><span class="badge badge-light p-2">${u.rol}</span></td>
+                    <td><span class="badge badge-light p-2">${u.rol}</span>${u.modistaNombre ? ` <span class="small text-muted">(${u.modistaNombre})</span>` : ''}</td>
                     <td>${badgeEstado}</td>
                     <td class="text-center">
                         <button class="btn btn-primary btn-sm btn-circle" title="Editar" onclick="abrirModalEditar(${u.id})"><i class="fas fa-pen"></i></button>
@@ -52,6 +84,8 @@ function abrirModalNuevo() {
     $('#usrPassword').prop('required', true);
     $('#ayudaPassword').text('Mínimo 6 caracteres.');
     $('#grupoActivo').hide();
+    mostrarGrupoModista();
+    cargarSelectModistas(null, null);
     $('#modalUsuario').modal('show');
 }
 
@@ -73,6 +107,8 @@ async function abrirModalEditar(id) {
         $('#usrPassword').prop('required', false);
         $('#ayudaPassword').text('Dejar en blanco para no cambiarla.');
         $('#grupoActivo').show();
+        mostrarGrupoModista();
+        await cargarSelectModistas(u.id, u.modistaId);
 
         $('#modalUsuario').modal('show');
     } catch (error) {
@@ -85,6 +121,7 @@ $('#formUsuario').on('submit', async function (e) {
 
     const id = $('#usuarioId').val();
     const password = $('#usrPassword').val();
+    const modistaId = $('#usrRol').val() === 'modista' ? (parseInt($('#usrModista').val()) || null) : null;
 
     try {
         let response;
@@ -93,7 +130,8 @@ $('#formUsuario').on('submit', async function (e) {
                 nombre: $('#usrNombre').val(),
                 rol: $('#usrRol').val(),
                 activo: $('#usrActivo').is(':checked'),
-                password: password || null
+                password: password || null,
+                modistaId: modistaId
             };
             response = await fetch(`${API_URL}/${id}`, {
                 method: 'PUT',
@@ -105,7 +143,8 @@ $('#formUsuario').on('submit', async function (e) {
                 nombre: $('#usrNombre').val(),
                 email: $('#usrEmail').val(),
                 rol: $('#usrRol').val(),
-                password: password
+                password: password,
+                modistaId: modistaId
             };
             response = await fetch(API_URL, {
                 method: 'POST',

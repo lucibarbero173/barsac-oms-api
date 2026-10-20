@@ -43,7 +43,8 @@ window.fetch = async function (...args) {
 const PAGINAS_POR_ROL = {
     control: ['control.html', 'perfil.html'],
     diseno: ['diseno.html', 'perfil.html'],
-    corte: ['corte.html', 'perfil.html']
+    corte: ['corte.html', 'perfil.html'],
+    modista: ['misPrendas.html', 'perfil.html']
 };
 
 (function () {

@@ -12,6 +12,9 @@ namespace BarsacOMS.Api.DTOs
 
         public bool Activo { get; set; } = true;
 
+        // Solo para rol "modista": a qué modista corresponde este usuario.
+        public int? ModistaId { get; set; }
+
         // Opcional: si viene con valor, se resetea la contraseña
         [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
         public string? Password { get; set; }

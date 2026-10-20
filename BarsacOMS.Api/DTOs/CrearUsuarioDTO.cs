@@ -17,5 +17,8 @@ namespace BarsacOMS.Api.DTOs
 
         [Required(ErrorMessage = "El rol es obligatorio")]
         public string Rol { get; set; } = string.Empty;
+
+        // Solo para rol "modista": a qué modista corresponde este usuario.
+        public int? ModistaId { get; set; }
     }
 }

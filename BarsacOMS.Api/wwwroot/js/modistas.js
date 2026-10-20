@@ -47,6 +47,7 @@ async function cargarModistas() {
             table.row.add([
                 `<span class="font-weight-bold">${escaparHtml(m.nombre)}</span>`,
                 `<div class="text-center">${estado}</div>`,
+                `<div class="text-center">${m.usuarioEmail ? escaparHtml(m.usuarioEmail) : '<span class="text-muted">Sin acceso</span>'}</div>`,
                 `<div class="text-center">${tarifas}</div>`,
                 `<div class="text-center">${acciones}</div>`
             ]);

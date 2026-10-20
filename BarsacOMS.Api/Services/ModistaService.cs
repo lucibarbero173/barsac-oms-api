@@ -25,7 +25,12 @@ namespace BarsacOMS.Api.Services
                     Id = m.Id,
                     Nombre = m.Nombre,
                     Activa = m.Activa,
-                    CantidadTarifas = m.Tarifas.Count
+                    CantidadTarifas = m.Tarifas.Count,
+                    UsuarioId = m.UsuarioId,
+                    UsuarioEmail = _context.Usuarios
+                        .Where(u => u.Id == m.UsuarioId)
+                        .Select(u => u.Email)
+                        .FirstOrDefault()
                 })
                 .ToListAsync();
         }

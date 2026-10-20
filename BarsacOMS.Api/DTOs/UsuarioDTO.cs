@@ -8,5 +8,7 @@ namespace BarsacOMS.Api.DTOs
         public string Rol { get; set; } = string.Empty;
         public bool Activo { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int? ModistaId { get; set; }
+        public string? ModistaNombre { get; set; }
     }
 }

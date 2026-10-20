@@ -6,6 +6,8 @@ namespace BarsacOMS.Api.DTOs
         public string Nombre { get; set; } = string.Empty;
         public bool Activa { get; set; }
         public int CantidadTarifas { get; set; }
+        public int? UsuarioId { get; set; }
+        public string? UsuarioEmail { get; set; }
     }
 
     public class GuardarModistaDTO
