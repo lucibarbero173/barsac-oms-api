@@ -109,7 +109,7 @@ async function cargarRecienAsignadas() {
 // MODAL DE REPARTO
 // =====================================================
 async function cargarModistas() {
-    const res = await fetch('/api/Modista');
+    const res = await fetch(`${API_CONFECCION}/modistas`);
     if (!res.ok) throw new Error('No se pudieron obtener las modistas');
     modistas = await res.json();
 }

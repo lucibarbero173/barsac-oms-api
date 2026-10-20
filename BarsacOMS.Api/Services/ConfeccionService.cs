@@ -15,6 +15,15 @@ namespace BarsacOMS.Api.Services
             _context = context;
         }
 
+        public async Task<List<ModistaConfeccionDto>> ObtenerModistasAsync()
+        {
+            return await _context.Modistas
+                .AsNoTracking()
+                .OrderBy(m => m.Nombre)
+                .Select(m => new ModistaConfeccionDto { Id = m.Id, Nombre = m.Nombre, Activa = m.Activa })
+                .ToListAsync();
+        }
+
         public async Task<List<FichaConfeccionResumenDto>> ObtenerFichasPorAsignarAsync()
         {
             // Se mira el estado de la ORDEN (no el de la ficha): recién cuando todas las fichas

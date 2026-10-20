@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin,super")]
+    [Authorize(Roles = "admin,super,corte")]
     [ApiController]
     [Route("api/[controller]")]
     public class ConfeccionController : ControllerBase
@@ -15,6 +15,14 @@ namespace BarsacOMS.Api.Controllers
         public ConfeccionController(IConfeccionService confeccionService)
         {
             _confeccionService = confeccionService;
+        }
+
+        // Solo id/nombre/activa: corte necesita la lista para repartir, pero no las tarifas ni
+        // los usuarios (eso queda en api/Modista, solo admin).
+        [HttpGet("modistas")]
+        public async Task<IActionResult> GetModistas()
+        {
+            return Ok(await _confeccionService.ObtenerModistasAsync());
         }
 
         [HttpGet("fichas")]

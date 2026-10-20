@@ -44,7 +44,7 @@ window.fetch = async function (...args) {
 const PAGINAS_POR_ROL = {
     control: ['control.html', 'perfil.html'],
     diseno: ['diseno.html', 'perfil.html'],
-    corte: ['corte.html', 'perfil.html'],
+    corte: ['corte.html', 'confeccion.html', 'perfil.html'],
     modista: ['misPrendas.html', 'perfil.html']
 };
 
@@ -67,11 +67,25 @@ const PAGINAS_BLOQUEADAS_POR_ROL = {
 
 // 4. Oculta del sidebar los ítems marcados con data-roles que no correspondan al rol actual.
 //    Ej: <li data-roles="admin">...</li> solo lo ve un usuario con rol admin.
+//    Los roles con páginas fijas (PAGINAS_POR_ROL) ven en el sidebar solo los links a esas
+//    páginas, sin importar data-roles (así una pantalla con el sidebar completo, como
+//    Confección, no les muestra Clientes, Pedidos, etc.).
 function ocultarMenuPorRol() {
     const rol = localStorage.getItem('usuarioRol');
     if (!rol) return;
 
+    const permitidas = PAGINAS_POR_ROL[rol];
+    if (permitidas) {
+        document.querySelectorAll('.sidebar .nav-item').forEach((li) => {
+            const link = li.querySelector('a.nav-link');
+            const href = link ? link.getAttribute('href') : null;
+            li.style.display = permitidas.includes(href) ? '' : 'none';
+        });
+        document.querySelectorAll('.sidebar .sidebar-heading').forEach((h) => { h.style.display = 'none'; });
+    }
+
     document.querySelectorAll('[data-roles]').forEach((el) => {
+        if (permitidas && el.closest('.sidebar')) return; // ya resuelto arriba
         const rolesPermitidos = el.getAttribute('data-roles').split(',').map((r) => r.trim());
         if (!rolesPermitidos.includes(rol)) {
             el.style.display = 'none';

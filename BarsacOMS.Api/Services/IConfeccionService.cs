@@ -4,6 +4,7 @@ namespace BarsacOMS.Api.Services
 {
     public interface IConfeccionService
     {
+        Task<List<ModistaConfeccionDto>> ObtenerModistasAsync();
         Task<List<FichaConfeccionResumenDto>> ObtenerFichasPorAsignarAsync();
         Task<List<FichaConfeccionResumenDto>> ObtenerFichasRecienAsignadasAsync();
         Task<FichaConfeccionDetalleDto?> ObtenerFichaAsync(int fichaId);

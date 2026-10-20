@@ -1,5 +1,12 @@
 namespace BarsacOMS.Api.DTOs
 {
+    public class ModistaConfeccionDto
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public bool Activa { get; set; }
+    }
+
     // Fila en los listados de Confección (por asignar / recién asignadas).
     public class FichaConfeccionResumenDto
     {
