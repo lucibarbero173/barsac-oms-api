@@ -11,7 +11,14 @@
   });
 
   // Close any open menu accordions when window is resized below 768px
+  // Solo si cambia el ANCHO: en el celu, al scrollear aparece/desaparece la barra de
+  // direcciones y eso dispara "resize" (cambia el alto), lo que cerraba los desplegables.
+  var anchoPrevio = $(window).width();
   $(window).resize(function() {
+    var anchoActual = $(window).width();
+    if (anchoActual === anchoPrevio) return;
+    anchoPrevio = anchoActual;
+
     if ($(window).width() < 768) {
       $('.sidebar .collapse').collapse('hide');
     };
