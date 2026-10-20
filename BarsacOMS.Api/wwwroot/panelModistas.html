@@ -23,6 +23,11 @@
 
     <!-- TU CSS PERSONALIZADO -->
     <link href="css/custom-theme.css" rel="stylesheet">
+    <style>
+        .tarjeta-modista { cursor: pointer; transition: transform .1s; }
+        .tarjeta-modista:hover { transform: translateY(-2px); }
+        .tarjeta-modista.activa { border: 2px solid #4e73df; }
+    </style>
 </head>
 
 <body id="page-top">
@@ -164,14 +169,21 @@
                         </div>
                     </div>
 
-                    <!-- Tarjetas -->
+                    <!-- Tarjetas para elegir: "Todas" + una por modista -->
+                    <div class="row" id="tarjetasModistas">
+                        <!-- Se carga dinámicamente vía JS -->
+                    </div>
+
+                    <h5 class="font-weight-bold mb-3" id="tituloVista"></h5>
+
+                    <!-- Tarjetas de números (cambian según la selección) -->
                     <div class="row">
                         <div class="col-xl-3 col-md-6 mb-4">
                             <div class="card border-left-info shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Falta coser (hoy)</div>
                                     <div class="h4 mb-0 font-weight-bold" id="kpiFaltaCoser">-</div>
-                                    <div class="small text-muted">prendas en manos de las modistas</div>
+                                    <div class="small text-muted">prendas asignadas sin coser</div>
                                 </div>
                             </div>
                         </div>
@@ -196,9 +208,9 @@
                         <div class="col-xl-3 col-md-6 mb-4">
                             <div class="card border-left-warning shadow h-100 py-2">
                                 <div class="card-body">
-                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Cosidas sin tarifa</div>
-                                    <div class="h4 mb-0 font-weight-bold" id="kpiSinTarifa">-</div>
-                                    <div class="small text-muted" id="kpiSinTarifaTexto">-</div>
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1" id="kpiCuartoTitulo">Cosidas sin tarifa</div>
+                                    <div class="h4 mb-0 font-weight-bold" id="kpiCuartoValor">-</div>
+                                    <div class="small text-muted" id="kpiCuartoTexto">-</div>
                                 </div>
                             </div>
                         </div>
@@ -207,7 +219,7 @@
                     <!-- Gráfico -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Prendas cosidas por semana</h6>
+                            <h6 class="m-0 font-weight-bold text-primary" id="tituloGrafico">Prendas cosidas por semana</h6>
                         </div>
                         <div class="card-body" id="cardGrafico">
                             <div style="position: relative; height: 300px;">
@@ -217,10 +229,10 @@
                         </div>
                     </div>
 
-                    <!-- Tabla por modista -->
-                    <div class="card shadow mb-4">
+                    <!-- VISTA GENERAL: tabla comparando a todas -->
+                    <div class="card shadow mb-4" id="vistaGeneral">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Por modista</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Comparación entre modistas</h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -234,7 +246,6 @@
                                             <th>Última cosida</th>
                                             <th>A pagar<br><span class="small text-muted">(hoy)</span></th>
                                             <th>Último pago</th>
-                                            <th style="width: 110px;"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="tablaModistasPanelBody">
@@ -242,10 +253,107 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <div class="small text-muted">Tocá una modista (acá o en las tarjetas de arriba) para ver su panel.</div>
+                        </div>
+                    </div>
+
+                    <!-- VISTA DE UNA MODISTA -->
+                    <div id="vistaModista" class="d-none">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Falta coser</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm text-center align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Ficha</th>
+                                                <th class="text-left">Cliente</th>
+                                                <th>Entrega</th>
+                                                <th class="text-left">Producto</th>
+                                                <th>Talle</th>
+                                                <th>Nombre / Número</th>
+                                                <th>Cosidas</th>
+                                                <th>Falta</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detFaltaCoserBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-7 mb-4">
+                                <div class="card shadow h-100">
+                                    <div class="card-header py-3">
+                                        <h6 class="m-0 font-weight-bold text-success">A pagar</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm text-center align-middle">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="text-left">Producto</th>
+                                                        <th>Cantidad</th>
+                                                        <th>Precio por prenda</th>
+                                                        <th>Subtotal</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="detAPagarBody"></tbody>
+                                                <tfoot>
+                                                    <tr class="font-weight-bold">
+                                                        <td class="text-left" colspan="3">Total a pagar</td>
+                                                        <td id="detAPagarTotal"></td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                        <div class="alert alert-warning py-2 d-none" id="detAvisoSinTarifa"></div>
+                                        <div class="form-row align-items-end">
+                                            <div class="col-md-7 mb-2">
+                                                <label for="detNotaPago" class="small font-weight-bold mb-1">Nota del pago (opcional)</label>
+                                                <input type="text" id="detNotaPago" class="form-control form-control-sm" placeholder="Ej: transferencia, efectivo...">
+                                            </div>
+                                            <div class="col-md-5 mb-2">
+                                                <button class="btn btn-success btn-block" id="btnRegistrarPago" onclick="registrarPago()">
+                                                    <i class="fas fa-money-bill-wave mr-1"></i> Registrar pago
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-5 mb-4">
+                                <div class="card shadow h-100">
+                                    <div class="card-header py-3">
+                                        <h6 class="m-0 font-weight-bold text-primary">Historial de pagos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm text-center align-middle">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Fecha</th>
+                                                        <th>Prendas</th>
+                                                        <th>Importe</th>
+                                                        <th class="text-left">Nota</th>
+                                                        <th style="width: 50px;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="detPagosBody"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <!-- /.container-fluid -->
+
 
 
             </div>
@@ -269,105 +377,6 @@
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
-
-    <!-- MODAL: DETALLE DE UNA MODISTA -->
-    <div class="modal fade" id="modalDetalleModista" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header py-3">
-                    <h5 class="modal-title font-weight-bold">
-                        <i class="fas fa-tshirt text-primary mr-2"></i> <span id="detNombreModista"></span>
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body px-4 py-3">
-                    <ul class="nav nav-tabs mb-3" role="tablist">
-                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tabFaltaCoser" role="tab">Falta coser</a></li>
-                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tabAPagar" role="tab">A pagar</a></li>
-                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tabPagos" role="tab">Historial de pagos</a></li>
-                    </ul>
-
-                    <div class="tab-content">
-                        <div class="tab-pane fade show active" id="tabFaltaCoser" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-sm text-center align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Ficha</th>
-                                            <th class="text-left">Cliente</th>
-                                            <th>Entrega</th>
-                                            <th class="text-left">Producto</th>
-                                            <th>Talle</th>
-                                            <th>Nombre / Número</th>
-                                            <th>Cosidas</th>
-                                            <th>Falta</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="detFaltaCoserBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="tab-pane fade" id="tabAPagar" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-sm text-center align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th class="text-left">Producto</th>
-                                            <th>Cantidad</th>
-                                            <th>Precio por prenda</th>
-                                            <th>Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="detAPagarBody"></tbody>
-                                    <tfoot>
-                                        <tr class="font-weight-bold">
-                                            <td class="text-left" colspan="3">Total a pagar</td>
-                                            <td id="detAPagarTotal"></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                            <div class="alert alert-warning py-2 d-none" id="detAvisoSinTarifa"></div>
-                            <div class="form-row align-items-end">
-                                <div class="col-md-8 mb-2">
-                                    <label for="detNotaPago" class="small font-weight-bold mb-1">Nota del pago (opcional)</label>
-                                    <input type="text" id="detNotaPago" class="form-control form-control-sm" placeholder="Ej: transferencia, efectivo...">
-                                </div>
-                                <div class="col-md-4 mb-2">
-                                    <button class="btn btn-success btn-block" id="btnRegistrarPago" onclick="registrarPago()">
-                                        <i class="fas fa-money-bill-wave mr-1"></i> Registrar pago
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="tab-pane fade" id="tabPagos" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-sm text-center align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Fecha</th>
-                                            <th>Prendas</th>
-                                            <th>Importe</th>
-                                            <th class="text-left">Nota</th>
-                                            <th style="width: 70px;"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="detPagosBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- JS Scripts Base -->
     <script src="vendor/jquery/jquery.min.js"></script>

@@ -2,10 +2,10 @@ const API_PANEL = '/api/PanelModistas';
 
 let datosPanel = null;
 let grafico = null;
-let modistaDetalleId = null;
+let modistaSeleccionada = null; // null = "Todas"
 
 // Paleta categórica validada (daltonismo + contraste), en orden fijo. El color va atado a
-// la modista (por su posición en la lista completa), no al ranking, así no cambia al filtrar.
+// la modista (por su posición en la lista), no al ranking, así no cambia al filtrar.
 const PALETA = {
     light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'],
     dark: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767']
@@ -15,8 +15,8 @@ const COLOR_OTRAS = { light: '#8c8b85', dark: '#7a7974' };
 document.addEventListener('DOMContentLoaded', () => {
     rangoRapido('8semanas');
 
-    // Al cambiar de tema se redibuja el gráfico con los colores de ese tema
-    $('#themeToggle').on('click', () => setTimeout(() => datosPanel && renderGrafico(datosPanel), 50));
+    // Al cambiar de tema se redibuja el gráfico y los puntitos de color con los del tema
+    $('#themeToggle').on('click', () => setTimeout(() => datosPanel && renderTodo(), 50));
 });
 
 function escaparHtml(texto) {
@@ -38,8 +38,19 @@ function isoLocal(fecha) {
     return `${fecha.getFullYear()}-${z(fecha.getMonth() + 1)}-${z(fecha.getDate())}`;
 }
 
+function plural(n, palabra) {
+    return `${n} ${palabra}${n === 1 ? '' : 's'}`;
+}
+
 function temaActual() {
     return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+}
+
+// Color de una modista: su lugar en la lista; de la 9na en adelante, gris ("Otras")
+function colorModista(modistaId) {
+    const tema = temaActual();
+    const i = datosPanel.modistas.findIndex(m => m.modistaId === modistaId);
+    return i >= 0 && i < PALETA[tema].length ? PALETA[tema][i] : COLOR_OTRAS[tema];
 }
 
 // =====================================================
@@ -66,7 +77,7 @@ function rangoRapido(tipo) {
 }
 
 // =====================================================
-// PANEL
+// CARGA Y SELECCIÓN
 // =====================================================
 async function cargarPanel() {
     const params = new URLSearchParams();
@@ -78,131 +89,113 @@ async function cargarPanel() {
         if (!res.ok) throw new Error('No se pudo obtener el panel');
         datosPanel = await res.json();
 
-        renderTarjetas(datosPanel);
-        renderGrafico(datosPanel);
-        renderTabla(datosPanel);
+        // Si la modista elegida ya no figura (ej. inactiva sin movimiento), se vuelve a "Todas"
+        if (modistaSeleccionada !== null && !datosPanel.modistas.some(m => m.modistaId === modistaSeleccionada)) {
+            modistaSeleccionada = null;
+        }
+
+        await renderTodo();
     } catch (error) {
         console.error(error);
         alert('No se pudo cargar el panel de modistas.');
     }
 }
 
-function renderTarjetas(d) {
+async function seleccionar(modistaId) {
+    modistaSeleccionada = modistaId;
+    await renderTodo();
+}
+
+async function renderTodo() {
+    renderTarjetasSeleccion();
+
+    if (modistaSeleccionada === null) {
+        renderVistaGeneral();
+    } else {
+        await renderVistaModista(modistaSeleccionada);
+    }
+}
+
+function renderTarjetasSeleccion() {
+    const d = datosPanel;
+    const $contenedor = $('#tarjetasModistas');
+    $contenedor.empty();
+
+    const tarjeta = (id, titulo, falta, aPagar, extra) => `
+        <div class="col-xl-2 col-lg-3 col-md-4 col-6 mb-4">
+            <div class="card shadow tarjeta-modista h-100 ${modistaSeleccionada === id ? 'activa' : ''}" onclick="seleccionar(${id})">
+                <div class="card-body py-3">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-2">${titulo}</div>
+                    <div class="small">Falta coser: <span class="font-weight-bold">${falta}</span></div>
+                    <div class="small">A pagar: <span class="font-weight-bold">${moneda(aPagar)}</span></div>
+                    ${extra || ''}
+                </div>
+            </div>
+        </div>
+    `;
+
+    $contenedor.append(tarjeta(null, '<i class="fas fa-users mr-1"></i> Todas', d.faltaCoser, d.aPagar));
+
+    d.modistas.forEach(m => {
+        const punto = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colorModista(m.modistaId)};" class="mr-1"></span>`;
+        const titulo = `${punto}${escaparHtml(m.nombre)}${m.activa ? '' : ' <span class="badge badge-secondary">Inactiva</span>'}`;
+        const extra = m.sinTarifa > 0
+            ? `<div class="small text-warning mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>${m.sinTarifa} sin tarifa</div>`
+            : '';
+        $contenedor.append(tarjeta(m.modistaId, titulo, m.faltaCoser, m.aPagar, extra));
+    });
+}
+
+// =====================================================
+// VISTA GENERAL ("Todas")
+// =====================================================
+function renderVistaGeneral() {
+    const d = datosPanel;
+
+    $('#tituloVista').text('Todas las modistas');
+    $('#vistaGeneral').removeClass('d-none');
+    $('#vistaModista').addClass('d-none');
+
     $('#kpiFaltaCoser').text(d.faltaCoser.toLocaleString('es-AR'));
     $('#kpiCosidas').text(d.cosidasPeriodo.toLocaleString('es-AR'));
     $('#kpiAsignadas').text(`de ${d.asignadasPeriodo.toLocaleString('es-AR')} asignadas en el período`);
     $('#kpiAPagar').text(moneda(d.aPagar));
-    $('#kpiPrendasAPagar').text(`${d.prendasAPagar} prenda${d.prendasAPagar === 1 ? '' : 's'} cosidas sin pagar`);
-    $('#kpiSinTarifa').text(d.sinTarifa);
-    $('#kpiSinTarifaTexto').html(d.sinTarifa > 0
-        ? '<i class="fas fa-exclamation-triangle text-warning mr-1"></i>cargales la tarifa en Modistas'
+    $('#kpiPrendasAPagar').text(`${plural(d.prendasAPagar, 'prenda')} cosidas sin pagar`);
+    renderKpiSinTarifa(d.sinTarifa);
+
+    $('#tituloGrafico').text('Prendas cosidas por semana');
+    renderGrafico(d.series);
+    renderTablaComparacion();
+}
+
+function renderKpiSinTarifa(sinTarifa) {
+    $('#kpiCuartoTitulo').text('Cosidas sin tarifa');
+    $('#kpiCuartoValor').text(sinTarifa);
+    $('#kpiCuartoTexto').html(sinTarifa > 0
+        ? '<i class="fas fa-exclamation-triangle text-warning mr-1"></i>cargá la tarifa en Modistas'
         : '<i class="fas fa-check-circle text-success mr-1"></i>todo tiene tarifa');
 }
 
-function renderGrafico(d) {
-    const tema = temaActual();
-    const colores = PALETA[tema];
-    const cs = getComputedStyle(document.getElementById('cardGrafico'));
-    const superficie = cs.backgroundColor || (tema === 'dark' ? '#1a1a19' : '#ffffff');
-    const textoSecundario = tema === 'dark' ? '#c3c2b7' : '#52514e';
-    const grilla = tema === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-
-    if (grafico) grafico.destroy();
-
-    const hayDatos = d.series.some(s => s.valores.some(v => v > 0));
-    $('#chartCosidasSemana').parent().toggleClass('d-none', !hayDatos);
-    $('#graficoVacio').toggleClass('d-none', hayDatos);
-    if (!hayDatos) return;
-
-    // Color fijo por modista: según su lugar en la lista completa (orden alfabético)
-    const posicion = {};
-    d.modistas.forEach((m, i) => { posicion[m.modistaId] = i; });
-
-    // Las primeras 8 de la lista tienen su color propio; si hubiera más, van a "Otras"
-    const ordenadas = [...d.series].sort((a, b) => posicion[a.modistaId] - posicion[b.modistaId]);
-    const visibles = ordenadas.filter(s => posicion[s.modistaId] < colores.length);
-    const resto = ordenadas.filter(s => posicion[s.modistaId] >= colores.length);
-
-    const datasets = visibles.map(s => ({
-        label: s.nombre,
-        data: s.valores,
-        backgroundColor: colores[posicion[s.modistaId]],
-        borderColor: superficie, // separación de 2px entre segmentos apilados
-        borderWidth: 2
-    }));
-
-    if (resto.length > 0) {
-        datasets.push({
-            label: 'Otras',
-            data: d.semanas.map((_, i) => resto.reduce((suma, s) => suma + s.valores[i], 0)),
-            backgroundColor: COLOR_OTRAS[tema],
-            borderColor: superficie,
-            borderWidth: 2
-        });
-    }
-
-    const etiquetas = d.semanas.map(s => {
-        const [, mes, dia] = s.split('T')[0].split('-');
-        return `${dia}/${mes}`;
-    });
-
-    grafico = new Chart(document.getElementById('chartCosidasSemana').getContext('2d'), {
-        type: 'bar',
-        data: { labels: etiquetas, datasets },
-        options: {
-            maintainAspectRatio: false,
-            legend: {
-                position: 'bottom',
-                labels: { fontColor: textoSecundario, boxWidth: 12, padding: 16 }
-            },
-            tooltips: {
-                mode: 'index',
-                intersect: false,
-                filter: item => item.yLabel > 0,
-                callbacks: {
-                    title: items => `Semana del ${items[0].xLabel}`,
-                    label: item => ` ${datasets[item.datasetIndex].label}: ${item.yLabel} prenda${item.yLabel === 1 ? '' : 's'}`,
-                    footer: items => `Total: ${items.reduce((s, i) => s + i.yLabel, 0)}`
-                }
-            },
-            hover: { mode: 'index', intersect: false },
-            scales: {
-                xAxes: [{
-                    stacked: true,
-                    maxBarThickness: 48,
-                    gridLines: { display: false },
-                    ticks: { fontColor: textoSecundario }
-                }],
-                yAxes: [{
-                    stacked: true,
-                    gridLines: { color: grilla, zeroLineColor: grilla, drawBorder: false },
-                    ticks: { beginAtZero: true, precision: 0, fontColor: textoSecundario }
-                }]
-            }
-        }
-    });
-}
-
-function renderTabla(d) {
+function renderTablaComparacion() {
     const $body = $('#tablaModistasPanelBody');
     $body.empty();
 
-    if (d.modistas.length === 0) {
-        $body.append('<tr><td colspan="8" class="text-center text-muted">No hay modistas cargadas.</td></tr>');
+    if (datosPanel.modistas.length === 0) {
+        $body.append('<tr><td colspan="7" class="text-center text-muted">No hay modistas cargadas.</td></tr>');
         return;
     }
 
-    d.modistas.forEach(m => {
+    datosPanel.modistas.forEach(m => {
         const avance = m.asignadasPeriodo > 0
             ? `<div class="small text-muted">${Math.round((m.cosidasPeriodo / m.asignadasPeriodo) * 100)}% de lo asignado</div>`
             : '';
         const aPagar = m.prendasAPagar > 0 || m.sinTarifa > 0
-            ? `<span class="font-weight-bold">${moneda(m.aPagar)}</span><div class="small text-muted">${m.prendasAPagar} prenda${m.prendasAPagar === 1 ? '' : 's'}</div>`
+            ? `<span class="font-weight-bold">${moneda(m.aPagar)}</span><div class="small text-muted">${plural(m.prendasAPagar, 'prenda')}</div>`
               + (m.sinTarifa > 0 ? `<div class="small text-warning"><i class="fas fa-exclamation-triangle mr-1"></i>${m.sinTarifa} sin tarifa</div>` : '')
             : '<span class="text-muted">-</span>';
 
         $body.append(`
-            <tr>
+            <tr style="cursor: pointer;" onclick="seleccionar(${m.modistaId})" title="Ver el panel de ${escaparHtml(m.nombre)}">
                 <td class="text-left font-weight-bold">${escaparHtml(m.nombre)}${m.activa ? '' : ' <span class="badge badge-secondary">Inactiva</span>'}</td>
                 <td>${m.asignadasPeriodo}</td>
                 <td>${m.cosidasPeriodo}${avance}</td>
@@ -210,37 +203,62 @@ function renderTabla(d) {
                 <td>${formatearFecha(m.ultimaCosida)}</td>
                 <td>${aPagar}</td>
                 <td>${formatearFecha(m.ultimoPago)}</td>
-                <td>
-                    <button class="btn btn-primary btn-sm" title="Ver detalle" onclick="abrirDetalle(${m.modistaId})"><i class="fas fa-eye"></i></button>
-                    <button class="btn btn-success btn-sm" title="Pagar" onclick="abrirDetalle(${m.modistaId}, 'pagar')" ${m.prendasAPagar > 0 || m.sinTarifa > 0 ? '' : 'disabled'}><i class="fas fa-dollar-sign"></i></button>
-                </td>
             </tr>
         `);
     });
 }
 
 // =====================================================
-// DETALLE DE UNA MODISTA
+// VISTA DE UNA MODISTA
 // =====================================================
-async function abrirDetalle(modistaId, pestana) {
+async function renderVistaModista(modistaId) {
+    const m = datosPanel.modistas.find(x => x.modistaId === modistaId);
+    if (!m) return;
+
+    $('#tituloVista').text(m.nombre);
+    $('#vistaGeneral').addClass('d-none');
+    $('#vistaModista').removeClass('d-none');
+
+    $('#kpiFaltaCoser').text(m.faltaCoser.toLocaleString('es-AR'));
+    $('#kpiCosidas').text(m.cosidasPeriodo.toLocaleString('es-AR'));
+    $('#kpiAsignadas').text(m.asignadasPeriodo > 0
+        ? `de ${m.asignadasPeriodo} asignadas en el período (${Math.round((m.cosidasPeriodo / m.asignadasPeriodo) * 100)}%)`
+        : 'no se le asignó nada en el período');
+    $('#kpiAPagar').text(moneda(m.aPagar));
+    $('#kpiPrendasAPagar').text(`${plural(m.prendasAPagar, 'prenda')} cosidas sin pagar`);
+
+    if (m.sinTarifa > 0) {
+        renderKpiSinTarifa(m.sinTarifa);
+    } else {
+        $('#kpiCuartoTitulo').text('Último pago');
+        $('#kpiCuartoValor').text(formatearFecha(m.ultimoPago));
+        $('#kpiCuartoTexto').text(m.ultimaCosida ? `última prenda cosida: ${formatearFecha(m.ultimaCosida)}` : 'todavía no cosió nada');
+    }
+
+    $('#tituloGrafico').text(`Prendas cosidas por semana — ${m.nombre}`);
+    const serie = datosPanel.series.find(s => s.modistaId === modistaId)
+        || { modistaId, nombre: m.nombre, valores: datosPanel.semanas.map(() => 0) };
+    renderGrafico([serie]);
+
+    await cargarDetalleModista(modistaId);
+}
+
+async function cargarDetalleModista(modistaId) {
     try {
         const res = await fetch(`${API_PANEL}/modista/${modistaId}`);
         if (!res.ok) throw new Error('No se pudo obtener el detalle');
         const det = await res.json();
 
-        modistaDetalleId = modistaId;
-        $('#detNombreModista').text(det.nombre);
-        $('#detNotaPago').val('');
+        // Por si mientras cargaba se eligió otra tarjeta
+        if (modistaSeleccionada !== modistaId) return;
 
+        $('#detNotaPago').val('');
         renderFaltaCoser(det.pendientes);
         renderAPagar(det.aPagar);
         renderPagos(det.pagos);
-
-        $(`a[href="${pestana === 'pagar' ? '#tabAPagar' : '#tabFaltaCoser'}"]`).tab('show');
-        $('#modalDetalleModista').modal('show');
     } catch (error) {
         console.error(error);
-        alert('No se pudo abrir el detalle de la modista.');
+        alert('No se pudo cargar el detalle de la modista.');
     }
 }
 
@@ -274,10 +292,8 @@ function renderAPagar(lineas) {
     const $body = $('#detAPagarBody');
     $body.empty();
 
-    const conPrecio = lineas.filter(l => l.precio !== null);
-    const sinPrecio = lineas.filter(l => l.precio === null);
-    const total = conPrecio.reduce((s, l) => s + l.subtotal, 0);
-    const cantSinPrecio = sinPrecio.reduce((s, l) => s + l.cantidad, 0);
+    const total = lineas.filter(l => l.precio !== null).reduce((s, l) => s + l.subtotal, 0);
+    const cantSinPrecio = lineas.filter(l => l.precio === null).reduce((s, l) => s + l.cantidad, 0);
 
     if (lineas.length === 0) {
         $body.append('<tr><td colspan="4" class="text-center text-muted">No hay prendas cosidas pendientes de pago.</td></tr>');
@@ -298,7 +314,7 @@ function renderAPagar(lineas) {
 
     $('#detAvisoSinTarifa')
         .toggleClass('d-none', cantSinPrecio === 0)
-        .html(`<i class="fas fa-exclamation-triangle mr-1"></i>${cantSinPrecio} prenda${cantSinPrecio === 1 ? '' : 's'} se cosieron sin tarifa cargada. Al registrar el pago se usa la tarifa vigente hoy; las que sigan sin tarifa quedan para el próximo pago.`);
+        .html(`<i class="fas fa-exclamation-triangle mr-1"></i>${plural(cantSinPrecio, 'prenda')} se cosieron sin tarifa cargada. Al registrar el pago se usa la tarifa vigente hoy; las que sigan sin tarifa quedan para el próximo pago.`);
 
     $('#btnRegistrarPago').prop('disabled', lineas.length === 0);
 }
@@ -328,14 +344,105 @@ function renderPagos(pagos) {
     });
 }
 
+// =====================================================
+// GRÁFICO (todas apiladas, o una sola modista)
+// =====================================================
+function renderGrafico(series) {
+    const tema = temaActual();
+    const cs = getComputedStyle(document.getElementById('cardGrafico'));
+    const superficie = cs.backgroundColor || (tema === 'dark' ? '#1a1a19' : '#ffffff');
+    const textoSecundario = tema === 'dark' ? '#c3c2b7' : '#52514e';
+    const grilla = tema === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+
+    if (grafico) grafico.destroy();
+
+    const hayDatos = series.some(s => s.valores.some(v => v > 0));
+    $('#chartCosidasSemana').parent().toggleClass('d-none', !hayDatos);
+    $('#graficoVacio').toggleClass('d-none', hayDatos);
+    if (!hayDatos) return;
+
+    const posicion = {};
+    datosPanel.modistas.forEach((m, i) => { posicion[m.modistaId] = i; });
+    const cantColores = PALETA[tema].length;
+
+    // Las primeras 8 de la lista tienen su color propio; si hubiera más, van a "Otras"
+    const ordenadas = [...series].sort((a, b) => posicion[a.modistaId] - posicion[b.modistaId]);
+    const visibles = ordenadas.filter(s => posicion[s.modistaId] < cantColores);
+    const resto = ordenadas.filter(s => !(posicion[s.modistaId] < cantColores));
+
+    const datasets = visibles.map(s => ({
+        label: s.nombre,
+        data: s.valores,
+        backgroundColor: colorModista(s.modistaId),
+        borderColor: superficie, // separación de 2px entre segmentos apilados
+        borderWidth: 2
+    }));
+
+    if (resto.length > 0) {
+        datasets.push({
+            label: resto.length === 1 ? resto[0].nombre : 'Otras',
+            data: datosPanel.semanas.map((_, i) => resto.reduce((suma, s) => suma + s.valores[i], 0)),
+            backgroundColor: COLOR_OTRAS[tema],
+            borderColor: superficie,
+            borderWidth: 2
+        });
+    }
+
+    const etiquetas = datosPanel.semanas.map(s => {
+        const [, mes, dia] = s.split('T')[0].split('-');
+        return `${dia}/${mes}`;
+    });
+
+    grafico = new Chart(document.getElementById('chartCosidasSemana').getContext('2d'), {
+        type: 'bar',
+        data: { labels: etiquetas, datasets },
+        options: {
+            maintainAspectRatio: false,
+            // Con una sola modista el título ya dice quién es: sin leyenda
+            legend: {
+                display: datasets.length > 1,
+                position: 'bottom',
+                labels: { fontColor: textoSecundario, boxWidth: 12, padding: 16 }
+            },
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+                filter: item => item.yLabel > 0,
+                callbacks: {
+                    title: items => `Semana del ${items[0].xLabel}`,
+                    label: item => ` ${datasets[item.datasetIndex].label}: ${plural(item.yLabel, 'prenda')}`,
+                    footer: items => datasets.length > 1 ? `Total: ${items.reduce((s, i) => s + i.yLabel, 0)}` : ''
+                }
+            },
+            hover: { mode: 'index', intersect: false },
+            scales: {
+                xAxes: [{
+                    stacked: true,
+                    maxBarThickness: 48,
+                    gridLines: { display: false },
+                    ticks: { fontColor: textoSecundario }
+                }],
+                yAxes: [{
+                    stacked: true,
+                    gridLines: { color: grilla, zeroLineColor: grilla, drawBorder: false },
+                    ticks: { beginAtZero: true, precision: 0, fontColor: textoSecundario }
+                }]
+            }
+        }
+    });
+}
+
+// =====================================================
+// PAGOS
+// =====================================================
 async function registrarPago() {
-    if (!modistaDetalleId) return;
+    if (modistaSeleccionada === null) return;
 
     const total = $('#detAPagarTotal').text();
-    if (!confirm(`¿Registrar el pago de ${total} a ${$('#detNombreModista').text()}?\n\nSe liquida todo lo cosido pendiente de pago.`)) return;
+    if (!confirm(`¿Registrar el pago de ${total} a ${$('#tituloVista').text()}?\n\nSe liquida todo lo cosido pendiente de pago.`)) return;
 
     try {
-        const res = await fetch(`${API_PANEL}/modista/${modistaDetalleId}/pagos`, {
+        const res = await fetch(`${API_PANEL}/modista/${modistaSeleccionada}/pagos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nota: $('#detNotaPago').val() })
@@ -347,13 +454,12 @@ async function registrarPago() {
         }
 
         const resultado = await res.json();
-        let mensaje = `Pago registrado: ${moneda(resultado.importe)} por ${resultado.cantidadPrendas} prenda${resultado.cantidadPrendas === 1 ? '' : 's'}.`;
+        let mensaje = `Pago registrado: ${moneda(resultado.importe)} por ${plural(resultado.cantidadPrendas, 'prenda')}.`;
         if (resultado.sinTarifa > 0) {
             mensaje += `\n\n${resultado.sinTarifa} prenda(s) quedaron afuera porque no tienen tarifa cargada.`;
         }
         alert(mensaje);
 
-        await abrirDetalle(modistaDetalleId, 'pagar');
         cargarPanel();
     } catch (error) {
         console.error(error);
@@ -370,9 +476,6 @@ async function anularPago(pagoId) {
             alert('No se pudo anular el pago.');
             return;
         }
-
-        await abrirDetalle(modistaDetalleId);
-        $('a[href="#tabPagos"]').tab('show');
         cargarPanel();
     } catch (error) {
         console.error(error);
