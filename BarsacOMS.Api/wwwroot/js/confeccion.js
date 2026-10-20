@@ -182,8 +182,9 @@ async function abrirFicha(fichaId) {
                     <td class="text-center align-middle font-weight-bold">${r.cantidad}</td>
                     <td>
                         <div class="lineas-asignacion">${lineas}</div>
-                        <button type="button" class="btn btn-link btn-sm p-0" onclick="agregarLinea(this)">
-                            <i class="fas fa-plus mr-1"></i> Repartir con otra modista
+                        <!-- sin btn-sm: el tema fuerza los .btn-sm de tablas a 32x32 -->
+                        <button type="button" class="btn btn-link p-0 mt-1 d-block text-nowrap text-left" style="font-size: .8rem; line-height: 1.2;" onclick="agregarLinea(this)">
+                            <i class="fas fa-plus mr-1"></i>Repartir con otra modista
                         </button>
                     </td>
                     <td class="text-center align-middle celda-sin-asignar"></td>
