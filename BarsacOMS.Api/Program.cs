@@ -46,6 +46,7 @@ builder.Services.AddScoped<IPerfilService, PerfilService>();
 builder.Services.AddScoped<IDisenoService, DisenoService>();
 builder.Services.AddScoped<ICorteService, CorteService>();
 builder.Services.AddScoped<IModistaService, ModistaService>();
+builder.Services.AddScoped<IConfeccionService, ConfeccionService>();
 
 // CONFIGURACIÓN DE AUTENTICACIÓN JWT
 // La clave sale de appsettings.json (local) o de la variable de entorno JWT_KEY (producción)

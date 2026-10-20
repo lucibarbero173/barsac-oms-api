@@ -119,7 +119,9 @@ namespace BarsacOMS.Api.Services
             }
 
             // Sin conflictos: aplicar cambios
-            fichaExistente.Modista = ficha.Modista;
+            var fichaTeniaAsignaciones = fichaExistente.Items.SelectMany(i => i.Unidades).Any(u => u.ModistaId != null);
+            // Modista ya no se edita desde la ficha: lo arma la pantalla de Confección
+            // según a quién se asignó cada prenda (se recalcula más abajo).
             fichaExistente.OrdenId = ficha.OrdenId;
             fichaExistente.ImagenDisenoBase64 = ficha.ImagenDisenoBase64;
             fichaExistente.EstadoFicha = ficha.EstadoFicha;
@@ -157,7 +159,8 @@ namespace BarsacOMS.Api.Services
                 {
                     var sobrantes = existente.Unidades
                         .Where(u => !TieneAvance(u))
-                        .OrderByDescending(u => u.Id)
+                        .OrderBy(u => u.ModistaId != null) // primero las que no tienen modista asignada
+                        .ThenByDescending(u => u.Id)
                         .Take(-delta)
                         .ToList();
                     _context.PrendasUnidad.RemoveRange(sobrantes);
@@ -181,6 +184,21 @@ namespace BarsacOMS.Api.Services
             }
 
             await _context.SaveChangesAsync();
+
+            // Si se borraron renglones o prendas que ya tenían modista, el texto de Modista de
+            // la ficha tiene que reflejarlo. Las fichas viejas (sin ninguna prenda asignada)
+            // conservan el texto que se cargó a mano en su momento.
+            var modistaIds = await _context.PrendasUnidad
+                .Where(u => _context.DetallesFichaProduccion
+                    .Any(d => d.Id == u.DetalleFichaProduccionId && d.FichaProduccionId == fichaExistente.Id))
+                .Select(u => u.ModistaId)
+                .ToListAsync();
+            if (fichaTeniaAsignaciones)
+            {
+                var nombres = await _context.Modistas.ToDictionaryAsync(m => m.Id, m => m.Nombre);
+                fichaExistente.Modista = ConfeccionService.TextoModistas(modistaIds, nombres);
+                await _context.SaveChangesAsync();
+            }
 
             // Si se cambió el estado de la ficha a mano, la orden tiene que reflejarlo
             // (usando siempre la ficha más atrasada de todas las suyas).

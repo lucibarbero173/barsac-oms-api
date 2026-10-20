@@ -110,6 +110,14 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.FechaControl).HasColumnName("fecha_control");
                 entity.Property(e => e.ControladoPorUsuarioId).HasColumnName("controlado_por_usuario_id");
 
+                entity.Property(e => e.ModistaId).HasColumnName("modista_id");
+                entity.Property(e => e.FechaAsignacionModista).HasColumnName("fecha_asignacion_modista");
+
+                entity.HasOne<Modista>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ModistaId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
                 entity.HasOne<Usuario>()
                       .WithMany()
                       .HasForeignKey(e => e.ControladoPorUsuarioId)

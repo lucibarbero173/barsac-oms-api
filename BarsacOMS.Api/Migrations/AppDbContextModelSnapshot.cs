@@ -754,6 +754,10 @@ namespace BarsacOMS.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("diseno_por_usuario_id");
 
+                    b.Property<DateTime?>("FechaAsignacionModista")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("fecha_asignacion_modista");
+
                     b.Property<DateTime?>("FechaControl")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("fecha_control");
@@ -766,6 +770,10 @@ namespace BarsacOMS.Api.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("fecha_diseno");
 
+                    b.Property<int?>("ModistaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("modista_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ControladoPorUsuarioId");
@@ -775,6 +783,8 @@ namespace BarsacOMS.Api.Migrations
                     b.HasIndex("DetalleFichaProduccionId");
 
                     b.HasIndex("DisenoPorUsuarioId");
+
+                    b.HasIndex("ModistaId");
 
                     b.ToTable("prenda_unidad", (string)null);
                 });
@@ -1073,6 +1083,11 @@ namespace BarsacOMS.Api.Migrations
                     b.HasOne("BarsacOMS.Api.Models.Usuario", null)
                         .WithMany()
                         .HasForeignKey("DisenoPorUsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("BarsacOMS.Api.Models.Modista", null)
+                        .WithMany()
+                        .HasForeignKey("ModistaId")
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 

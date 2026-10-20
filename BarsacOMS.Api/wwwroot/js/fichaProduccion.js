@@ -438,7 +438,7 @@ function eliminarFilaPrenda(filaId) {
 // Guardar con validación estricta de topes por producto según la orden
 async function guardarFicha() {
     const ordenId = parseInt($('#selectPedido').val());
-    const modista = $('#selectModista').val();
+    const modista = $('#inputModista').val(); // solo informativo: en la edición el backend lo ignora
     const estadoFicha = parseInt($('#selectEstadoFicha').val());
 
     if (!ordenId) {
@@ -586,7 +586,7 @@ async function editarFicha(idFicha) {
     $select.val(ficha.ordenId).prop('disabled', true);
 
     $('#inputCliente').val(ficha.orden ? ficha.orden.nombreCliente : '');
-    $('#selectModista').val(ficha.modista);
+    $('#inputModista').val(ficha.modista && ficha.modista !== 'Sin asignar' ? ficha.modista : '');
     $('#selectEstadoFicha').val(ficha.estadoFicha);
     $('#inputFechaPedido').val(ficha.orden && ficha.orden.fechaPedido ? ficha.orden.fechaPedido.split('T')[0] : '');
     $('#inputFechaEntrega').val(ficha.orden && ficha.orden.fechaEntrega ? ficha.orden.fechaEntrega.split('T')[0] : '');

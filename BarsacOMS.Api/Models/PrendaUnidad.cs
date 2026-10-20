@@ -54,5 +54,10 @@ namespace BarsacOMS.Api.Models
         public bool Controlada { get; set; } = false;
         public DateTime? FechaControl { get; set; }
         public int? ControladoPorUsuarioId { get; set; }
+
+        // Etapa Confección: a qué modista se le mandó a coser esta prenda.
+        // Se asigna por unidad para poder repartir un mismo renglón entre varias modistas.
+        public int? ModistaId { get; set; }
+        public DateTime? FechaAsignacionModista { get; set; }
     }
 }
