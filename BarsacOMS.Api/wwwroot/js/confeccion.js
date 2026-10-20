@@ -79,7 +79,7 @@ async function cargarRecienAsignadas() {
         $body.empty();
 
         if (fichas.length === 0) {
-            $body.append('<tr><td colspan="6" class="text-center text-muted">Todavía no hay fichas repartidas completas.</td></tr>');
+            $body.append('<tr><td colspan="7" class="text-center text-muted">Todavía no hay fichas repartidas completas.</td></tr>');
             return;
         }
 
@@ -91,6 +91,7 @@ async function cargarRecienAsignadas() {
                     <td class="text-left">${escaparHtml(f.cliente)}</td>
                     <td>${escaparHtml(f.modistas)}</td>
                     <td>${formatearFecha(f.fechaAsignacion)}</td>
+                    <td>${f.cosidas === f.total ? '<span class="badge badge-success">Todo cosido</span>' : `${f.cosidas}/${f.total}`}</td>
                     <td>
                         <button class="btn btn-outline-secondary btn-sm" onclick="abrirFicha(${f.fichaId})" title="Ver / corregir">
                             <i class="fas fa-eye"></i>
@@ -125,12 +126,16 @@ function opcionesModistas(modistaIdSeleccionada) {
     return html;
 }
 
-function htmlLineaAsignacion(modistaId, cantidad) {
+// cosidas > 0: esa modista ya cosió prendas del renglón, no se le puede quitar ni bajar de ahí
+function htmlLineaAsignacion(modistaId, cantidad, cosidas = 0) {
+    const bloqueada = cosidas > 0;
     return `
         <div class="d-flex align-items-center mb-1 linea-asignacion">
-            <select class="form-control form-control-sm custom-select select-modista mr-1">${opcionesModistas(modistaId)}</select>
-            <input type="number" class="form-control form-control-sm text-center input-cantidad-modista mr-1" style="width: 70px;" min="1" value="${cantidad ?? ''}">
-            <button type="button" class="btn btn-outline-danger btn-sm border-0" title="Quitar" onclick="quitarLinea(this)"><i class="fas fa-times"></i></button>
+            <select class="form-control form-control-sm custom-select select-modista mr-1" ${bloqueada ? 'disabled' : ''}>${opcionesModistas(modistaId)}</select>
+            <input type="number" class="form-control form-control-sm text-center input-cantidad-modista mr-1" style="width: 70px;" min="${bloqueada ? cosidas : 1}" value="${cantidad ?? ''}">
+            ${bloqueada
+                ? `<span class="small text-success text-nowrap" title="Ya cosidas: no se le pueden sacar"><i class="fas fa-check mr-1"></i>${cosidas} cosida${cosidas === 1 ? '' : 's'}</span>`
+                : '<button type="button" class="btn btn-outline-danger btn-sm border-0" title="Quitar" onclick="quitarLinea(this)"><i class="fas fa-times"></i></button>'}
         </div>
     `;
 }
@@ -165,7 +170,7 @@ async function abrirFicha(fichaId) {
         ficha.renglones.forEach(r => {
             const nombreNumero = [r.nombre, r.numero ? '#' + r.numero : null].filter(Boolean).join(' ') || '-';
             const lineas = r.asignaciones.length > 0
-                ? r.asignaciones.map(a => htmlLineaAsignacion(a.modistaId, a.cantidad)).join('')
+                ? r.asignaciones.map(a => htmlLineaAsignacion(a.modistaId, a.cantidad, a.cosidas)).join('')
                 : htmlLineaAsignacion(null, r.cantidad);
 
             const $fila = $(`

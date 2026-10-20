@@ -90,7 +90,7 @@ namespace BarsacOMS.Api.Services
 
             // Validar ANTES de tocar nada: no se puede borrar ni reducir por debajo de lo que ya
             // avanzó en cualquier etapa (Diseño, Corte o Control), para no perder trabajo hecho.
-            static bool TieneAvance(PrendaUnidad u) => u.Controlada || u.DisenoListo || u.CorteEstado != EstadoCorte.Pendiente;
+            static bool TieneAvance(PrendaUnidad u) => u.Controlada || u.DisenoListo || u.CorteEstado != EstadoCorte.Pendiente || u.Cosida;
 
             var conflictos = new List<string>();
 
@@ -98,7 +98,7 @@ namespace BarsacOMS.Api.Services
             {
                 if (existente.Unidades.Any(TieneAvance))
                 {
-                    conflictos.Add($"La línea \"{existente.Producto} - talle {existente.Talle}\" ya tiene prendas con avance (Diseño/Corte/Control) y no puede eliminarse.");
+                    conflictos.Add($"La línea \"{existente.Producto} - talle {existente.Talle}\" ya tiene prendas con avance (Diseño/Corte/Control/Cosido) y no puede eliminarse.");
                 }
             }
 
@@ -109,7 +109,7 @@ namespace BarsacOMS.Api.Services
                 int conAvance = existente.Unidades.Count(TieneAvance);
                 if (nuevo.Cantidades < conAvance)
                 {
-                    conflictos.Add($"La línea \"{existente.Producto} - talle {existente.Talle}\" tiene {conAvance} prenda(s) con avance (Diseño/Corte/Control), no se puede bajar la cantidad a {nuevo.Cantidades}.");
+                    conflictos.Add($"La línea \"{existente.Producto} - talle {existente.Talle}\" tiene {conAvance} prenda(s) con avance (Diseño/Corte/Control/Cosido), no se puede bajar la cantidad a {nuevo.Cantidades}.");
                 }
             }
 

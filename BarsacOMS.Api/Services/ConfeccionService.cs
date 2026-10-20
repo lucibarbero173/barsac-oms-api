@@ -46,7 +46,7 @@ namespace BarsacOMS.Api.Services
                     Cliente = f.Orden.NombreCliente,
                     f.Orden.FechaEntrega,
                     Unidades = f.Items.SelectMany(i => i.Unidades)
-                        .Select(u => new { u.ModistaId, u.FechaAsignacionModista })
+                        .Select(u => new { u.ModistaId, u.FechaAsignacionModista, u.Cosida })
                         .ToList()
                 })
                 .ToListAsync();
@@ -61,6 +61,7 @@ namespace BarsacOMS.Api.Services
                 FechaEntrega = f.FechaEntrega,
                 Total = f.Unidades.Count,
                 Asignadas = f.Unidades.Count(u => u.ModistaId != null),
+                Cosidas = f.Unidades.Count(u => u.Cosida),
                 Modistas = TextoModistas(f.Unidades.Select(u => u.ModistaId), nombres),
                 FechaAsignacion = f.Unidades.Max(u => u.FechaAsignacionModista)
             }).ToList();
@@ -104,7 +105,8 @@ namespace BarsacOMS.Api.Services
                             {
                                 ModistaId = g.Key,
                                 ModistaNombre = nombres.GetValueOrDefault(g.Key),
-                                Cantidad = g.Count()
+                                Cantidad = g.Count(),
+                                Cosidas = g.Count(u => u.Cosida)
                             })
                             .OrderBy(a => a.ModistaNombre)
                             .ToList()
@@ -151,6 +153,14 @@ namespace BarsacOMS.Api.Services
                         return (false, $"{modista.Nombre} está inactiva, no se le pueden asignar prendas nuevas.");
                 }
 
+                // Lo que una modista ya cosió no se le puede sacar (se liquidaría mal)
+                foreach (var grupo in detalle.Unidades.Where(u => u.ModistaId != null && u.Cosida).GroupBy(u => u.ModistaId!.Value))
+                {
+                    var queda = r.Asignaciones.Where(a => a.ModistaId == grupo.Key).Sum(a => a.Cantidad);
+                    if (queda < grupo.Count())
+                        return (false, $"En \"{etiqueta}\" {modistas[grupo.Key].Nombre} ya cosió {grupo.Count()}, no se le puede asignar menos que eso.");
+                }
+
                 var total = r.Asignaciones.Sum(a => a.Cantidad);
                 if (total > detalle.Unidades.Count)
                     return (false, $"En \"{etiqueta}\" asignaste {total} prendas y el renglón tiene {detalle.Unidades.Count}.");
@@ -165,7 +175,7 @@ namespace BarsacOMS.Api.Services
                 foreach (var grupo in unidades.Where(u => u.ModistaId != null).GroupBy(u => u.ModistaId!.Value))
                 {
                     var queda = objetivo.GetValueOrDefault(grupo.Key);
-                    foreach (var u in grupo.OrderByDescending(u => u.Id).Take(Math.Max(0, grupo.Count() - queda)))
+                    foreach (var u in grupo.OrderBy(u => u.Cosida).ThenByDescending(u => u.Id).Take(Math.Max(0, grupo.Count() - queda)))
                     {
                         u.ModistaId = null;
                         u.FechaAsignacionModista = null;

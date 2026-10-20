@@ -112,6 +112,9 @@ namespace BarsacOMS.Api.Data
 
                 entity.Property(e => e.ModistaId).HasColumnName("modista_id");
                 entity.Property(e => e.FechaAsignacionModista).HasColumnName("fecha_asignacion_modista");
+                entity.Property(e => e.Cosida).HasColumnName("cosida");
+                entity.Property(e => e.FechaCosida).HasColumnName("fecha_cosida");
+                entity.Property(e => e.PrecioCosido).HasColumnName("precio_cosido").HasPrecision(18, 2);
 
                 entity.HasOne<Modista>()
                       .WithMany()

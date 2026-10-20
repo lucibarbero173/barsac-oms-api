@@ -9,6 +9,7 @@ namespace BarsacOMS.Api.DTOs
         public DateTime? FechaEntrega { get; set; }
         public int Total { get; set; }
         public int Asignadas { get; set; }
+        public int Cosidas { get; set; }
         public string Modistas { get; set; } = string.Empty;
 
         // Solo en "recién asignadas": cuándo se asignó la última prenda.
@@ -43,6 +44,9 @@ namespace BarsacOMS.Api.DTOs
         public int ModistaId { get; set; }
         public string? ModistaNombre { get; set; }
         public int Cantidad { get; set; }
+
+        // Solo informativo al leer: cuántas de esas ya cosió (no se puede bajar de ahí).
+        public int Cosidas { get; set; }
     }
 
     public class GuardarAsignacionRenglonDto

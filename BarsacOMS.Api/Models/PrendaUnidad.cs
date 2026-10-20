@@ -59,5 +59,12 @@ namespace BarsacOMS.Api.Models
         // Se asigna por unidad para poder repartir un mismo renglón entre varias modistas.
         public int? ModistaId { get; set; }
         public DateTime? FechaAsignacionModista { get; set; }
+
+        // La modista la marca como cosida desde Mis Prendas. PrecioCosido es la tarifa
+        // (modista + producto) vigente en ese momento: si después cambia la tarifa, lo ya
+        // cosido se liquida igual al precio de cuando se hizo. Null = no tenía tarifa cargada.
+        public bool Cosida { get; set; } = false;
+        public DateTime? FechaCosida { get; set; }
+        public decimal? PrecioCosido { get; set; }
     }
 }

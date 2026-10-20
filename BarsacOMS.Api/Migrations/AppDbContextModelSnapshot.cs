@@ -742,6 +742,10 @@ namespace BarsacOMS.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("corte_parte_faltante");
 
+                    b.Property<bool>("Cosida")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cosida");
+
                     b.Property<int>("DetalleFichaProduccionId")
                         .HasColumnType("integer")
                         .HasColumnName("detalle_ficha_produccion_id");
@@ -766,6 +770,10 @@ namespace BarsacOMS.Api.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("fecha_corte");
 
+                    b.Property<DateTime?>("FechaCosida")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("fecha_cosida");
+
                     b.Property<DateTime?>("FechaDiseno")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("fecha_diseno");
@@ -773,6 +781,11 @@ namespace BarsacOMS.Api.Migrations
                     b.Property<int?>("ModistaId")
                         .HasColumnType("integer")
                         .HasColumnName("modista_id");
+
+                    b.Property<decimal?>("PrecioCosido")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("precio_cosido");
 
                     b.HasKey("Id");
 
