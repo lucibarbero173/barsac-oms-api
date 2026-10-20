@@ -17,8 +17,10 @@ namespace BarsacOMS.Api.Services
 
         public async Task<List<FichaConfeccionResumenDto>> ObtenerFichasPorAsignarAsync()
         {
+            // Se mira el estado de la ORDEN (no el de la ficha): recién cuando todas las fichas
+            // del pedido terminaron el corte, el pedido queda Apto Confección y se reparte.
             var resumen = await ObtenerResumenesAsync(_context.FichasProduccion
-                .Where(f => f.EstadoFicha == EstadoOrden.AptoConfeccion
+                .Where(f => f.Orden.Estado == EstadoOrden.AptoConfeccion
                          && f.Items.SelectMany(i => i.Unidades).Any(u => u.ModistaId == null)));
 
             return resumen.OrderBy(f => f.FechaEntrega ?? DateTime.MaxValue).ToList();

@@ -36,7 +36,7 @@ async function cargarFichas() {
         $body.empty();
 
         if (fichas.length === 0) {
-            $body.append('<tr><td colspan="7" class="text-center text-muted">No hay fichas Apto Confección para repartir.</td></tr>');
+            $body.append('<tr><td colspan="7" class="text-center text-muted">No hay pedidos Apto Confección para repartir.</td></tr>');
             return;
         }
 
