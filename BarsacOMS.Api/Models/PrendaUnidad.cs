@@ -66,5 +66,8 @@ namespace BarsacOMS.Api.Models
         public bool Cosida { get; set; } = false;
         public DateTime? FechaCosida { get; set; }
         public decimal? PrecioCosido { get; set; }
+
+        // En qué pago se le liquidó a la modista. Null = cosida pero todavía no pagada.
+        public int? PagoModistaId { get; set; }
     }
 }

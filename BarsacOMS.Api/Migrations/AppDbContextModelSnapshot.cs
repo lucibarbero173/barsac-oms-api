@@ -675,6 +675,43 @@ namespace BarsacOMS.Api.Migrations
                     b.ToTable("Pagos", (string)null);
                 });
 
+            modelBuilder.Entity("BarsacOMS.Api.Models.PagoModista", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CantidadPrendas")
+                        .HasColumnType("integer")
+                        .HasColumnName("cantidad_prendas");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("fecha");
+
+                    b.Property<decimal>("Importe")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("importe");
+
+                    b.Property<int>("ModistaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("modista_id");
+
+                    b.Property<string>("Nota")
+                        .HasColumnType("text")
+                        .HasColumnName("nota");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModistaId");
+
+                    b.ToTable("pago_modista", (string)null);
+                });
+
             modelBuilder.Entity("BarsacOMS.Api.Models.PrecioProducto", b =>
                 {
                     b.Property<int>("Id")
@@ -782,6 +819,10 @@ namespace BarsacOMS.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("modista_id");
 
+                    b.Property<int?>("PagoModistaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("pago_modista_id");
+
                     b.Property<decimal?>("PrecioCosido")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
@@ -798,6 +839,8 @@ namespace BarsacOMS.Api.Migrations
                     b.HasIndex("DisenoPorUsuarioId");
 
                     b.HasIndex("ModistaId");
+
+                    b.HasIndex("PagoModistaId");
 
                     b.ToTable("prenda_unidad", (string)null);
                 });
@@ -1064,6 +1107,15 @@ namespace BarsacOMS.Api.Migrations
                     b.Navigation("Cliente");
                 });
 
+            modelBuilder.Entity("BarsacOMS.Api.Models.PagoModista", b =>
+                {
+                    b.HasOne("BarsacOMS.Api.Models.Modista", null)
+                        .WithMany()
+                        .HasForeignKey("ModistaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("BarsacOMS.Api.Models.PrecioProducto", b =>
                 {
                     b.HasOne("BarsacOMS.Api.Models.Producto", "Producto")
@@ -1101,6 +1153,11 @@ namespace BarsacOMS.Api.Migrations
                     b.HasOne("BarsacOMS.Api.Models.Modista", null)
                         .WithMany()
                         .HasForeignKey("ModistaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("BarsacOMS.Api.Models.PagoModista", null)
+                        .WithMany()
+                        .HasForeignKey("PagoModistaId")
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 

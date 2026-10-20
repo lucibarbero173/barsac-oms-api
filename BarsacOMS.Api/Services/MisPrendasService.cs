@@ -128,8 +128,13 @@ namespace BarsacOMS.Api.Services
             }
             else if (cosidas < yaCosidas)
             {
+                // Lo que ya se le pagó no se puede desmarcar (descuadraría la liquidación)
+                var pagadas = mias.Count(u => u.Cosida && u.PagoModistaId != null);
+                if (cosidas < pagadas)
+                    return (false, $"{pagadas} de estas prendas ya te las pagaron, no se pueden desmarcar.");
+
                 // Se desmarcan las últimas que marcó (por si se equivocó de número)
-                foreach (var u in mias.Where(u => u.Cosida).OrderByDescending(u => u.FechaCosida).ThenByDescending(u => u.Id).Take(yaCosidas - cosidas))
+                foreach (var u in mias.Where(u => u.Cosida && u.PagoModistaId == null).OrderByDescending(u => u.FechaCosida).ThenByDescending(u => u.Id).Take(yaCosidas - cosidas))
                 {
                     u.Cosida = false;
                     u.FechaCosida = null;

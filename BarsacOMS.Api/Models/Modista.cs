@@ -16,6 +16,18 @@ namespace BarsacOMS.Api.Models
         public List<TarifaModista> Tarifas { get; set; } = new();
     }
 
+    // Liquidación: un pago a una modista por todo lo cosido que tenía pendiente de cobro.
+    // Las prendas pagadas quedan apuntando a este pago (PrendaUnidad.PagoModistaId).
+    public class PagoModista
+    {
+        public int Id { get; set; }
+        public int ModistaId { get; set; }
+        public DateTime Fecha { get; set; }
+        public decimal Importe { get; set; }
+        public int CantidadPrendas { get; set; }
+        public string? Nota { get; set; }
+    }
+
     // Lo que cobra una modista por coser UNA prenda de un producto (ej. Tere, Remera Cool Elastic).
     public class TarifaModista
     {
