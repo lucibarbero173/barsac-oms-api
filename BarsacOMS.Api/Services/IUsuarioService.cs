@@ -6,7 +6,7 @@ namespace BarsacOMS.Api.Services
     {
         Task<IEnumerable<UsuarioDto>> ObtenerUsuariosAsync();
         Task<UsuarioDto?> ObtenerUsuarioPorIdAsync(int id);
-        Task<(bool Exito, string Mensaje, UsuarioDto? Usuario)> CrearUsuarioAsync(CrearUsuarioDto dto);
-        Task<(bool Exito, string Mensaje)> ActualizarUsuarioAsync(int id, ActualizarUsuarioDto dto);
+        Task<(bool Exito, string Mensaje, UsuarioDto? Usuario)> CrearUsuarioAsync(CrearUsuarioDto dto, bool esSuper);
+        Task<(bool Exito, string Mensaje)> ActualizarUsuarioAsync(int id, ActualizarUsuarioDto dto, bool esSuper);
     }
 }

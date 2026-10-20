@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "super")]
     [ApiController]
     [Route("api/[controller]")]
     public class PagoController : ControllerBase

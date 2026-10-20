@@ -39,7 +39,8 @@ window.fetch = async function (...args) {
 })();
 
 // 3. Control de acceso por rol: qué páginas puede ver cada rol.
-//    "admin" ve todo. Los demás roles solo ven las páginas listadas acá.
+//    "super" ve todo. "admin" ve todo menos PAGINAS_BLOQUEADAS_POR_ROL.
+//    Los demás roles solo ven las páginas listadas acá.
 const PAGINAS_POR_ROL = {
     control: ['control.html', 'perfil.html'],
     diseno: ['diseno.html', 'perfil.html'],
@@ -47,13 +48,20 @@ const PAGINAS_POR_ROL = {
     modista: ['misPrendas.html', 'perfil.html']
 };
 
+const PAGINAS_BLOQUEADAS_POR_ROL = {
+    admin: ['pagos.html', 'conciliacion.html']
+};
+
 (function () {
     const rol = localStorage.getItem('usuarioRol');
     const paginaActual = window.location.pathname.split('/').pop();
     const permitidas = PAGINAS_POR_ROL[rol];
+    const bloqueadas = PAGINAS_BLOQUEADAS_POR_ROL[rol];
 
     if (permitidas && !permitidas.includes(paginaActual)) {
         window.location.replace(permitidas[0]);
+    } else if (bloqueadas && bloqueadas.includes(paginaActual)) {
+        window.location.replace('estadisticas.html');
     }
 })();
 

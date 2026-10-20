@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "admin,super")]
     [Route("api/[controller]")]
     [ApiController]
     public class UsuariosController : ControllerBase
@@ -37,7 +37,7 @@ namespace BarsacOMS.Api.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var (exito, mensaje, usuario) = await _usuarioService.CrearUsuarioAsync(dto);
+            var (exito, mensaje, usuario) = await _usuarioService.CrearUsuarioAsync(dto, User.IsInRole("super"));
             if (!exito) return BadRequest(new { mensaje });
 
             return CreatedAtAction(nameof(GetUsuario), new { id = usuario!.Id }, usuario);
@@ -48,7 +48,7 @@ namespace BarsacOMS.Api.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var (exito, mensaje) = await _usuarioService.ActualizarUsuarioAsync(id, dto);
+            var (exito, mensaje) = await _usuarioService.ActualizarUsuarioAsync(id, dto, User.IsInRole("super"));
             if (!exito) return BadRequest(new { mensaje });
 
             return Ok(new { mensaje });

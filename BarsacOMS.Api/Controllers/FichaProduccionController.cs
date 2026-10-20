@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin,control")]
+    [Authorize(Roles = "admin,super,control")]
     [ApiController]
     [Route("api/[controller]")]
     public class FichaProduccionController : ControllerBase
@@ -35,7 +35,7 @@ namespace BarsacOMS.Api.Controllers
         }
 
         // POST: api/FichaProduccion
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin,super")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] FichaProduccion ficha)
         {
@@ -46,7 +46,7 @@ namespace BarsacOMS.Api.Controllers
         }
 
         // PUT: api/FichaProduccion/5
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin,super")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] FichaProduccion ficha)
         {
@@ -80,7 +80,7 @@ namespace BarsacOMS.Api.Controllers
         }
 
         // PUT: api/FichaProduccion/5/entregar
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin,super")]
         [HttpPut("{id}/entregar")]
         public async Task<IActionResult> Entregar(int id)
         {
@@ -90,7 +90,7 @@ namespace BarsacOMS.Api.Controllers
         }
 
         // DELETE: api/FichaProduccion/5
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin,super")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "admin,super")]
     [Route("api/[controller]")]
     [ApiController]
     public class EntregaParcialController : ControllerBase

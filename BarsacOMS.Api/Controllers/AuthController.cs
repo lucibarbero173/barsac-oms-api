@@ -19,7 +19,7 @@ namespace BarsacOMS.Api.Controllers
 
         // El alta de cuentas reales (con rol) se hace desde UsuariosController (admin-only).
         // Este endpoint queda restringido para no permitir autoregistro público.
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin,super")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {

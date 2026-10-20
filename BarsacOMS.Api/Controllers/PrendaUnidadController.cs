@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin,control")]
+    [Authorize(Roles = "admin,super,control")]
     [Route("api/[controller]")]
     [ApiController]
     public class PrendaUnidadController : ControllerBase

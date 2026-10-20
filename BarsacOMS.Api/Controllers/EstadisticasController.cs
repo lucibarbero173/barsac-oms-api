@@ -4,7 +4,7 @@ using BarsacOMS.Api.Services;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "admin,super")]
     [ApiController]
     [Route("api/[controller]")]
     public class EstadisticasController : ControllerBase

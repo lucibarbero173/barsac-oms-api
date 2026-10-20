@@ -8,7 +8,8 @@ namespace BarsacOMS.Api.Services
     public class UsuarioService : IUsuarioService
     {
         // Roles válidos hoy. Se amplía cuando se sumen los roles de las próximas fases (corte, preparacion).
-        private static readonly string[] RolesValidos = { "admin", "control", "diseno", "corte", "modista" };
+        // "super" = acceso a todo (incluye Pagos y Conciliación, que "admin" no ve).
+        private static readonly string[] RolesValidos = { "super", "admin", "control", "diseno", "corte", "modista" };
 
         private readonly AppDbContext _context;
 
@@ -87,11 +88,16 @@ namespace BarsacOMS.Api.Services
             }
         }
 
-        public async Task<(bool Exito, string Mensaje, UsuarioDto? Usuario)> CrearUsuarioAsync(CrearUsuarioDto dto)
+        public async Task<(bool Exito, string Mensaje, UsuarioDto? Usuario)> CrearUsuarioAsync(CrearUsuarioDto dto, bool esSuper)
         {
             if (!RolesValidos.Contains(dto.Rol))
             {
                 return (false, $"Rol inválido. Roles permitidos: {string.Join(", ", RolesValidos)}", null);
+            }
+
+            if (dto.Rol == "super" && !esSuper)
+            {
+                return (false, "Solo un usuario Super puede crear otro usuario Super.", null);
             }
 
             var errorModista = await ValidarModistaAsync(dto.Rol, dto.ModistaId, null);
@@ -137,7 +143,7 @@ namespace BarsacOMS.Api.Services
             }
         }
 
-        public async Task<(bool Exito, string Mensaje)> ActualizarUsuarioAsync(int id, ActualizarUsuarioDto dto)
+        public async Task<(bool Exito, string Mensaje)> ActualizarUsuarioAsync(int id, ActualizarUsuarioDto dto, bool esSuper)
         {
             if (!RolesValidos.Contains(dto.Rol))
             {
@@ -148,6 +154,12 @@ namespace BarsacOMS.Api.Services
             if (usuario == null)
             {
                 return (false, "Usuario no encontrado.");
+            }
+
+            // Un admin no puede tocar a un Super ni darle (o darse) el rol Super
+            if (!esSuper && (usuario.Rol == "super" || dto.Rol == "super"))
+            {
+                return (false, "Solo un usuario Super puede editar usuarios Super o asignar ese rol.");
             }
 
             var errorModista = await ValidarModistaAsync(dto.Rol, dto.ModistaId, id);

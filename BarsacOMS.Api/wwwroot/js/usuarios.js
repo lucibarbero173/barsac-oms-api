@@ -8,7 +8,14 @@ $(document).ready(function () {
     obtenerUsuarios();
 
     $('#usrRol').on('change', mostrarGrupoModista);
+
+    // Solo un Super puede dar el rol Super (el backend también lo valida)
+    if (!esSuper()) $('#usrRol option.solo-super').remove();
 });
+
+function esSuper() {
+    return localStorage.getItem('usuarioRol') === 'super';
+}
 
 function mostrarGrupoModista() {
     const esModista = $('#usrRol').val() === 'modista';
@@ -61,7 +68,9 @@ async function obtenerUsuarios() {
                     <td><span class="badge badge-light p-2">${u.rol}</span>${u.modistaNombre ? ` <span class="small text-muted">(${u.modistaNombre})</span>` : ''}</td>
                     <td>${badgeEstado}</td>
                     <td class="text-center">
-                        <button class="btn btn-primary btn-sm btn-circle" title="Editar" onclick="abrirModalEditar(${u.id})"><i class="fas fa-pen"></i></button>
+                        ${u.rol === 'super' && !esSuper()
+                            ? '<span class="text-muted" title="Solo un Super puede editarlo"><i class="fas fa-lock"></i></span>'
+                            : `<button class="btn btn-primary btn-sm btn-circle" title="Editar" onclick="abrirModalEditar(${u.id})"><i class="fas fa-pen"></i></button>`}
                     </td>
                 </tr>
             `;
@@ -81,6 +90,7 @@ function abrirModalNuevo() {
     $('#modalUsuarioTitle').html('<i class="fas fa-user-cog text-info mr-2"></i> Nuevo Usuario');
     $('#usuarioId').val('');
     $('#formUsuario')[0].reset();
+    $('#usrRol').val('admin'); // que no quede "Super" por defecto al ser la primera opción
     $('#usrPassword').prop('required', true);
     $('#ayudaPassword').text('Mínimo 6 caracteres.');
     $('#grupoActivo').hide();

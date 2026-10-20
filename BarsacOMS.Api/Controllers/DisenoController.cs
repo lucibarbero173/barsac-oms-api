@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin,diseno")]
+    [Authorize(Roles = "admin,super,diseno")]
     [ApiController]
     [Route("api/[controller]")]
     public class DisenoController : ControllerBase

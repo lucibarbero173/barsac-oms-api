@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin,corte")]
+    [Authorize(Roles = "admin,super,corte")]
     [ApiController]
     [Route("api/[controller]")]
     public class CorteController : ControllerBase
