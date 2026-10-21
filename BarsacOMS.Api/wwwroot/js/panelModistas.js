@@ -134,14 +134,20 @@ function renderTarjetasSeleccion() {
         </div>
     `;
 
-    $contenedor.append(tarjeta(null, '<i class="fas fa-users mr-1"></i> Todas', d.faltaCoser, d.aPagar));
+    $contenedor.append(tarjeta(null, '<i class="fas fa-users mr-1"></i> Todas', d.faltaCoser, d.aPagar,
+        d.extrasPendientes > 0
+            ? `<div class="small text-warning mt-1"><i class="fas fa-hourglass-half mr-1"></i>${plural(d.extrasPendientes, 'extra')} por revisar</div>`
+            : ''));
 
     d.modistas.forEach(m => {
         const punto = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colorModista(m.modistaId)};" class="mr-1"></span>`;
         const titulo = `${punto}${escaparHtml(m.nombre)}${m.activa ? '' : ' <span class="badge badge-secondary">Inactiva</span>'}`;
-        const extra = m.sinTarifa > 0
+        const extra = (m.sinTarifa > 0
             ? `<div class="small text-warning mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>${m.sinTarifa} sin tarifa</div>`
-            : '';
+            : '')
+            + (m.extrasPendientes > 0
+            ? `<div class="small text-warning mt-1"><i class="fas fa-hourglass-half mr-1"></i>${plural(m.extrasPendientes, 'extra')} por revisar</div>`
+            : '');
         $contenedor.append(tarjeta(m.modistaId, titulo, m.faltaCoser, m.aPagar, extra));
     });
 }
@@ -253,12 +259,74 @@ async function cargarDetalleModista(modistaId) {
         if (modistaSeleccionada !== modistaId) return;
 
         $('#detNotaPago').val('');
+        renderExtras(det.extras);
         renderFaltaCoser(det.pendientes);
         renderAPagar(det.aPagar);
         renderPagos(det.pagos);
     } catch (error) {
         console.error(error);
         alert('No se pudo cargar el detalle de la modista.');
+    }
+}
+
+const ESTADO_EXTRA = {
+    0: '<span class="badge badge-warning"><i class="fas fa-hourglass-half mr-1"></i>Por revisar</span>',
+    1: '<span class="badge badge-success"><i class="fas fa-check mr-1"></i>Aprobado</span>',
+    2: '<span class="badge badge-secondary"><i class="fas fa-times mr-1"></i>Rechazado</span>'
+};
+
+function renderExtras(extras) {
+    $('#cardExtras').toggleClass('d-none', extras.length === 0);
+    const $body = $('#detExtrasBody');
+    $body.empty();
+
+    extras.forEach(e => {
+        const [fecha] = e.fechaCarga.split('T');
+        let acciones = '';
+        if (e.pagada) {
+            acciones = '<span class="small text-muted">Pagado</span>';
+        } else if (e.estado === 0) {
+            acciones = `
+                <button class="btn btn-success btn-sm" title="Aprobar" onclick="revisarExtra(${e.id}, 'aprobar')"><i class="fas fa-check"></i></button>
+                <button class="btn btn-outline-danger btn-sm" title="Rechazar" onclick="revisarExtra(${e.id}, 'rechazar')"><i class="fas fa-times"></i></button>
+            `;
+        } else {
+            // Por si se tocó mal: se puede dar vuelta mientras no esté pagado
+            acciones = e.estado === 1
+                ? `<button class="btn btn-outline-secondary btn-sm" title="Pasar a rechazado" onclick="revisarExtra(${e.id}, 'rechazar')"><i class="fas fa-undo"></i></button>`
+                : `<button class="btn btn-outline-secondary btn-sm" title="Pasar a aprobado" onclick="revisarExtra(${e.id}, 'aprobar')"><i class="fas fa-undo"></i></button>`;
+        }
+
+        const precio = e.estado === 1
+            ? `<div class="small text-muted">${e.precioUnitario !== null ? moneda(e.precioUnitario) + ' c/u' : 'sin tarifa'}</div>`
+            : '';
+
+        $body.append(`
+            <tr>
+                <td>${formatearFecha(fecha)}</td>
+                <td class="font-weight-bold">${e.fichaId}</td>
+                <td class="text-left">${escaparHtml(e.cliente)}</td>
+                <td class="text-left">${escaparHtml(e.producto)}</td>
+                <td class="font-weight-bold">${e.cantidad}</td>
+                <td class="text-left">${escaparHtml(e.nota) || '-'}</td>
+                <td>${ESTADO_EXTRA[e.estado] || ''}${precio}</td>
+                <td>${acciones}</td>
+            </tr>
+        `);
+    });
+}
+
+async function revisarExtra(extraId, accion) {
+    try {
+        const res = await fetch(`${API_PANEL}/extras/${extraId}/${accion}`, { method: 'POST' });
+        if (!res.ok) {
+            alert(await res.text());
+            return;
+        }
+        cargarPanel();
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo guardar la revisión.');
     }
 }
 
@@ -302,7 +370,7 @@ function renderAPagar(lineas) {
     lineas.forEach(l => {
         $body.append(`
             <tr>
-                <td class="text-left">${escaparHtml(l.producto)}</td>
+                <td class="text-left">${escaparHtml(l.producto)}${l.esExtra ? ' <span class="badge badge-warning">cosió de más</span>' : ''}</td>
                 <td>${l.cantidad}</td>
                 <td>${l.precio !== null ? moneda(l.precio) : '<span class="text-warning"><i class="fas fa-exclamation-triangle mr-1"></i>Sin tarifa</span>'}</td>
                 <td>${l.precio !== null ? moneda(l.subtotal) : '-'}</td>

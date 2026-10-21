@@ -28,6 +28,35 @@ namespace BarsacOMS.Api.Models
         public string? Nota { get; set; }
     }
 
+    public enum EstadoPrendaExtra
+    {
+        Pendiente = 0,
+        Aprobada = 1,
+        Rechazada = 2,
+    }
+
+    // Prendas que la modista cosió DE MÁS (le llegaron más de las que tenía asignadas).
+    // Las carga ella desde Mis Prendas; solo se pagan si un admin las aprueba.
+    public class PrendaExtraModista
+    {
+        public int Id { get; set; }
+        public int ModistaId { get; set; }
+        public int FichaProduccionId { get; set; }
+        public string Producto { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
+        public string? Nota { get; set; }
+        public DateTime FechaCarga { get; set; }
+
+        public EstadoPrendaExtra Estado { get; set; } = EstadoPrendaExtra.Pendiente;
+        public DateTime? FechaRevision { get; set; }
+
+        // Tarifa al momento de aprobar (null = no había tarifa; se reintenta al pagar)
+        public decimal? PrecioUnitario { get; set; }
+
+        // En qué pago se liquidó. Null = todavía no se pagó.
+        public int? PagoModistaId { get; set; }
+    }
+
     // Lo que cobra una modista por coser UNA prenda de un producto (ej. Tere, Remera Cool Elastic).
     public class TarifaModista
     {

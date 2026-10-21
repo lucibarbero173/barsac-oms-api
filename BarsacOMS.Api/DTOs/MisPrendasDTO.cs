@@ -12,6 +12,31 @@ namespace BarsacOMS.Api.DTOs
         public int Cosidas { get; set; }
         public DateTime? FechaUltimaCosida { get; set; }
         public List<RenglonModistaDto> Renglones { get; set; } = new();
+
+        // Lo que cargó como "cosí de más" en esta ficha
+        public List<PrendaExtraDto> Extras { get; set; } = new();
+    }
+
+    public class PrendaExtraDto
+    {
+        public int Id { get; set; }
+        public int FichaId { get; set; }
+        public int OrdenId { get; set; }
+        public string Cliente { get; set; } = string.Empty;
+        public string Producto { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
+        public string? Nota { get; set; }
+        public DateTime FechaCarga { get; set; }
+        public int Estado { get; set; } // 0 Pendiente, 1 Aprobada, 2 Rechazada
+        public decimal? PrecioUnitario { get; set; }
+        public bool Pagada { get; set; }
+    }
+
+    public class CargarPrendaExtraDto
+    {
+        public string Producto { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
+        public string? Nota { get; set; }
     }
 
     public class RenglonModistaDto

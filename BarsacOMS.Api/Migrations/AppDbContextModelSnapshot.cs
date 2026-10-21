@@ -746,6 +746,68 @@ namespace BarsacOMS.Api.Migrations
                     b.ToTable("precio_producto", (string)null);
                 });
 
+            modelBuilder.Entity("BarsacOMS.Api.Models.PrendaExtraModista", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("integer")
+                        .HasColumnName("cantidad");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer")
+                        .HasColumnName("estado");
+
+                    b.Property<DateTime>("FechaCarga")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("fecha_carga");
+
+                    b.Property<DateTime?>("FechaRevision")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("fecha_revision");
+
+                    b.Property<int>("FichaProduccionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("ficha_produccion_id");
+
+                    b.Property<int>("ModistaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("modista_id");
+
+                    b.Property<string>("Nota")
+                        .HasColumnType("text")
+                        .HasColumnName("nota");
+
+                    b.Property<int?>("PagoModistaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("pago_modista_id");
+
+                    b.Property<decimal?>("PrecioUnitario")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("precio_unitario");
+
+                    b.Property<string>("Producto")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("producto");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FichaProduccionId");
+
+                    b.HasIndex("ModistaId");
+
+                    b.HasIndex("PagoModistaId");
+
+                    b.ToTable("prenda_extra_modista", (string)null);
+                });
+
             modelBuilder.Entity("BarsacOMS.Api.Models.PrendaUnidad", b =>
                 {
                     b.Property<int>("Id")
@@ -1125,6 +1187,26 @@ namespace BarsacOMS.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("BarsacOMS.Api.Models.PrendaExtraModista", b =>
+                {
+                    b.HasOne("BarsacOMS.Api.Models.FichaProduccion", null)
+                        .WithMany()
+                        .HasForeignKey("FichaProduccionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BarsacOMS.Api.Models.Modista", null)
+                        .WithMany()
+                        .HasForeignKey("ModistaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BarsacOMS.Api.Models.PagoModista", null)
+                        .WithMany()
+                        .HasForeignKey("PagoModistaId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("BarsacOMS.Api.Models.PrendaUnidad", b =>

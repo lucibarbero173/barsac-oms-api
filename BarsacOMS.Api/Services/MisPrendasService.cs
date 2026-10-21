@@ -1,5 +1,6 @@
 using BarsacOMS.Api.Data;
 using BarsacOMS.Api.DTOs;
+using BarsacOMS.Api.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarsacOMS.Api.Services
@@ -62,6 +63,14 @@ namespace BarsacOMS.Api.Services
                 })
                 .ToListAsync();
 
+            var fichaIds = fichas.Select(f => f.Id).ToList();
+            var extras = (await _context.PrendasExtraModista
+                .AsNoTracking()
+                .Where(e => e.ModistaId == modistaId && fichaIds.Contains(e.FichaProduccionId))
+                .OrderBy(e => e.FechaCarga)
+                .ToListAsync())
+                .ToLookup(e => e.FichaProduccionId);
+
             var resultado = fichas.Select(f => new FichaModistaDto
             {
                 FichaId = f.Id,
@@ -82,7 +91,8 @@ namespace BarsacOMS.Api.Services
                     Detalle = r.Detalle,
                     Asignadas = r.Asignadas,
                     Cosidas = r.Cosidas
-                }).ToList()
+                }).ToList(),
+                Extras = extras[f.Id].Select(e => AExtraDto(e, f.OrdenId, f.Cliente)).ToList()
             });
 
             return terminadas
@@ -142,6 +152,63 @@ namespace BarsacOMS.Api.Services
                 }
             }
 
+            await _context.SaveChangesAsync();
+            return (true, null);
+        }
+
+        public static PrendaExtraDto AExtraDto(PrendaExtraModista e, int ordenId, string cliente) => new PrendaExtraDto
+        {
+            Id = e.Id,
+            FichaId = e.FichaProduccionId,
+            OrdenId = ordenId,
+            Cliente = cliente,
+            Producto = e.Producto,
+            Cantidad = e.Cantidad,
+            Nota = e.Nota,
+            FechaCarga = e.FechaCarga.AddHours(-3), // hora de Argentina
+            Estado = (int)e.Estado,
+            PrecioUnitario = e.PrecioUnitario,
+            Pagada = e.PagoModistaId != null
+        };
+
+        // "Cosí de más": solo en fichas donde tiene prendas asignadas y con un producto de esa ficha.
+        public async Task<(bool Exito, string? Error)> CargarExtraAsync(int modistaId, int fichaId, CargarPrendaExtraDto dto)
+        {
+            if (dto.Cantidad <= 0) return (false, "La cantidad tiene que ser mayor a cero.");
+            if (dto.Cantidad > 500) return (false, "Revisá la cantidad, es demasiado alta.");
+
+            var productosFicha = await _context.DetallesFichaProduccion
+                .Where(d => d.FichaProduccionId == fichaId && d.Unidades.Any(u => u.ModistaId == modistaId))
+                .Select(d => d.Producto)
+                .Distinct()
+                .ToListAsync();
+
+            if (productosFicha.Count == 0) return (false, "Esa ficha no está asignada a vos.");
+
+            var producto = productosFicha.FirstOrDefault(p => p == dto.Producto);
+            if (producto == null) return (false, "Elegí un producto de la ficha.");
+
+            _context.PrendasExtraModista.Add(new PrendaExtraModista
+            {
+                ModistaId = modistaId,
+                FichaProduccionId = fichaId,
+                Producto = producto,
+                Cantidad = dto.Cantidad,
+                Nota = string.IsNullOrWhiteSpace(dto.Nota) ? null : dto.Nota.Trim(),
+                FechaCarga = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
+            return (true, null);
+        }
+
+        // Solo puede borrar las suyas que todavía no se revisaron
+        public async Task<(bool Exito, string? Error)> BorrarExtraAsync(int modistaId, int extraId)
+        {
+            var extra = await _context.PrendasExtraModista.FirstOrDefaultAsync(e => e.Id == extraId && e.ModistaId == modistaId);
+            if (extra == null) return (false, "No se encontró esa carga.");
+            if (extra.Estado != EstadoPrendaExtra.Pendiente) return (false, "Ya fue revisada, no se puede borrar.");
+
+            _context.PrendasExtraModista.Remove(extra);
             await _context.SaveChangesAsync();
             return (true, null);
         }

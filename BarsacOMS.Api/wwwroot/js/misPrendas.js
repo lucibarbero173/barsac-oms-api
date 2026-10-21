@@ -58,7 +58,37 @@ async function cargarTerminadas() {
     }
 }
 
+// Fichas cargadas, para armar el modal de "Cosí de más" con los productos de cada una
+const fichasPorId = {};
+
+const ESTADO_EXTRA = {
+    0: '<span class="badge badge-warning">Esperando revisión</span>',
+    1: '<span class="badge badge-success">Aprobado</span>',
+    2: '<span class="badge badge-secondary">Rechazado</span>'
+};
+
+function htmlExtras(f) {
+    if (!f.extras || f.extras.length === 0) return '';
+
+    return `
+        <div class="renglon">
+            <div class="font-weight-bold small mb-1"><i class="fas fa-plus-circle mr-1"></i>Cosí de más</div>
+            ${f.extras.map(e => `
+                <div class="d-flex justify-content-between align-items-center small mb-1">
+                    <span>${escaparHtml(e.producto)} × <strong>${e.cantidad}</strong>${e.nota ? ` <span class="text-muted">— ${escaparHtml(e.nota)}</span>` : ''}</span>
+                    <span class="text-nowrap ml-2">
+                        ${ESTADO_EXTRA[e.estado] || ''}
+                        ${e.estado === 0 ? `<button class="btn btn-link btn-sm text-danger p-0 ml-2" title="Borrar" onclick="borrarExtra(${e.id})"><i class="fas fa-trash-alt"></i></button>` : ''}
+                    </span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
 function htmlFicha(f, terminada) {
+    fichasPorId[f.fichaId] = f;
+
     const botonImagen = f.tieneImagen
         ? `<button class="btn btn-outline-light btn-sm" onclick="verDiseno(${f.fichaId})"><i class="fas fa-image mr-1"></i> Ver diseño</button>`
         : '';
@@ -76,8 +106,83 @@ function htmlFicha(f, terminada) {
                 Cosidas: <span class="font-weight-bold total-cosidas">${f.cosidas}</span> de ${f.asignadas}
             </div>
             ${f.renglones.map(r => htmlRenglon(r, terminada)).join('')}
+            ${htmlExtras(f)}
+            <div class="text-right mt-2">
+                <button class="btn btn-outline-warning btn-sm" onclick="abrirExtra(${f.fichaId})">
+                    <i class="fas fa-plus mr-1"></i> Cosí de más
+                </button>
+            </div>
         </div>
     `;
+}
+
+// =====================================================
+// COSÍ DE MÁS
+// =====================================================
+let fichaExtraId = null;
+
+function abrirExtra(fichaId) {
+    const f = fichasPorId[fichaId];
+    if (!f) return;
+
+    fichaExtraId = fichaId;
+    const productos = [...new Set(f.renglones.map(r => r.producto))];
+
+    $('#extraFichaId').text(fichaId);
+    $('#extraProducto').html(productos.map(p => `<option value="${escaparHtml(p)}">${escaparHtml(p)}</option>`).join(''));
+    $('#extraCantidad').text(1);
+    $('#extraNota').val('');
+    $('#modalExtra').modal('show');
+}
+
+function cambiarCantidadExtra(delta) {
+    const actual = parseInt($('#extraCantidad').text()) || 1;
+    $('#extraCantidad').text(Math.max(1, actual + delta));
+}
+
+async function guardarExtra() {
+    if (!fichaExtraId) return;
+
+    try {
+        const res = await fetch(`${API_MIS_PRENDAS}/fichas/${fichaExtraId}/extras`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                producto: $('#extraProducto').val(),
+                cantidad: parseInt($('#extraCantidad').text()) || 1,
+                nota: $('#extraNota').val()
+            })
+        });
+
+        if (!res.ok) {
+            alert('No se pudo guardar: ' + await res.text());
+            return;
+        }
+
+        $('#modalExtra').modal('hide');
+        cargarPendientes();
+        cargarTerminadas();
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo guardar. Revisá la conexión.');
+    }
+}
+
+async function borrarExtra(extraId) {
+    if (!confirm('¿Borrar esta carga?')) return;
+
+    try {
+        const res = await fetch(`${API_MIS_PRENDAS}/extras/${extraId}`, { method: 'DELETE' });
+        if (!res.ok) {
+            alert('No se pudo borrar: ' + await res.text());
+            return;
+        }
+        cargarPendientes();
+        cargarTerminadas();
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo borrar. Revisá la conexión.');
+    }
 }
 
 function htmlRenglon(r, terminada) {

@@ -259,6 +259,32 @@
 
                     <!-- VISTA DE UNA MODISTA -->
                     <div id="vistaModista" class="d-none">
+                        <!-- "Cosí de más" que cargó la modista: se aprueban antes de pagarse -->
+                        <div class="card shadow mb-4 border-left-warning d-none" id="cardExtras">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-warning"><i class="fas fa-plus-circle mr-1"></i> Cosió de más (cargado por ella)</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm text-center align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Cargado</th>
+                                                <th>Ficha</th>
+                                                <th class="text-left">Cliente</th>
+                                                <th class="text-left">Producto</th>
+                                                <th>Cantidad</th>
+                                                <th class="text-left">Nota</th>
+                                                <th>Estado</th>
+                                                <th style="width: 100px;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detExtrasBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
                                 <h6 class="m-0 font-weight-bold text-primary">Falta coser</h6>

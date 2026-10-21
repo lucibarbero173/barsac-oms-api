@@ -30,6 +30,7 @@ namespace BarsacOMS.Api.Data
         public DbSet<Modista> Modistas { get; set; }
         public DbSet<TarifaModista> TarifasModista { get; set; }
         public DbSet<PagoModista> PagosModista { get; set; }
+        public DbSet<PrendaExtraModista> PrendasExtraModista { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -457,6 +458,39 @@ namespace BarsacOMS.Api.Data
                       .WithMany()
                       .HasForeignKey(e => e.ModistaId)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<PrendaExtraModista>(entity =>
+            {
+                entity.ToTable("prenda_extra_modista");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.ModistaId).HasColumnName("modista_id");
+                entity.Property(e => e.FichaProduccionId).HasColumnName("ficha_produccion_id");
+                entity.Property(e => e.Producto).HasColumnName("producto");
+                entity.Property(e => e.Cantidad).HasColumnName("cantidad");
+                entity.Property(e => e.Nota).HasColumnName("nota");
+                entity.Property(e => e.FechaCarga).HasColumnName("fecha_carga");
+                entity.Property(e => e.Estado).HasColumnName("estado");
+                entity.Property(e => e.FechaRevision).HasColumnName("fecha_revision");
+                entity.Property(e => e.PrecioUnitario).HasColumnName("precio_unitario").HasPrecision(18, 2);
+                entity.Property(e => e.PagoModistaId).HasColumnName("pago_modista_id");
+
+                entity.HasOne<Modista>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ModistaId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<FichaProduccion>()
+                      .WithMany()
+                      .HasForeignKey(e => e.FichaProduccionId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Si se anula el pago, el extra vuelve a quedar "a pagar"
+                entity.HasOne<PagoModista>()
+                      .WithMany()
+                      .HasForeignKey(e => e.PagoModistaId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<TarifaModista>(entity =>

@@ -63,11 +63,20 @@ namespace BarsacOMS.Api.Services
 
             var porModista = unidades.ToLookup(u => u.ModistaId);
 
+            // "Cosí de más": las aprobadas sin pagar suman a lo que se debe; las pendientes esperan revisión
+            var extras = (await _context.PrendasExtraModista
+                .AsNoTracking()
+                .Where(e => e.PagoModistaId == null && e.Estado != EstadoPrendaExtra.Rechazada)
+                .Select(e => new { e.ModistaId, e.Estado, e.Cantidad, e.PrecioUnitario })
+                .ToListAsync())
+                .ToLookup(e => e.ModistaId);
+
             var resumen = modistas
                 .Select(m =>
                 {
                     var us = porModista[m.Id].ToList();
                     var sinPagar = us.Where(u => u.Cosida && u.PagoModistaId == null).ToList();
+                    var extrasAprobados = extras[m.Id].Where(e => e.Estado == EstadoPrendaExtra.Aprobada).ToList();
 
                     return new ResumenModistaPanelDto
                     {
@@ -75,9 +84,13 @@ namespace BarsacOMS.Api.Services
                         Nombre = m.Nombre,
                         Activa = m.Activa,
                         FaltaCoser = us.Count(u => !u.Cosida),
-                        APagar = sinPagar.Sum(u => u.PrecioCosido ?? 0),
-                        PrendasAPagar = sinPagar.Count(u => u.PrecioCosido != null),
-                        SinTarifa = sinPagar.Count(u => u.PrecioCosido == null),
+                        APagar = sinPagar.Sum(u => u.PrecioCosido ?? 0)
+                               + extrasAprobados.Sum(e => (e.PrecioUnitario ?? 0) * e.Cantidad),
+                        PrendasAPagar = sinPagar.Count(u => u.PrecioCosido != null)
+                                      + extrasAprobados.Where(e => e.PrecioUnitario != null).Sum(e => e.Cantidad),
+                        SinTarifa = sinPagar.Count(u => u.PrecioCosido == null)
+                                  + extrasAprobados.Where(e => e.PrecioUnitario == null).Sum(e => e.Cantidad),
+                        ExtrasPendientes = extras[m.Id].Where(e => e.Estado == EstadoPrendaExtra.Pendiente).Sum(e => e.Cantidad),
                         AsignadasPeriodo = us.Count(u => u.FechaAsignacionModista >= desdeUtc && u.FechaAsignacionModista < hastaUtc),
                         CosidasPeriodo = us.Count(u => u.Cosida && u.FechaCosida >= desdeUtc && u.FechaCosida < hastaUtc),
                         UltimaCosida = us.Max(u => u.FechaCosida) is DateTime uc ? ALocal(uc) : null,
@@ -85,7 +98,7 @@ namespace BarsacOMS.Api.Services
                     };
                 })
                 // Las inactivas sin nada pendiente no aportan nada al panel
-                .Where(r => r.Activa || r.FaltaCoser > 0 || r.PrendasAPagar > 0 || r.SinTarifa > 0 || r.CosidasPeriodo > 0)
+                .Where(r => r.Activa || r.FaltaCoser > 0 || r.PrendasAPagar > 0 || r.SinTarifa > 0 || r.CosidasPeriodo > 0 || r.ExtrasPendientes > 0)
                 .ToList();
 
             // Semanas del período, de lunes a domingo
@@ -114,6 +127,7 @@ namespace BarsacOMS.Api.Services
                 APagar = resumen.Sum(r => r.APagar),
                 PrendasAPagar = resumen.Sum(r => r.PrendasAPagar),
                 SinTarifa = resumen.Sum(r => r.SinTarifa),
+                ExtrasPendientes = resumen.Sum(r => r.ExtrasPendientes),
                 Modistas = resumen,
                 Semanas = semanas,
                 Series = series
@@ -162,12 +176,38 @@ namespace BarsacOMS.Api.Services
                 .OrderByDescending(p => p.Fecha)
                 .ToListAsync();
 
+            // "Cosí de más": todas las cargas (para revisar), las más nuevas primero
+            var extras = await (
+                from e in _context.PrendasExtraModista
+                join f in _context.FichasProduccion on e.FichaProduccionId equals f.Id
+                where e.ModistaId == modistaId
+                orderby e.FechaCarga descending
+                select new { Extra = e, f.OrdenId, Cliente = f.Orden.NombreCliente }
+            ).AsNoTracking().ToListAsync();
+
+            // Los extras aprobados y sin pagar también son plata que se le debe
+            aPagar.AddRange(extras
+                .Where(x => x.Extra.Estado == EstadoPrendaExtra.Aprobada && x.Extra.PagoModistaId == null)
+                .GroupBy(x => new { x.Extra.Producto, x.Extra.PrecioUnitario })
+                .Select(g => new LineaAPagarDto
+                {
+                    Producto = g.Key.Producto,
+                    Precio = g.Key.PrecioUnitario,
+                    Cantidad = g.Sum(x => x.Extra.Cantidad),
+                    Subtotal = (g.Key.PrecioUnitario ?? 0) * g.Sum(x => x.Extra.Cantidad),
+                    EsExtra = true
+                }));
+
             return new DetalleModistaPanelDto
             {
                 ModistaId = modista.Id,
                 Nombre = modista.Nombre,
                 Pendientes = renglones.OrderBy(r => r.FechaEntrega ?? DateTime.MaxValue).ThenBy(r => r.FichaId).ToList(),
-                APagar = aPagar.OrderBy(l => l.Precio == null).ThenBy(l => l.Producto).ToList(),
+                APagar = aPagar.OrderBy(l => l.Precio == null).ThenBy(l => l.EsExtra).ThenBy(l => l.Producto).ToList(),
+                Extras = extras
+                    .Where(x => x.Extra.PagoModistaId == null || x.Extra.FechaCarga >= DateTime.UtcNow.AddDays(-60))
+                    .Select(x => MisPrendasService.AExtraDto(x.Extra, x.OrdenId, x.Cliente))
+                    .ToList(),
                 Pagos = pagos.Select(p => new PagoModistaDto
                 {
                     Id = p.Id,
@@ -209,7 +249,19 @@ namespace BarsacOMS.Api.Services
             var aPagar = pendientes.Where(p => p.Unidad.PrecioCosido != null).Select(p => p.Unidad).ToList();
             var sinTarifa = pendientes.Count - aPagar.Count;
 
-            if (aPagar.Count == 0)
+            // Extras ("cosí de más") aprobados y sin pagar: misma regla de tarifa
+            var extras = await _context.PrendasExtraModista
+                .Where(e => e.ModistaId == modistaId && e.Estado == EstadoPrendaExtra.Aprobada && e.PagoModistaId == null)
+                .ToListAsync();
+            foreach (var e in extras.Where(e => e.PrecioUnitario == null))
+            {
+                if (tarifaPorProducto.TryGetValue(e.Producto.Trim().ToLower(), out var precio))
+                    e.PrecioUnitario = precio;
+            }
+            var extrasAPagar = extras.Where(e => e.PrecioUnitario != null).ToList();
+            sinTarifa += extras.Where(e => e.PrecioUnitario == null).Sum(e => e.Cantidad);
+
+            if (aPagar.Count == 0 && extrasAPagar.Count == 0)
             {
                 return (null, sinTarifa > 0
                     ? $"Hay {sinTarifa} prenda(s) cosidas sin tarifa cargada. Cargá la tarifa en Modistas y volvé a intentar."
@@ -220,8 +272,8 @@ namespace BarsacOMS.Api.Services
             {
                 ModistaId = modistaId,
                 Fecha = DateTime.UtcNow,
-                Importe = aPagar.Sum(u => u.PrecioCosido!.Value),
-                CantidadPrendas = aPagar.Count,
+                Importe = aPagar.Sum(u => u.PrecioCosido!.Value) + extrasAPagar.Sum(e => e.PrecioUnitario!.Value * e.Cantidad),
+                CantidadPrendas = aPagar.Count + extrasAPagar.Sum(e => e.Cantidad),
                 Nota = string.IsNullOrWhiteSpace(nota) ? null : nota.Trim()
             };
 
@@ -231,6 +283,7 @@ namespace BarsacOMS.Api.Services
             await _context.SaveChangesAsync();
 
             aPagar.ForEach(u => u.PagoModistaId = pago.Id);
+            extrasAPagar.ForEach(e => e.PagoModistaId = pago.Id);
             await _context.SaveChangesAsync();
 
             await transaccion.CommitAsync();
@@ -252,9 +305,40 @@ namespace BarsacOMS.Api.Services
             var unidades = await _context.PrendasUnidad.Where(u => u.PagoModistaId == pagoId).ToListAsync();
             unidades.ForEach(u => u.PagoModistaId = null);
 
+            var extras = await _context.PrendasExtraModista.Where(e => e.PagoModistaId == pagoId).ToListAsync();
+            extras.ForEach(e => e.PagoModistaId = null);
+
             _context.PagosModista.Remove(pago);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        // Aprobar un "cosí de más": se congela la tarifa vigente (si no hay, se reintenta al pagar).
+        // También sirve para aprobar uno que se había rechazado por error.
+        public async Task<(bool Exito, string? Error)> RevisarExtraAsync(int extraId, bool aprobar)
+        {
+            var extra = await _context.PrendasExtraModista.FindAsync(extraId);
+            if (extra == null) return (false, "No se encontró esa carga.");
+            if (extra.PagoModistaId != null) return (false, "Ya se pagó, no se puede cambiar. Anulá el pago primero.");
+
+            extra.Estado = aprobar ? EstadoPrendaExtra.Aprobada : EstadoPrendaExtra.Rechazada;
+            extra.FechaRevision = DateTime.UtcNow;
+
+            if (aprobar)
+            {
+                var nombre = extra.Producto.Trim().ToLower();
+                extra.PrecioUnitario = await _context.TarifasModista
+                    .Where(t => t.ModistaId == extra.ModistaId && t.Producto!.Nombre.Trim().ToLower() == nombre)
+                    .Select(t => (decimal?)t.Precio)
+                    .FirstOrDefaultAsync();
+            }
+            else
+            {
+                extra.PrecioUnitario = null;
+            }
+
+            await _context.SaveChangesAsync();
+            return (true, null);
         }
     }
 }

@@ -110,6 +110,46 @@
         </div>
     </div>
 
+    <!-- MODAL: COSÍ DE MÁS -->
+    <div class="modal fade" id="modalExtra" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="background: #242b3a; color: #dfe3ea;">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title font-weight-bold">Cosí de más — Ficha #<span id="extraFichaId"></span></h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">Usalo solo si te llegaron más prendas de las que tenías asignadas. Lo revisan antes de sumarlo al pago.</p>
+
+                    <div class="form-group">
+                        <label for="extraProducto" class="font-weight-bold small">Producto</label>
+                        <select id="extraProducto" class="form-control"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold small">¿Cuántas de más?</label>
+                        <div class="contador">
+                            <button type="button" class="btn btn-outline-light" onclick="cambiarCantidadExtra(-1)"><i class="fas fa-minus"></i></button>
+                            <div class="valor"><span id="extraCantidad">1</span></div>
+                            <button type="button" class="btn btn-outline-light" onclick="cambiarCantidadExtra(1)"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label for="extraNota" class="font-weight-bold small">Nota (opcional)</label>
+                        <input type="text" id="extraNota" class="form-control" placeholder="Ej: vinieron 2 remeras talle M de más">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success px-4" onclick="guardarExtra()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: IMAGEN DEL DISEÑO -->
     <div class="modal fade" id="modalZoomImagen" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-xl" role="document">

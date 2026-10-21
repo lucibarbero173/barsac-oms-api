@@ -48,6 +48,30 @@ namespace BarsacOMS.Api.Controllers
             return Ok(new { imagenDisenoBase64 = imagen });
         }
 
+        // POST: api/MisPrendas/fichas/5/extras  ("cosí de más")
+        [HttpPost("fichas/{id}/extras")]
+        public async Task<IActionResult> CargarExtra(int id, [FromBody] CargarPrendaExtraDto dto)
+        {
+            var modistaId = await ObtenerModistaIdActualAsync();
+            if (modistaId == null) return BadRequest("Tu usuario no está vinculado a ninguna modista.");
+
+            var (exito, error) = await _misPrendasService.CargarExtraAsync(modistaId.Value, id, dto);
+            if (!exito) return BadRequest(error);
+            return NoContent();
+        }
+
+        // DELETE: api/MisPrendas/extras/3
+        [HttpDelete("extras/{id}")]
+        public async Task<IActionResult> BorrarExtra(int id)
+        {
+            var modistaId = await ObtenerModistaIdActualAsync();
+            if (modistaId == null) return BadRequest("Tu usuario no está vinculado a ninguna modista.");
+
+            var (exito, error) = await _misPrendasService.BorrarExtraAsync(modistaId.Value, id);
+            if (!exito) return BadRequest(error);
+            return NoContent();
+        }
+
         // PUT: api/MisPrendas/renglon/12
         [HttpPut("renglon/{detalleId}")]
         public async Task<IActionResult> MarcarCosidas(int detalleId, [FromBody] MarcarCosidasDto dto)

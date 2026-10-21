@@ -42,6 +42,17 @@ namespace BarsacOMS.Api.Controllers
             return Ok(resultado);
         }
 
+        // POST: api/PanelModistas/extras/3/aprobar  |  api/PanelModistas/extras/3/rechazar
+        [HttpPost("extras/{id}/{accion}")]
+        public async Task<IActionResult> RevisarExtra(int id, string accion)
+        {
+            if (accion != "aprobar" && accion != "rechazar") return NotFound();
+
+            var (exito, error) = await _panelService.RevisarExtraAsync(id, accion == "aprobar");
+            if (!exito) return BadRequest(error);
+            return NoContent();
+        }
+
         // DELETE: api/PanelModistas/pagos/7
         [HttpDelete("pagos/{id}")]
         public async Task<IActionResult> AnularPago(int id)

@@ -12,6 +12,7 @@ namespace BarsacOMS.Api.DTOs
         public decimal APagar { get; set; }
         public int PrendasAPagar { get; set; }
         public int SinTarifa { get; set; }
+        public int ExtrasPendientes { get; set; }
 
         public List<ResumenModistaPanelDto> Modistas { get; set; } = new();
 
@@ -31,6 +32,9 @@ namespace BarsacOMS.Api.DTOs
         public decimal APagar { get; set; }
         public int PrendasAPagar { get; set; }
         public int SinTarifa { get; set; }
+
+        // Prendas "cosí de más" que cargó y esperan aprobación
+        public int ExtrasPendientes { get; set; }
 
         // Dentro del período elegido
         public int AsignadasPeriodo { get; set; }
@@ -54,6 +58,7 @@ namespace BarsacOMS.Api.DTOs
         public List<PendienteCoserDto> Pendientes { get; set; } = new();
         public List<LineaAPagarDto> APagar { get; set; } = new();
         public List<PagoModistaDto> Pagos { get; set; } = new();
+        public List<PrendaExtraDto> Extras { get; set; } = new();
     }
 
     public class PendienteCoserDto
@@ -77,6 +82,7 @@ namespace BarsacOMS.Api.DTOs
         public decimal? Precio { get; set; }
         public int Cantidad { get; set; }
         public decimal Subtotal { get; set; }
+        public bool EsExtra { get; set; }
     }
 
     public class PagoModistaDto
