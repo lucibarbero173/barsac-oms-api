@@ -195,8 +195,60 @@ async function abrirFicha(fichaId) {
     }
 }
 
+// Orden lógico de talles de letra; los numéricos van por número y el resto alfabético
+const ORDEN_TALLES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL'];
+
+function compararTalles(a, b) {
+    const ia = ORDEN_TALLES.indexOf(a.toUpperCase());
+    const ib = ORDEN_TALLES.indexOf(b.toUpperCase());
+    if (ia >= 0 && ib >= 0) return ia - ib;
+    if (ia >= 0) return -1;
+    if (ib >= 0) return 1;
+    const na = parseFloat(a), nb = parseFloat(b);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.localeCompare(b);
+}
+
+// Cuenta las prendas de la ficha por producto y talle (cada prenda es una unidad)
+function renderResumenProductos() {
+    const porProducto = {};
+    prendasActuales.forEach(p => {
+        const r = porProducto[p.producto] || (porProducto[p.producto] = { total: 0, cortadas: 0, talles: {} });
+        r.total++;
+        if (p.corteEstado === 1) r.cortadas++;
+        const talle = (p.talle || '').trim() || 'Sin talle';
+        r.talles[talle] = (r.talles[talle] || 0) + 1;
+    });
+
+    const $body = $('#ctResumenBody');
+    $body.empty();
+
+    Object.keys(porProducto).sort((a, b) => a.localeCompare(b)).forEach(producto => {
+        const r = porProducto[producto];
+        const talles = Object.keys(r.talles).sort(compararTalles)
+            .map(t => `<span class="badge badge-light border mr-1 mb-1 px-2 py-1" style="font-size: .85rem;">${t} <strong>× ${r.talles[t]}</strong></span>`)
+            .join('');
+
+        $body.append(`
+            <tr>
+                <td class="text-left font-weight-bold">${producto}</td>
+                <td class="text-center font-weight-bold" style="font-size: 1.1rem;">${r.total}</td>
+                <td>${talles}</td>
+                <td class="text-center ${r.cortadas === r.total ? 'text-success font-weight-bold' : ''}">${r.cortadas} / ${r.total}</td>
+            </tr>
+        `);
+    });
+
+    const total = prendasActuales.length;
+    const cortadas = prendasActuales.filter(p => p.corteEstado === 1).length;
+    $('#ctResumenTotal').text(total);
+    $('#ctResumenCortadas').text(`${cortadas} / ${total}`);
+}
+
 // EstadoCorte: 0 Pendiente, 1 Completo, 2 Faltante
 function renderPrendas() {
+    renderResumenProductos();
+
     const $body = $('#ctPrendasBody');
     $body.empty();
 

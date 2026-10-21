@@ -205,6 +205,30 @@
 
                     <hr>
 
+                    <!-- Resumen por producto: para no tener que contar 1 x 1 (ej. cuántos cuellos cortar) -->
+                    <h6 class="font-weight-bold text-primary">Resumen por producto</h6>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered table-sm align-middle mb-0">
+                            <thead class="bg-white text-center">
+                                <tr>
+                                    <th class="text-left">Producto</th>
+                                    <th style="width: 80px;">Total</th>
+                                    <th class="text-left">Por talle</th>
+                                    <th style="width: 110px;">Cortadas</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ctResumenBody"></tbody>
+                            <tfoot>
+                                <tr class="font-weight-bold text-center">
+                                    <td class="text-left">Total de la ficha</td>
+                                    <td id="ctResumenTotal"></td>
+                                    <td></td>
+                                    <td id="ctResumenCortadas"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
                     <h6 class="font-weight-bold text-primary">Prendas</h6>
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm text-center align-middle">
