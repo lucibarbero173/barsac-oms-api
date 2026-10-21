@@ -49,6 +49,19 @@ function armarDetallePartes(partes) {
         .join('');
 }
 
+// Por pedido: una línea por prenda, ej. "Pollera Lycra Negra (talle S) — Completa × 1"
+function armarDetallePrendas(partes) {
+    return partes
+        .map(p => {
+            const talle = p.talle ? ` <span class="text-muted">(talle ${p.talle})</span>` : '';
+            return `<div class="mb-1">
+                <span class="font-weight-bold">${p.producto || 'Prenda'}</span>${talle}
+                <span class="badge badge-light border ml-1">${PARTES_FALTANTE[p.parte] || 'Faltante'} × ${p.cantidad}</span>
+            </div>`;
+        })
+        .join('');
+}
+
 function renderizarFaltantesPorPedido(lista) {
     const tbody = document.getElementById("tablaFaltantesPedidoBody");
     tbody.innerHTML = "";
@@ -64,7 +77,7 @@ function renderizarFaltantesPorPedido(lista) {
             <td class="font-weight-bold">#${item.ordenId}</td>
             <td>${item.cliente}</td>
             <td class="text-center font-weight-bold">${item.total}</td>
-            <td>${armarDetallePartes(item.partes)}</td>
+            <td>${armarDetallePrendas(item.partes)}</td>
         `;
         tbody.appendChild(tr);
     });

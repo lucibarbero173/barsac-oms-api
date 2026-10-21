@@ -83,6 +83,10 @@ namespace BarsacOMS.Api.DTOs
     {
         public ParteFaltante Parte { get; set; }
         public int Cantidad { get; set; }
+
+        // Solo en el desglose por pedido: de qué prenda era la parte que salió mal
+        public string? Producto { get; set; }
+        public string? Talle { get; set; }
     }
 
     public class FaltantesPorPedidoDto

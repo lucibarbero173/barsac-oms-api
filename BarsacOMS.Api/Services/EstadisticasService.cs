@@ -162,10 +162,12 @@ namespace BarsacOMS.Api.Services
                     OrdenId = o.Id,
                     Cliente = o.Cliente != null ? o.Cliente.Nombre : o.NombreCliente,
                     d.Producto,
+                    d.Talle,
                     Parte = u.CorteParteFaltante!.Value
                 }
             ).ToListAsync();
 
+            // Por pedido se desglosa por prenda (producto + talle) y parte, para saber QUÉ salió mal
             var porPedido = registros
                 .GroupBy(r => new { r.OrdenId, r.Cliente })
                 .Select(g => new FaltantesPorPedidoDto
@@ -173,9 +175,16 @@ namespace BarsacOMS.Api.Services
                     OrdenId = g.Key.OrdenId,
                     Cliente = g.Key.Cliente ?? "Sin cliente",
                     Total = g.Count(),
-                    Partes = g.GroupBy(x => x.Parte)
-                        .Select(pg => new ConteoParteDto { Parte = pg.Key, Cantidad = pg.Count() })
-                        .OrderByDescending(pg => pg.Cantidad)
+                    Partes = g.GroupBy(x => new { x.Producto, x.Talle, x.Parte })
+                        .Select(pg => new ConteoParteDto
+                        {
+                            Parte = pg.Key.Parte,
+                            Cantidad = pg.Count(),
+                            Producto = pg.Key.Producto,
+                            Talle = pg.Key.Talle
+                        })
+                        .OrderBy(pg => pg.Producto)
+                        .ThenByDescending(pg => pg.Cantidad)
                         .ToList()
                 })
                 .OrderByDescending(x => x.OrdenId)
