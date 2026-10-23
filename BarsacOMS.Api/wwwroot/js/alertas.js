@@ -150,6 +150,7 @@ function obtenerBadgeEstado(estado, prendasControladas) {
     switch (estado) {
         case 0: return '<span class="badge" style="background-color:#dc3545;color:#fff;">Pendiente</span>';
         case 1: return '<span class="badge" style="background-color:#6c757d;color:#fff;">Diseño</span>';
+        case 8: return '<span class="badge" style="background-color:#e83e8c;color:#fff;">Impresión</span>';
         case 2: return '<span class="badge" style="background-color:#8BC34A;color:#fff;">Entregado</span>';
         case 3: return '<span class="badge" style="background-color:#29ABE2;color:#fff;">Listo para Entregar</span>';
         case 4: return '<span class="badge" style="background-color:#FF9800;color:#fff;">Entrega Parcial</span>';

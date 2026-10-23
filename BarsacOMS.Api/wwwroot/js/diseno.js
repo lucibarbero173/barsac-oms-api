@@ -5,7 +5,34 @@ let prendasActuales = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarTodo();
+
+    // La ruta de los archivos se guarda sola al salir del campo
+    $('#dsRutaImpresion').on('change', guardarRutaImpresion);
 });
+
+// Dónde y con qué nombre se exportaron los archivos (lo lee la pantalla de Impresión)
+async function guardarRutaImpresion() {
+    if (!fichaActualId) return;
+
+    const $input = $('#dsRutaImpresion');
+    const ruta = $input.val().trim();
+    if (ruta === $input.data('guardada')) return;
+
+    try {
+        const res = await fetch(`${API_DISENO}/fichas/${fichaActualId}/ruta-impresion`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ruta })
+        });
+        if (!res.ok) throw new Error('No se pudo guardar la ruta');
+
+        $input.data('guardada', ruta);
+        $('#dsRutaEstado').html('<span class="text-success"><i class="fas fa-check mr-1"></i>Guardado</span>');
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo guardar dónde quedaron los archivos.');
+    }
+}
 
 function cargarTodo() {
     cargarFichas();
@@ -188,6 +215,8 @@ async function abrirFicha(fichaId) {
         $('#dsOrdenId').text(ficha.ordenId);
         $('#dsCliente').text(ficha.cliente);
         $('#dsFechaEntrega').text(ficha.fechaEntrega ? ficha.fechaEntrega.split('T')[0] : '-');
+        $('#dsRutaImpresion').val(ficha.rutaImpresion || '').data('guardada', ficha.rutaImpresion || '');
+        $('#dsRutaEstado').text('Lo ve Impresión para saber dónde buscar. Se guarda solo al salir del campo.');
 
         mostrarImagen(ficha.imagenDisenoBase64);
         renderPrendas();
@@ -248,6 +277,9 @@ function actualizarProgreso() {
 
 async function togglePrenda(unidadId) {
     try {
+        // Antes de que la ficha se complete y se cierre, que no se pierda la ruta escrita
+        await guardarRutaImpresion();
+
         const res = await fetch(`${API_DISENO}/unidad/${unidadId}/toggle`, { method: 'POST' });
         if (!res.ok) throw new Error('No se pudo actualizar la prenda');
         const resultado = await res.json();
@@ -256,10 +288,13 @@ async function togglePrenda(unidadId) {
         if (prenda) prenda.disenoListo = !prenda.disenoListo;
         renderPrendas();
 
-        if (resultado.nuevoEstadoOrden === 5) { // EstadoOrden.Corte
-            alert('¡Ficha completa! El pedido pasó a Corte.');
+        // Se mira el progreso de ESTA ficha (no el estado de la orden, que puede tener otras fichas)
+        if (prenda && prenda.disenoListo && resultado.total > 0 && resultado.completadas === resultado.total) {
+            const sinRuta = !$('#dsRutaImpresion').val().trim();
+            alert('¡Ficha completa! Pasó a Impresión.' + (sinRuta ? '\n\nOjo: no cargaste dónde quedaron los archivos exportados.' : ''));
             $('#modalFichaDiseno').modal('hide');
             cargarFichas();
+            cargarRecienTerminadas();
         }
     } catch (error) {
         console.error(error);

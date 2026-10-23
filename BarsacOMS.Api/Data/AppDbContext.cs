@@ -44,6 +44,9 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Modista).HasColumnName("modista");
                 entity.Property(e => e.EstadoFicha).HasColumnName("estado_ficha");
                 entity.Property(e => e.ImagenDisenoBase64).HasColumnName("imagen_diseno_base64");
+                entity.Property(e => e.RutaImpresion).HasColumnName("ruta_impresion");
+                entity.Property(e => e.FechaImpresion).HasColumnName("fecha_impresion");
+                entity.Property(e => e.ImpresoPorUsuarioId).HasColumnName("impreso_por_usuario_id");
                 entity.Property(e => e.Entregada).HasColumnName("entregada");
                 entity.Property(e => e.FechaEntregaFicha).HasColumnName("fecha_entrega_ficha");
 

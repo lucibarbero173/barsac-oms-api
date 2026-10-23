@@ -91,6 +91,7 @@ namespace BarsacOMS.Api.Services
                 FechaEntrega = ficha.Orden.FechaEntrega,
                 ImagenDisenoBase64 = ficha.ImagenDisenoBase64,
                 Estado = ficha.EstadoFicha,
+                RutaImpresion = ficha.RutaImpresion,
                 Prendas = ficha.Items
                     .SelectMany(i => i.Unidades.Select(u => new PrendaEtapaDto
                     {
@@ -137,11 +138,13 @@ namespace BarsacOMS.Api.Services
             // orden: si la orden tiene otra ficha ya más avanzada, no se debe tocar.
             var (completadas, total) = await CalcularProgresoFichaAsync(ficha.Id, u => u.DisenoListo);
 
-            if (ficha.EstadoFicha == EstadoOrden.Pendiente || ficha.EstadoFicha == EstadoOrden.EnProceso)
+            // Al terminar el diseño la ficha pasa a Impresión (antes iba directo a Corte).
+            // Si estaba en Impresión y se desmarca una prenda, vuelve a Diseño.
+            if (ficha.EstadoFicha == EstadoOrden.Pendiente || ficha.EstadoFicha == EstadoOrden.EnProceso || ficha.EstadoFicha == EstadoOrden.Impresion)
             {
                 if (total > 0 && completadas == total)
                 {
-                    ficha.EstadoFicha = EstadoOrden.Corte;
+                    ficha.EstadoFicha = EstadoOrden.Impresion;
                 }
                 else if (completadas > 0)
                 {
@@ -160,6 +163,17 @@ namespace BarsacOMS.Api.Services
                 Total = total,
                 NuevoEstadoOrden = orden?.Estado ?? EstadoOrden.EnProceso
             };
+        }
+
+        // Dónde y con qué nombre se exportaron los archivos, para que Impresión sepa qué buscar
+        public async Task<bool> GuardarRutaImpresionAsync(int fichaId, string? ruta)
+        {
+            var ficha = await _context.FichasProduccion.FindAsync(fichaId);
+            if (ficha == null) return false;
+
+            ficha.RutaImpresion = string.IsNullOrWhiteSpace(ruta) ? null : ruta.Trim();
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<List<AlertaFaltanteDto>> ObtenerAlertasFaltantesAsync()
@@ -208,10 +222,7 @@ namespace BarsacOMS.Api.Services
         // Solo estos valores son estados de PRODUCCIÓN (los que puede tomar una ficha).
         // Si la orden ya está en un estado de entrega (Entregado/EntregadoParcial/
         // ListoParaEntregar), un toggle de diseño en una ficha no debe pisarlo.
-        private static readonly HashSet<EstadoOrden> EstadosDeProduccion = new()
-        {
-            EstadoOrden.Pendiente, EstadoOrden.EnProceso, EstadoOrden.Corte, EstadoOrden.CorteFaltantes, EstadoOrden.AptoConfeccion
-        };
+        private static readonly HashSet<EstadoOrden> EstadosDeProduccion = EtapasProduccion.EstadosDeProduccion;
 
         // El estado de la ORDEN pasa a ser el de su ficha más atrasada: así nunca se ve
         // más avanzada de lo que en realidad está, aunque tenga otra ficha ya lista.
@@ -223,7 +234,7 @@ namespace BarsacOMS.Api.Services
             var fichas = await _context.FichasProduccion.Where(f => f.OrdenId == ordenId).ToListAsync();
             if (fichas.Count == 0) return;
 
-            orden.Estado = (EstadoOrden)fichas.Min(f => (int)f.EstadoFicha);
+            orden.Estado = EtapasProduccion.MasAtrasada(fichas.Select(f => f.EstadoFicha));
             await _context.SaveChangesAsync();
         }
     }

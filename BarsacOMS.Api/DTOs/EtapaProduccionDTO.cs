@@ -28,6 +28,40 @@ namespace BarsacOMS.Api.DTOs
         public string? ImagenDisenoBase64 { get; set; }
         public EstadoOrden Estado { get; set; }
         public List<PrendaEtapaDto> Prendas { get; set; } = new();
+
+        // Dónde y con qué nombre exportó Diseño los archivos (lo lee Impresión)
+        public string? RutaImpresion { get; set; }
+    }
+
+    // Una línea del resumen de la ficha para Impresión, ej. "15 Remera Cool"
+    public class ProductoCantidadDto
+    {
+        public string Producto { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
+    }
+
+    // Fila del listado de Impresión: datos del pedido, resumen por producto y la ruta
+    public class FichaImpresionDto
+    {
+        public int FichaId { get; set; }
+        public int OrdenId { get; set; }
+        public DateTime? FechaPedido { get; set; }
+        public int ClienteId { get; set; }
+        public string Cliente { get; set; } = string.Empty;
+        public string? Solicitante { get; set; }
+        public DateTime? FechaEntrega { get; set; }
+        public string? RutaImpresion { get; set; }
+        public List<ProductoCantidadDto> Productos { get; set; } = new();
+        public int TotalPrendas { get; set; }
+        public DateTime? FechaImpresion { get; set; }
+
+        // Solo al pedir una ficha puntual (en los listados va vacía para no cargar de más)
+        public string? ImagenDisenoBase64 { get; set; }
+    }
+
+    public class GuardarRutaImpresionDto
+    {
+        public string? Ruta { get; set; }
     }
 
     public class PrendaEtapaDto

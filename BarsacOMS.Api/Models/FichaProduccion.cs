@@ -25,6 +25,12 @@ namespace BarsacOMS.Api.Models
         // Imagen del diseño, cargada por el diseñador (reemplaza el Word aparte).
         public string? ImagenDisenoBase64 { get; set; }
 
+        // Etapa Impresión: Diseño anota dónde y con qué nombre exportó los archivos
+        // (ej. "Pedidos sueltos / Remeras cool Denis") e Impresión marca la ficha como impresa.
+        public string? RutaImpresion { get; set; }
+        public DateTime? FechaImpresion { get; set; }
+        public int? ImpresoPorUsuarioId { get; set; }
+
         // Entrega de esta tanda puntual (un pedido puede tener varias fichas = varias tandas).
         public bool Entregada { get; set; } = false;
         public DateTime? FechaEntregaFicha { get; set; }

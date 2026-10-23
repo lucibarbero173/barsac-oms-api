@@ -58,6 +58,7 @@
             <hr class="sidebar-divider">
             <div class="sidebar-heading">Producción</div>
             <li class="nav-item active"><a class="nav-link" href="diseno.html"><i class="fas fa-pencil-ruler"></i><span>Diseño</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="impresion.html"><i class="fas fa-print"></i><span>Impresión</span></a></li>
             <li class="nav-item"><a class="nav-link" href="corte.html"><i class="fas fa-cut"></i><span>Corte</span></a></li>
             <li class="nav-item" data-roles="admin,super"><a class="nav-link" href="confeccion.html"><i class="fas fa-tasks"></i><span>Confección</span></a></li>
             <hr class="sidebar-divider d-none d-md-block">
@@ -218,6 +219,18 @@
                         <div id="placeholderImagenDiseno" class="d-flex align-items-center justify-content-center text-muted mb-2">
                             <span><i class="fas fa-image mr-1"></i> Esta ficha todavía no tiene imagen (se carga desde Fichas de Producción)</span>
                         </div>
+                    </div>
+
+                    <!-- Para Impresión: dónde quedaron los archivos exportados de esta ficha -->
+                    <h6 class="font-weight-bold text-primary"><i class="fas fa-folder-open mr-1"></i> Archivos para Impresión</h6>
+                    <div class="form-group mb-1">
+                        <div class="input-group">
+                            <input type="text" id="dsRutaImpresion" class="form-control" placeholder="Carpeta y nombre del archivo exportado. Ej: Pedidos sueltos / Remeras cool Denis">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" type="button" onclick="guardarRutaImpresion()">Guardar</button>
+                            </div>
+                        </div>
+                        <small class="text-muted" id="dsRutaEstado">Lo ve Impresión para saber dónde buscar. Se guarda solo al salir del campo.</small>
                     </div>
 
                     <hr>

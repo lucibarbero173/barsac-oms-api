@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BarsacOMS.Api.DTOs;
 using BarsacOMS.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,6 +50,15 @@ namespace BarsacOMS.Api.Controllers
             var resultado = await _disenoService.ToggleUnidadAsync(id, ObtenerUsuarioIdActual());
             if (resultado == null) return NotFound();
             return Ok(resultado);
+        }
+
+        // PUT: api/Diseno/fichas/5/ruta-impresion
+        [HttpPut("fichas/{id}/ruta-impresion")]
+        public async Task<IActionResult> GuardarRutaImpresion(int id, [FromBody] GuardarRutaImpresionDto dto)
+        {
+            var ok = await _disenoService.GuardarRutaImpresionAsync(id, dto.Ruta);
+            if (!ok) return NotFound();
+            return NoContent();
         }
 
         [HttpGet("alertas-faltantes")]

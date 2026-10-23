@@ -261,6 +261,8 @@ async function cargarTablaFichas() {
                 badgeEstado = '<span class="badge" style="background-color:#FF9800;color:#fff;">Entrega Parcial</span>';
             } else if (estadoFicha === 1) { // EstadoOrden.EnProceso ("Diseño")
                 badgeEstado = '<span class="badge" style="background-color:#6c757d;color:#fff;">Diseño</span>';
+            } else if (estadoFicha === 8) { // EstadoOrden.Impresion
+                badgeEstado = '<span class="badge" style="background-color:#e83e8c;color:#fff;">Impresión</span>';
             } else if (estadoFicha === 5) { // EstadoOrden.Corte
                 badgeEstado = '<span class="badge" style="background-color:#6f42c1;color:#fff;">Corte</span>';
             } else if (estadoFicha === 6) { // EstadoOrden.CorteFaltantes

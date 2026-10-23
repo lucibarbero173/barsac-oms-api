@@ -355,10 +355,7 @@ namespace BarsacOMS.Api.Services
         }
 
         // Solo estos valores son estados de PRODUCCIÓN (los que puede tomar una ficha).
-        private static readonly HashSet<EstadoOrden> EstadosDeProduccion = new()
-        {
-            EstadoOrden.Pendiente, EstadoOrden.EnProceso, EstadoOrden.Corte, EstadoOrden.CorteFaltantes, EstadoOrden.AptoConfeccion
-        };
+        private static readonly HashSet<EstadoOrden> EstadosDeProduccion = EtapasProduccion.EstadosDeProduccion;
 
         // El estado de la ORDEN pasa a ser el de su ficha más atrasada: así nunca se ve
         // más avanzada de lo que en realidad está. ignorarEstadoActual=true se usa al
@@ -373,7 +370,7 @@ namespace BarsacOMS.Api.Services
             var fichas = await _context.FichasProduccion.Where(f => f.OrdenId == ordenId).ToListAsync();
             if (fichas.Count == 0) return;
 
-            orden.Estado = (EstadoOrden)fichas.Min(f => (int)f.EstadoFicha);
+            orden.Estado = EtapasProduccion.MasAtrasada(fichas.Select(f => f.EstadoFicha));
             await _context.SaveChangesAsync();
         }
     }

@@ -378,9 +378,17 @@ namespace BarsacOMS.Api.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("fecha_entrega_ficha");
 
+                    b.Property<DateTime?>("FechaImpresion")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("fecha_impresion");
+
                     b.Property<string>("ImagenDisenoBase64")
                         .HasColumnType("text")
                         .HasColumnName("imagen_diseno_base64");
+
+                    b.Property<int?>("ImpresoPorUsuarioId")
+                        .HasColumnType("integer")
+                        .HasColumnName("impreso_por_usuario_id");
 
                     b.Property<string>("Modista")
                         .IsRequired()
@@ -390,6 +398,10 @@ namespace BarsacOMS.Api.Migrations
                     b.Property<int>("OrdenId")
                         .HasColumnType("integer")
                         .HasColumnName("orden_id");
+
+                    b.Property<string>("RutaImpresion")
+                        .HasColumnType("text")
+                        .HasColumnName("ruta_impresion");
 
                     b.HasKey("Id");
 
