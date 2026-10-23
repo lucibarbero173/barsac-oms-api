@@ -89,9 +89,12 @@ function htmlExtras(f) {
 function htmlFicha(f, terminada) {
     fichasPorId[f.fichaId] = f;
 
-    const botonImagen = f.tieneImagen
-        ? `<button class="btn btn-outline-light btn-sm" onclick="verDiseno(${f.fichaId})"><i class="fas fa-image mr-1"></i> Ver diseño</button>`
-        : '';
+    const botonImagen = `
+        <div class="text-nowrap">
+            ${f.tieneImagen ? `<button class="btn btn-outline-light btn-sm" onclick="verDiseno(${f.fichaId})"><i class="fas fa-image mr-1"></i> Ver diseño</button>` : ''}
+            <button class="btn btn-outline-light btn-sm ml-1" title="Imprimir planilla" onclick="imprimirPlanilla(${f.fichaId})"><i class="fas fa-print"></i></button>
+        </div>
+    `;
 
     return `
         <div class="ficha-card ${terminada ? 'terminada' : ''}" id="ficha-${f.fichaId}">
@@ -247,6 +250,189 @@ function cambiarCosidas(boton, delta) {
 function marcarTodas(boton) {
     const $renglon = $(boton).closest('.renglon');
     guardarCosidas($renglon, parseInt($renglon.data('asignadas')));
+}
+
+// =====================================================
+// CAMBIAR CONTRASEÑA (usa el mismo endpoint que la pantalla Perfil)
+// =====================================================
+function abrirCambioPassword() {
+    $('#passActual, #passNueva, #passRepetir').val('');
+    $('#modalPassword').modal('show');
+}
+
+async function guardarPassword() {
+    const actual = $('#passActual').val();
+    const nueva = $('#passNueva').val();
+    const repetir = $('#passRepetir').val();
+
+    if (!actual) return alert('Escribí tu contraseña actual.');
+    if (nueva.length < 6) return alert('La contraseña nueva tiene que tener al menos 6 caracteres.');
+    if (nueva !== repetir) return alert('Las dos contraseñas nuevas no coinciden.');
+
+    try {
+        // El perfil se guarda completo: se mandan nombre, email y foto tal como están
+        const resPerfil = await fetch('/api/Perfil/me');
+        if (!resPerfil.ok) throw new Error('No se pudo leer el perfil');
+        const perfil = await resPerfil.json();
+
+        const res = await fetch('/api/Perfil/me', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre: perfil.nombre,
+                email: perfil.email,
+                fotoBase64: perfil.fotoBase64,
+                passwordActual: actual,
+                passwordNueva: nueva
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alert(err.mensaje || 'No se pudo cambiar la contraseña.');
+            return;
+        }
+
+        $('#modalPassword').modal('hide');
+        alert('¡Listo! Tu contraseña se cambió. La próxima vez entrá con la nueva.');
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo cambiar la contraseña. Revisá la conexión.');
+    }
+}
+
+// =====================================================
+// IMPRIMIR PLANILLA DE CONTROL DE UNA FICHA
+// =====================================================
+async function imprimirPlanilla(fichaId) {
+    const f = fichasPorId[fichaId];
+    if (!f) return;
+
+    // La ventana se abre YA (en el click), si no el navegador la bloquea por ser popup
+    const ventana = window.open('', '', 'height=700,width=900');
+    if (!ventana) {
+        alert('El navegador bloqueó la ventana de impresión. Permití las ventanas emergentes para este sitio.');
+        return;
+    }
+    ventana.document.write('<p style="font-family: sans-serif;">Preparando la planilla...</p>');
+
+    let imagen = '';
+    if (f.tieneImagen) {
+        try {
+            const res = await fetch(`${API_MIS_PRENDAS}/fichas/${fichaId}/imagen`);
+            if (res.ok) imagen = (await res.json()).imagenDisenoBase64 || '';
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const modista = localStorage.getItem('usuarioNombre') || '';
+    const hoy = new Date().toLocaleDateString('es-AR');
+
+    const filas = f.renglones.map(r => {
+        const nombreNumero = [r.nombre, r.numero ? '#' + r.numero : null].filter(Boolean).join(' ') || '';
+        return `
+            <tr>
+                <td class="izq">${escaparHtml(r.producto)}</td>
+                <td>${escaparHtml(r.talle) || ''}</td>
+                <td>${escaparHtml(nombreNumero)}</td>
+                <td>${escaparHtml(r.detalle) || ''}</td>
+                <td class="grande">${r.asignadas}</td>
+                <td></td>
+                <td></td>
+            </tr>
+        `;
+    }).join('');
+
+    const total = f.renglones.reduce((s, r) => s + r.asignadas, 0);
+    const filasVacias = Array.from({ length: 4 }, () => '<tr><td style="height: 26px;"></td><td></td><td></td><td></td></tr>').join('');
+
+    ventana.document.open();
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Planilla Ficha #${f.fichaId}</title>
+                <style>
+                    body { font-family: Arial, Helvetica, sans-serif; color: #000; padding: 16px; font-size: 13px; }
+                    h1 { font-size: 20px; margin: 0 0 4px; }
+                    .datos { margin-bottom: 12px; }
+                    .datos span { margin-right: 18px; }
+                    .encabezado { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+                    .encabezado img { max-height: 140px; max-width: 220px; object-fit: contain; border: 1px solid #999; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+                    th, td { border: 1px solid #555; padding: 6px; text-align: center; }
+                    th { background: #eee; }
+                    .izq { text-align: left; }
+                    .grande { font-weight: bold; font-size: 15px; }
+                    h2 { font-size: 15px; margin: 14px 0 6px; }
+                    .pie { margin-top: 24px; display: flex; justify-content: space-between; }
+                    .firma { border-top: 1px solid #000; width: 40%; text-align: center; padding-top: 4px; }
+                    @media print { body { padding: 0; } }
+                </style>
+            </head>
+            <body>
+                <div class="encabezado">
+                    <div>
+                        <h1>Ficha #${f.fichaId} — ${escaparHtml(f.cliente)}</h1>
+                        <div class="datos">
+                            <span><strong>Modista:</strong> ${escaparHtml(modista)}</span>
+                            <span><strong>Entrega:</strong> ${formatearFecha(f.fechaEntrega)}</span>
+                            <span><strong>Impresa:</strong> ${hoy}</span>
+                        </div>
+                    </div>
+                    ${imagen ? `<img src="${imagen}">` : ''}
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="izq">Producto</th>
+                            <th>Talle</th>
+                            <th>Nombre / Nº</th>
+                            <th>Detalle</th>
+                            <th>Cant.</th>
+                            <th style="width: 14%;">Cosidas</th>
+                            <th style="width: 18%;">Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>${filas}</tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="izq" colspan="4"><strong>Total</strong></td>
+                            <td class="grande">${total}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <h2>Cosí de más (completar a mano)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="izq">Producto</th>
+                            <th>Talle</th>
+                            <th>Cant.</th>
+                            <th>Nota</th>
+                        </tr>
+                    </thead>
+                    <tbody>${filasVacias}</tbody>
+                </table>
+
+                <div class="pie">
+                    <div class="firma">Entregado por</div>
+                    <div class="firma">Recibido por</div>
+                </div>
+            </body>
+        </html>
+    `);
+    ventana.document.close();
+
+    // Esperar a que cargue la imagen antes de imprimir
+    setTimeout(() => {
+        ventana.focus();
+        ventana.print();
+    }, 400);
 }
 
 async function verDiseno(fichaId) {

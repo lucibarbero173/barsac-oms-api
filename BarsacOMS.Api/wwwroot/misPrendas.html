@@ -95,7 +95,10 @@
     <div class="prendas-wrapper">
         <div class="prendas-topbar">
             <span class="text-light font-weight-bold" id="lblNombreUsuario"></span>
-            <a href="#" id="btnLogout" class="text-light"><i class="fas fa-sign-out-alt"></i> Salir</a>
+            <span>
+                <a href="#" class="text-light mr-3" onclick="abrirCambioPassword(); return false;"><i class="fas fa-key"></i> Contraseña</a>
+                <a href="#" id="btnLogout" class="text-light"><i class="fas fa-sign-out-alt"></i> Salir</a>
+            </span>
         </div>
 
         <h1 class="text-light h3 mb-3">Mis Prendas</h1>
@@ -107,6 +110,39 @@
         </div>
         <div class="collapse" id="colapsoTerminadas">
             <div id="listaTerminadas"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: CAMBIAR CONTRASEÑA -->
+    <div class="modal fade" id="modalPassword" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="background: #242b3a; color: #dfe3ea;">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-key mr-2"></i>Cambiar contraseña</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="passActual" class="font-weight-bold small">Contraseña actual</label>
+                        <input type="password" id="passActual" class="form-control" autocomplete="current-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="passNueva" class="font-weight-bold small">Contraseña nueva</label>
+                        <input type="password" id="passNueva" class="form-control" minlength="6" autocomplete="new-password">
+                        <small class="text-muted">Mínimo 6 caracteres.</small>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="passRepetir" class="font-weight-bold small">Repetí la contraseña nueva</label>
+                        <input type="password" id="passRepetir" class="form-control" minlength="6" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success px-4" onclick="guardarPassword()">Guardar</button>
+                </div>
+            </div>
         </div>
     </div>
 
