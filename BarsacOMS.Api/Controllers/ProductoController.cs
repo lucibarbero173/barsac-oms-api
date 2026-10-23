@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin,super")]
+    [Authorize(Roles = "admin,super,gestion")]
     [ApiController]
     [Route("api/[controller]")]
     public class ProductoController : ControllerBase
@@ -61,6 +61,7 @@ namespace BarsacOMS.Api.Controllers
             }
         }
 
+        [Authorize(Roles = "admin,super")] // gestion solo lee el catálogo (para armar pedidos)
         [HttpPost]
         public async Task<IActionResult> PostProducto([FromBody] GuardarProductoDTO dto)
         {
@@ -85,6 +86,7 @@ namespace BarsacOMS.Api.Controllers
             }
         }
 
+        [Authorize(Roles = "admin,super")] // gestion solo lee el catálogo (para armar pedidos)
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProducto(int id, [FromBody] GuardarProductoDTO dto)
         {
@@ -101,6 +103,7 @@ namespace BarsacOMS.Api.Controllers
             }
         }
 
+        [Authorize(Roles = "admin,super")] // gestion solo lee el catálogo (para armar pedidos)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProducto(int id)
         {

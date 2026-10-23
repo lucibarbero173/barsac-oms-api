@@ -45,7 +45,8 @@ const PAGINAS_POR_ROL = {
     control: ['control.html', 'perfil.html'],
     diseno: ['diseno.html', 'perfil.html'],
     corte: ['corte.html', 'confeccion.html', 'perfil.html'],
-    modista: ['misPrendas.html', 'perfil.html']
+    modista: ['misPrendas.html', 'perfil.html'],
+    gestion: ['pedidos.html', 'nuevoPedido.html', 'clientes.html', 'fichaProduccion.html', 'cobros.html', 'alertas.html', 'perfil.html']
 };
 
 const PAGINAS_BLOQUEADAS_POR_ROL = {

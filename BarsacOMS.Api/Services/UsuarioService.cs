@@ -9,7 +9,7 @@ namespace BarsacOMS.Api.Services
     {
         // Roles válidos hoy. Se amplía cuando se sumen los roles de las próximas fases (corte, preparacion).
         // "super" = acceso a todo (incluye Pagos y Conciliación, que "admin" no ve).
-        private static readonly string[] RolesValidos = { "super", "admin", "control", "diseno", "corte", "modista" };
+        private static readonly string[] RolesValidos = { "super", "admin", "gestion", "control", "diseno", "corte", "modista" };
 
         private readonly AppDbContext _context;
 

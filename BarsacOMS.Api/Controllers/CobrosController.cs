@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin,super")]
+    [Authorize(Roles = "admin,super,gestion")]
     [Route("api/[controller]")]
     [ApiController]
     public class CobrosController : ControllerBase

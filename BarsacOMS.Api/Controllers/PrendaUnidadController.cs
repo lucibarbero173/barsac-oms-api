@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarsacOMS.Api.Controllers
 {
-    [Authorize(Roles = "admin,super,control")]
+    [Authorize(Roles = "admin,super,control,gestion")]
     [Route("api/[controller]")]
     [ApiController]
     public class PrendaUnidadController : ControllerBase
@@ -24,6 +24,7 @@ namespace BarsacOMS.Api.Controllers
             return Ok(unidades);
         }
 
+        [Authorize(Roles = "admin,super,control")] // escanear es de Control, no de gestion
         [HttpPost("{id}/escanear")]
         public async Task<IActionResult> Escanear(int id)
         {
