@@ -59,6 +59,23 @@ namespace BarsacOMS.Api.DTOs
         public List<LineaAPagarDto> APagar { get; set; } = new();
         public List<PagoModistaDto> Pagos { get; set; } = new();
         public List<PrendaExtraDto> Extras { get; set; } = new();
+
+        // Resumen por ficha: cuánto le asignaron, cuánto cosió y cuándo terminó
+        public List<TrabajoModistaDto> Trabajos { get; set; } = new();
+    }
+
+    public class TrabajoModistaDto
+    {
+        public int FichaId { get; set; }
+        public int OrdenId { get; set; }
+        public string Cliente { get; set; } = string.Empty;
+        public DateTime? FechaEntrega { get; set; }
+        public int Asignadas { get; set; }
+        public int Cosidas { get; set; }
+        public DateTime? PrimeraCosida { get; set; }
+
+        // Día en que marcó la última prenda que tenía asignada en la ficha (null = en curso)
+        public DateTime? FechaTerminada { get; set; }
     }
 
     public class PendienteCoserDto

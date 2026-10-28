@@ -259,6 +259,7 @@ async function cargarDetalleModista(modistaId) {
         if (modistaSeleccionada !== modistaId) return;
 
         $('#detNotaPago').val('');
+        renderTrabajos(det.trabajos);
         renderExtras(det.extras);
         renderFaltaCoser(det.pendientes);
         renderAPagar(det.aPagar);
@@ -267,6 +268,41 @@ async function cargarDetalleModista(modistaId) {
         console.error(error);
         alert('No se pudo cargar el detalle de la modista.');
     }
+}
+
+function renderTrabajos(trabajos) {
+    const $body = $('#detTrabajosBody');
+    $body.empty();
+
+    if (!trabajos || trabajos.length === 0) {
+        $body.append('<tr><td colspan="7" class="text-center text-muted">Todavía no tiene pedidos asignados.</td></tr>');
+        return;
+    }
+
+    trabajos.forEach(t => {
+        const porcentaje = t.asignadas > 0 ? Math.round((t.cosidas / t.asignadas) * 100) : 0;
+        const termino = t.fechaTerminada
+            ? `<span class="badge badge-success"><i class="fas fa-check mr-1"></i>${formatearFecha(t.fechaTerminada)}</span>`
+            : '<span class="badge badge-warning">En curso</span>';
+
+        $body.append(`
+            <tr>
+                <td class="font-weight-bold">#${t.ordenId}</td>
+                <td>${t.fichaId}</td>
+                <td class="text-left">${escaparHtml(t.cliente)}</td>
+                <td>${formatearFecha(t.fechaEntrega)}</td>
+                <td>
+                    ${t.cosidas === 0
+                        ? `<span class="small text-muted">0 / ${t.asignadas}</span>`
+                        : `<div class="progress" style="height: 16px;">
+                               <div class="progress-bar ${t.fechaTerminada ? 'bg-success' : 'bg-info'}" style="width: ${porcentaje}%;">${t.cosidas} / ${t.asignadas}</div>
+                           </div>`}
+                </td>
+                <td>${formatearFecha(t.primeraCosida)}</td>
+                <td>${termino}</td>
+            </tr>
+        `);
+    });
 }
 
 const ESTADO_EXTRA = {

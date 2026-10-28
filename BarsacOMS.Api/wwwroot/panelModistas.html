@@ -268,6 +268,32 @@
 
                     <!-- VISTA DE UNA MODISTA -->
                     <div id="vistaModista" class="d-none">
+                        <!-- Resumen por pedido: cuánto cosió y cuándo terminó -->
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-check mr-1"></i> Pedidos que cosió</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm text-center align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Orden</th>
+                                                <th>Ficha</th>
+                                                <th class="text-left">Cliente</th>
+                                                <th>Entrega</th>
+                                                <th style="width: 22%;">Cosidas</th>
+                                                <th>Empezó</th>
+                                                <th>Terminó</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detTrabajosBody"></tbody>
+                                    </table>
+                                </div>
+                                <div class="small text-muted mt-2">"Terminó" es el día en que marcó la última prenda que tenía asignada en esa ficha.</div>
+                            </div>
+                        </div>
+
                         <!-- "Cosí de más" que cargó la modista: se aprueban antes de pagarse -->
                         <div class="card shadow mb-4 border-left-warning d-none" id="cardExtras">
                             <div class="card-header py-3">

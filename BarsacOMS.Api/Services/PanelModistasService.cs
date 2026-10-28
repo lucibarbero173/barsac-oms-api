@@ -232,6 +232,42 @@ namespace BarsacOMS.Api.Services
                 .OrderByDescending(p => p.Fecha)
                 .ToListAsync();
 
+            // Una fila por ficha donde tuvo prendas asignadas
+            var unidadesPorFicha = await (
+                from u in _context.PrendasUnidad
+                join d in _context.DetallesFichaProduccion on u.DetalleFichaProduccionId equals d.Id
+                join f in _context.FichasProduccion on d.FichaProduccionId equals f.Id
+                where u.ModistaId == modistaId
+                select new { FichaId = f.Id, f.OrdenId, Cliente = f.Orden.NombreCliente, f.Orden.FechaEntrega, u.Cosida, u.FechaCosida }
+            ).AsNoTracking().ToListAsync();
+
+            var trabajos = unidadesPorFicha
+                .GroupBy(x => new { x.FichaId, x.OrdenId, x.Cliente, x.FechaEntrega })
+                .Select(g =>
+                {
+                    var cosidas = g.Count(x => x.Cosida);
+                    var terminada = cosidas == g.Count();
+                    var primera = g.Where(x => x.Cosida).Min(x => x.FechaCosida);
+                    var ultima = g.Where(x => x.Cosida).Max(x => x.FechaCosida);
+                    return new TrabajoModistaDto
+                    {
+                        FichaId = g.Key.FichaId,
+                        OrdenId = g.Key.OrdenId,
+                        Cliente = g.Key.Cliente,
+                        FechaEntrega = g.Key.FechaEntrega,
+                        Asignadas = g.Count(),
+                        Cosidas = cosidas,
+                        PrimeraCosida = primera.HasValue ? ALocal(primera.Value) : null,
+                        FechaTerminada = terminada && ultima.HasValue ? ALocal(ultima.Value) : null
+                    };
+                })
+                // En curso primero (las más cercanas a entregar), después las terminadas más recientes
+                .OrderBy(t => t.FechaTerminada.HasValue)
+                .ThenBy(t => t.FechaTerminada.HasValue ? DateTime.MaxValue : (t.FechaEntrega ?? DateTime.MaxValue))
+                .ThenByDescending(t => t.FechaTerminada)
+                .Take(60)
+                .ToList();
+
             // "Cosí de más": todas las cargas (para revisar), las más nuevas primero
             var extras = await (
                 from e in _context.PrendasExtraModista
@@ -260,6 +296,7 @@ namespace BarsacOMS.Api.Services
                 Nombre = modista.Nombre,
                 Pendientes = renglones.OrderBy(r => r.FechaEntrega ?? DateTime.MaxValue).ThenBy(r => r.FichaId).ToList(),
                 APagar = aPagar.OrderBy(l => l.Precio == null).ThenBy(l => l.EsExtra).ThenBy(l => l.Producto).ToList(),
+                Trabajos = trabajos,
                 Extras = extras
                     .Where(x => x.Extra.PagoModistaId == null || x.Extra.FechaCarga >= DateTime.UtcNow.AddDays(-60))
                     .Select(x => MisPrendasService.AExtraDto(x.Extra, x.OrdenId, x.Cliente))
