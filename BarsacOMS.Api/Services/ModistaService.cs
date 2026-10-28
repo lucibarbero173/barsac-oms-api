@@ -117,6 +117,9 @@ namespace BarsacOMS.Api.Services
             }
 
             await _context.SaveChangesAsync();
+
+            // Lo que cosió sin tarifa y todavía no se le pagó toma la tarifa recién cargada
+            await PanelModistasService.CompletarPreciosFaltantesAsync(_context, modistaId);
             return true;
         }
     }

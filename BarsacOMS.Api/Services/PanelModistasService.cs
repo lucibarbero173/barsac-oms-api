@@ -39,6 +39,9 @@ namespace BarsacOMS.Api.Services
             var desdeUtc = AUtc(desdeLocal);
             var hastaUtc = AUtc(hastaLocal.AddDays(1)); // exclusivo: incluye todo el día "hasta"
 
+            // Si se cargaron tarifas que faltaban, que los totales ya las muestren
+            await CompletarPreciosFaltantesAsync(_context);
+
             var modistas = await _context.Modistas.AsNoTracking().OrderBy(m => m.Nombre).ToListAsync();
 
             var unidades = await _context.PrendasUnidad
@@ -134,10 +137,63 @@ namespace BarsacOMS.Api.Services
             };
         }
 
+        // Lo cosido (y los extras aprobados) que quedó sin precio porque no había tarifa: si ahora
+        // la hay, se completa con la tarifa vigente, para que el "a pagar" lo muestre antes de pagar.
+        // modistaId null = todas. Solo toca lo que todavía no se pagó.
+        public static async Task CompletarPreciosFaltantesAsync(AppDbContext context, int? modistaId = null)
+        {
+            var unidades = await (
+                from u in context.PrendasUnidad
+                join d in context.DetallesFichaProduccion on u.DetalleFichaProduccionId equals d.Id
+                where u.ModistaId != null && u.Cosida && u.PagoModistaId == null && u.PrecioCosido == null
+                      && (modistaId == null || u.ModistaId == modistaId)
+                select new { Unidad = u, d.Producto }
+            ).ToListAsync();
+
+            var extras = await context.PrendasExtraModista
+                .Where(e => e.Estado == EstadoPrendaExtra.Aprobada && e.PagoModistaId == null && e.PrecioUnitario == null
+                         && (modistaId == null || e.ModistaId == modistaId))
+                .ToListAsync();
+
+            if (unidades.Count == 0 && extras.Count == 0) return;
+
+            var modistasInvolucradas = unidades.Select(x => x.Unidad.ModistaId!.Value)
+                .Concat(extras.Select(e => e.ModistaId)).Distinct().ToList();
+
+            var tarifas = (await context.TarifasModista
+                .Where(t => modistasInvolucradas.Contains(t.ModistaId))
+                .Select(t => new { t.ModistaId, Nombre = t.Producto!.Nombre, t.Precio })
+                .ToListAsync())
+                .GroupBy(t => (t.ModistaId, t.Nombre.Trim().ToLower()))
+                .ToDictionary(g => g.Key, g => g.First().Precio);
+
+            var cambios = false;
+            foreach (var x in unidades)
+            {
+                if (tarifas.TryGetValue((x.Unidad.ModistaId!.Value, (x.Producto ?? string.Empty).Trim().ToLower()), out var precio))
+                {
+                    x.Unidad.PrecioCosido = precio;
+                    cambios = true;
+                }
+            }
+            foreach (var e in extras)
+            {
+                if (tarifas.TryGetValue((e.ModistaId, e.Producto.Trim().ToLower()), out var precio))
+                {
+                    e.PrecioUnitario = precio;
+                    cambios = true;
+                }
+            }
+
+            if (cambios) await context.SaveChangesAsync();
+        }
+
         public async Task<DetalleModistaPanelDto?> ObtenerDetalleAsync(int modistaId)
         {
             var modista = await _context.Modistas.AsNoTracking().FirstOrDefaultAsync(m => m.Id == modistaId);
             if (modista == null) return null;
+
+            await CompletarPreciosFaltantesAsync(_context, modistaId);
 
             var renglones = await (
                 from d in _context.DetallesFichaProduccion
