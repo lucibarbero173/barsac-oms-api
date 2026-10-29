@@ -22,6 +22,85 @@ namespace BarsacOMS.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("BarsacOMS.Api.Models.ChatLectura", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Canal")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("canal");
+
+                    b.Property<int>("UltimoMensajeLeidoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("ultimo_mensaje_leido_id");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId", "Canal")
+                        .IsUnique();
+
+                    b.ToTable("chat_lectura", (string)null);
+                });
+
+            modelBuilder.Entity("BarsacOMS.Api.Models.ChatMensaje", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Canal")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("canal");
+
+                    b.Property<string>("Estacion")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("estacion");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("fecha");
+
+                    b.Property<string>("NombreUsuario")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nombre_usuario");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("texto");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Canal", "Id");
+
+                    b.ToTable("chat_mensaje", (string)null);
+                });
+
             modelBuilder.Entity("BarsacOMS.Api.Models.Cliente", b =>
                 {
                     b.Property<int>("Id")

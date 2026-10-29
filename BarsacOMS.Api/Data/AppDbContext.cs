@@ -31,6 +31,8 @@ namespace BarsacOMS.Api.Data
         public DbSet<TarifaModista> TarifasModista { get; set; }
         public DbSet<PagoModista> PagosModista { get; set; }
         public DbSet<PrendaExtraModista> PrendasExtraModista { get; set; }
+        public DbSet<ChatMensaje> ChatMensajes { get; set; }
+        public DbSet<ChatLectura> ChatLecturas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -261,6 +263,36 @@ namespace BarsacOMS.Api.Data
                       .WithMany()
                       .HasForeignKey(e => e.OrdenId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // =====================
+            // CHAT INTERNO
+            // =====================
+            modelBuilder.Entity<ChatMensaje>(entity =>
+            {
+                entity.ToTable("chat_mensaje");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Canal).HasColumnName("canal").HasMaxLength(100);
+                entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+                entity.Property(e => e.NombreUsuario).HasColumnName("nombre_usuario").HasMaxLength(150);
+                entity.Property(e => e.Estacion).HasColumnName("estacion").HasMaxLength(50);
+                entity.Property(e => e.Texto).HasColumnName("texto").HasMaxLength(2000);
+                entity.Property(e => e.Fecha).HasColumnName("fecha");
+
+                entity.HasIndex(e => new { e.Canal, e.Id });
+            });
+
+            modelBuilder.Entity<ChatLectura>(entity =>
+            {
+                entity.ToTable("chat_lectura");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+                entity.Property(e => e.Canal).HasColumnName("canal").HasMaxLength(100);
+                entity.Property(e => e.UltimoMensajeLeidoId).HasColumnName("ultimo_mensaje_leido_id");
+
+                entity.HasIndex(e => new { e.UsuarioId, e.Canal }).IsUnique();
             });
 
             // =====================

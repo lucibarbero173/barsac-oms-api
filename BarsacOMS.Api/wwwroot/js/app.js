@@ -145,3 +145,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// Chat interno: la burbujita abajo a la derecha (se carga en todas las pantallas con sesión)
+(function () {
+    if (!localStorage.getItem('token')) return;
+    const s = document.createElement('script');
+    s.src = 'js/chat.js';
+    document.body.appendChild(s);
+})();
