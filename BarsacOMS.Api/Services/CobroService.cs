@@ -18,48 +18,151 @@ namespace BarsacOMS.Api.Services
         public async Task<List<Cobro>> ObtenerTodosAsync()
         {
             return await _context.Cobros
+                .Include(c => c.Asignaciones)
                 .OrderByDescending(c => c.FechaCobro)
                 .ToListAsync();
         }
 
         public async Task<Cobro?> ObtenerPorIdAsync(int id)
         {
-            return await _context.Cobros.FindAsync(id);
+            return await _context.Cobros
+                .Include(c => c.Asignaciones)
+                .FirstOrDefaultAsync(c => c.Id == id);
+        }
+
+        // Si el cobro se reparte entre pedidos: montos positivos, sin pedidos repetidos, pedidos
+        // que existan y que la suma dé exactamente el importe total. Null = está todo bien.
+        public async Task<string?> ValidarAsignacionesAsync(Cobro cobro)
+        {
+            var asignaciones = cobro.Asignaciones ?? new List<CobroAsignacion>();
+            if (asignaciones.Count == 0) return null;
+
+            if (asignaciones.Any(a => a.Importe <= 0))
+                return "Cada pedido del reparto tiene que tener un monto mayor a cero.";
+
+            if (asignaciones.GroupBy(a => a.OrdenId).Any(g => g.Count() > 1))
+                return "Hay un pedido repetido en el reparto.";
+
+            var ids = asignaciones.Select(a => a.OrdenId).ToList();
+            var existentes = await _context.Ordenes.Where(o => ids.Contains(o.Id)).Select(o => o.Id).ToListAsync();
+            var faltante = ids.FirstOrDefault(id => !existentes.Contains(id));
+            if (faltante != 0) return $"El pedido #{faltante} no existe.";
+
+            var suma = Math.Round(asignaciones.Sum(a => a.Importe), 2);
+            if (suma != Math.Round(cobro.Importe, 2))
+                return $"El reparto suma ${suma:N2} y el cobro es de ${cobro.Importe:N2}. Tienen que coincidir.";
+
+            return null;
         }
 
         public async Task<Cobro> CrearCobroAsync(Cobro cobro)
         {
+            NormalizarReparto(cobro);
+
             _context.Cobros.Add(cobro);
             await _context.SaveChangesAsync();
 
-            // Sumamos ESTE cobro a la orden (si está asociada), sin tocar nada más.
-            if (cobro.OrdenId.HasValue)
-            {
-                await AplicarDeltaAOrdenAsync(cobro.OrdenId.Value, cobro.Concepto, cobro.Importe);
-            }
+            // Sumamos ESTE cobro a su(s) pedido(s), sin tocar nada más.
+            await AplicarEfectoAsync(cobro.OrdenId, cobro.Asignaciones, cobro.Concepto, cobro.Importe, signo: 1);
 
             return cobro;
         }
 
         public async Task<bool> EliminarCobroAsync(int id)
         {
-            var cobro = await _context.Cobros.FindAsync(id);
+            var cobro = await ObtenerPorIdAsync(id);
             if (cobro == null) return false;
 
-            int? ordenId = cobro.OrdenId;
+            var ordenId = cobro.OrdenId;
+            var asignaciones = cobro.Asignaciones.Select(a => new CobroAsignacion { OrdenId = a.OrdenId, Importe = a.Importe }).ToList();
             var concepto = cobro.Concepto;
             var importe = cobro.Importe;
 
-            _context.Cobros.Remove(cobro);
+            _context.Cobros.Remove(cobro); // la cascada se lleva sus asignaciones
             await _context.SaveChangesAsync();
 
-            // Restamos ESTE cobro de la orden, sin tocar el resto.
-            if (ordenId.HasValue)
-            {
-                await AplicarDeltaAOrdenAsync(ordenId.Value, concepto, -importe);
-            }
+            // Restamos ESTE cobro de su(s) pedido(s), sin tocar el resto.
+            await AplicarEfectoAsync(ordenId, asignaciones, concepto, importe, signo: -1);
 
             return true;
+        }
+
+        public async Task<bool> ActualizarCobroAsync(int id, Cobro cobro)
+        {
+            var cobroExistente = await ObtenerPorIdAsync(id);
+            if (cobroExistente == null) return false;
+
+            // Foto de cómo estaba, para deshacer su efecto en los pedidos
+            var ordenIdAnterior = cobroExistente.OrdenId;
+            var asignacionesAnteriores = cobroExistente.Asignaciones
+                .Select(a => new CobroAsignacion { OrdenId = a.OrdenId, Importe = a.Importe }).ToList();
+            var conceptoAnterior = cobroExistente.Concepto;
+            var importeAnterior = cobroExistente.Importe;
+
+            NormalizarReparto(cobro);
+
+            // Actualizamos los datos
+            cobroExistente.OrdenId = cobro.OrdenId;
+            cobroExistente.FechaCobro = cobro.FechaCobro;
+            cobroExistente.ClienteId = cobro.ClienteId;
+            cobroExistente.NombreCliente = cobro.NombreCliente;
+            cobroExistente.NombreOrdenante = cobro.NombreOrdenante;
+            cobroExistente.Concepto = cobro.Concepto;
+            cobroExistente.MedioCobro = cobro.MedioCobro;
+            cobroExistente.Importe = cobro.Importe;
+
+            _context.RemoveRange(cobroExistente.Asignaciones);
+            cobroExistente.Asignaciones = cobro.Asignaciones
+                .Select(a => new CobroAsignacion { OrdenId = a.OrdenId, Importe = a.Importe }).ToList();
+
+            await _context.SaveChangesAsync();
+
+            // Deshacemos el efecto viejo en los pedidos de origen...
+            await AplicarEfectoAsync(ordenIdAnterior, asignacionesAnteriores, conceptoAnterior, importeAnterior, signo: -1);
+
+            // ...y aplicamos el nuevo (pueden ser los mismos pedidos).
+            await AplicarEfectoAsync(cobroExistente.OrdenId, cobroExistente.Asignaciones, cobroExistente.Concepto, cobroExistente.Importe, signo: 1);
+
+            return true;
+        }
+
+        // Un reparto de un solo pedido es lo mismo que un cobro común: se guarda en OrdenId.
+        // Con 2 o más pedidos, OrdenId queda en null y manda el reparto.
+        private static void NormalizarReparto(Cobro cobro)
+        {
+            cobro.Asignaciones ??= new List<CobroAsignacion>();
+
+            if (cobro.Asignaciones.Count == 1)
+            {
+                cobro.OrdenId = cobro.Asignaciones[0].OrdenId;
+                cobro.Asignaciones = new List<CobroAsignacion>();
+            }
+            else if (cobro.Asignaciones.Count > 1)
+            {
+                cobro.OrdenId = null;
+                foreach (var a in cobro.Asignaciones)
+                {
+                    a.Id = 0;
+                    a.CobroId = 0;
+                }
+            }
+        }
+
+        // Suma (signo 1) o resta (signo -1) el cobro en cada pedido que le corresponde
+        private async Task AplicarEfectoAsync(int? ordenId, IEnumerable<CobroAsignacion> asignaciones, string? concepto, decimal importe, int signo)
+        {
+            var lista = asignaciones.ToList();
+            if (lista.Count > 0)
+            {
+                foreach (var a in lista)
+                {
+                    await AplicarDeltaAOrdenAsync(a.OrdenId, concepto, signo * a.Importe);
+                }
+            }
+            else if (ordenId.HasValue)
+            {
+                await AplicarDeltaAOrdenAsync(ordenId.Value, concepto, signo * importe);
+            }
         }
 
         // Suma (o resta, si delta es negativo) un importe puntual al campo que corresponda
@@ -88,42 +191,6 @@ namespace BarsacOMS.Api.Services
 
             orden.Saldo = orden.ImporteTotal - (orden.Senas ?? 0m) - (orden.OtrosCobros ?? 0m);
             await _context.SaveChangesAsync();
-        }
-
-        public async Task<bool> ActualizarCobroAsync(int id, Cobro cobro)
-        {
-            var cobroExistente = await _context.Cobros.FindAsync(id);
-            if (cobroExistente == null) return false;
-
-            int? ordenIdAnterior = cobroExistente.OrdenId;
-            var conceptoAnterior = cobroExistente.Concepto;
-            var importeAnterior = cobroExistente.Importe;
-
-            // Actualizamos los datos
-            cobroExistente.OrdenId = cobro.OrdenId;
-            cobroExistente.FechaCobro = cobro.FechaCobro;
-            cobroExistente.ClienteId = cobro.ClienteId;
-            cobroExistente.NombreCliente = cobro.NombreCliente;
-            cobroExistente.NombreOrdenante = cobro.NombreOrdenante;
-            cobroExistente.Concepto = cobro.Concepto;
-            cobroExistente.MedioCobro = cobro.MedioCobro;
-            cobroExistente.Importe = cobro.Importe;
-
-            await _context.SaveChangesAsync();
-
-            // Deshacemos el efecto viejo en la orden de origen...
-            if (ordenIdAnterior.HasValue)
-            {
-                await AplicarDeltaAOrdenAsync(ordenIdAnterior.Value, conceptoAnterior, -importeAnterior);
-            }
-
-            // ...y aplicamos el nuevo en la orden de destino (puede ser la misma).
-            if (cobroExistente.OrdenId.HasValue)
-            {
-                await AplicarDeltaAOrdenAsync(cobroExistente.OrdenId.Value, cobroExistente.Concepto, cobroExistente.Importe);
-            }
-
-            return true;
         }
     }
 }

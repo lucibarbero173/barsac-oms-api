@@ -10,5 +10,6 @@ namespace BarsacOMS.Api.Services
 
         Task<bool> ActualizarCobroAsync(int id, Cobro cobro);
         Task<bool> EliminarCobroAsync(int id);
+        Task<string?> ValidarAsignacionesAsync(Cobro cobro);
     }
 }

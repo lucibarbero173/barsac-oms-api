@@ -235,18 +235,13 @@
                         <input type="hidden" id="inputCobroId" value="0">
 
                         <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label class="font-weight-bold">Número Pedido</label>
-                                <input type="number" id="inputPedidoId" class="form-control" placeholder="Ej: 1372" onchange="buscarDatosPedido()" onkeyup="buscarDatosPedido()">
-                                <small id="pedidoHelp" class="form-text text-muted">Ingresa el ID para cargar cliente automáticamente.</small>
-                            </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-6">
                                 <label class="font-weight-bold">Fecha Cobro</label>
                                 <input type="date" id="inputFecha" class="form-control" required>
                             </div>
-                            <div class="form-group col-md-4">
-                                <label class="font-weight-bold">Importe ($)</label>
-                                <input type="number" step="0.01" id="inputImporte" class="form-control" placeholder="0.00" required>
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">Importe total ($)</label>
+                                <input type="number" step="0.01" id="inputImporte" class="form-control" placeholder="Lo que entró, ej: 1000000" required>
                             </div>
                         </div>
 
@@ -258,6 +253,40 @@
                             <div class="form-group col-md-8">
                                 <label class="font-weight-bold">Nombre Cliente</label>
                                 <input type="text" id="inputNombreCliente" class="form-control" placeholder="Nombre del cliente" required>
+                            </div>
+                        </div>
+
+                        <!-- Pedidos a los que corresponde el cobro (uno o varios) -->
+                        <div class="card mb-3">
+                            <div class="card-header py-2 d-flex justify-content-between align-items-center flex-wrap">
+                                <span class="font-weight-bold">Pedidos que paga este cobro</span>
+                                <span>
+                                    <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="traerPedidosConSaldo()" title="Usa el Número Cliente">
+                                        <i class="fas fa-search-dollar mr-1"></i> Traer pedidos con saldo del cliente
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success btn-sm mb-1" onclick="repartirAutomatico()">
+                                        <i class="fas fa-random mr-1"></i> Repartir automáticamente
+                                    </button>
+                                </span>
+                            </div>
+                            <div class="card-body py-2">
+                                <table class="table table-sm mb-2">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 28%;">N° Pedido</th>
+                                            <th>Saldo del pedido</th>
+                                            <th style="width: 32%;">Monto de este cobro</th>
+                                            <th style="width: 40px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="repartoBody"></tbody>
+                                </table>
+                                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                    <button type="button" class="btn btn-link btn-sm p-0" onclick="agregarFilaReparto()">
+                                        <i class="fas fa-plus mr-1"></i> Agregar pedido
+                                    </button>
+                                    <span id="repartoEstado" class="small font-weight-bold"></span>
+                                </div>
                             </div>
                         </div>
 

@@ -40,6 +40,9 @@ namespace BarsacOMS.Api.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            var error = await _cobroService.ValidarAsignacionesAsync(cobro);
+            if (error != null) return BadRequest(error);
+
             var nuevoCobro = await _cobroService.CrearCobroAsync(cobro);
             return CreatedAtAction(nameof(GetById), new { id = nuevoCobro.Id }, nuevoCobro);
         }
@@ -48,6 +51,9 @@ namespace BarsacOMS.Api.Controllers
         public async Task<IActionResult> ActualizarCobro(int id, [FromBody] Cobro cobro)
         {
             if (id != cobro.Id) return BadRequest("El ID del cobro no coincide");
+
+            var error = await _cobroService.ValidarAsignacionesAsync(cobro);
+            if (error != null) return BadRequest(error);
 
             var actualizado = await _cobroService.ActualizarCobroAsync(id, cobro);
             if (!actualizado) return NotFound();

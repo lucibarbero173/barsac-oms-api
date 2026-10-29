@@ -241,6 +241,26 @@ namespace BarsacOMS.Api.Data
                       .WithMany()
                       .HasForeignKey(c => c.OrdenId)
                       .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasMany(c => c.Asignaciones)
+                      .WithOne()
+                      .HasForeignKey(a => a.CobroId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<CobroAsignacion>(entity =>
+            {
+                entity.ToTable("cobro_asignacion");
+
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.CobroId).HasColumnName("cobro_id");
+                entity.Property(e => e.OrdenId).HasColumnName("orden_id");
+                entity.Property(e => e.Importe).HasColumnName("importe").HasPrecision(18, 2);
+
+                entity.HasOne<OrdenTrabajo>()
+                      .WithMany()
+                      .HasForeignKey(e => e.OrdenId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // =====================
