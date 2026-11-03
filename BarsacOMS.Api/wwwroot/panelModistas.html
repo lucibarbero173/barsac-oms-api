@@ -373,11 +373,21 @@
                                         </div>
                                         <div class="alert alert-warning py-2 d-none" id="detAvisoSinTarifa"></div>
                                         <div class="form-row align-items-end">
-                                            <div class="col-md-7 mb-2">
-                                                <label for="detNotaPago" class="small font-weight-bold mb-1">Nota del pago (opcional)</label>
-                                                <input type="text" id="detNotaPago" class="form-control form-control-sm" placeholder="Ej: transferencia, efectivo...">
+                                            <div class="col-md-3 mb-2">
+                                                <label for="detMedioPago" class="small font-weight-bold mb-1">Medio de pago</label>
+                                                <select id="detMedioPago" class="form-control form-control-sm">
+                                                    <option value="EFECTIVO">EFECTIVO</option>
+                                                    <option value="ICBC">ICBC</option>
+                                                    <option value="MERCADO PAGO">MERCADO PAGO</option>
+                                                    <option value="UALA">UALA</option>
+                                                    <option value="CHEQUE">CHEQUE</option>
+                                                </select>
                                             </div>
                                             <div class="col-md-5 mb-2">
+                                                <label for="detNotaPago" class="small font-weight-bold mb-1">Nota del pago (opcional)</label>
+                                                <input type="text" id="detNotaPago" class="form-control form-control-sm" placeholder="Ej: semana del 27/10">
+                                            </div>
+                                            <div class="col-md-4 mb-2">
                                                 <button class="btn btn-success btn-block" id="btnRegistrarPago" onclick="registrarPago()">
                                                     <i class="fas fa-money-bill-wave mr-1"></i> Registrar pago
                                                 </button>

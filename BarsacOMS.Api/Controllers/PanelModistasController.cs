@@ -37,7 +37,7 @@ namespace BarsacOMS.Api.Controllers
         [HttpPost("modista/{id}/pagos")]
         public async Task<IActionResult> RegistrarPago(int id, [FromBody] RegistrarPagoModistaDto dto)
         {
-            var (resultado, error) = await _panelService.RegistrarPagoAsync(id, dto.Nota);
+            var (resultado, error) = await _panelService.RegistrarPagoAsync(id, dto.Nota, dto.MedioPago);
             if (resultado == null) return BadRequest(error);
             return Ok(resultado);
         }

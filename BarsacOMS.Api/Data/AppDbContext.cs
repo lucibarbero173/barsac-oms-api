@@ -508,11 +508,17 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.Importe).HasColumnName("importe").HasPrecision(18, 2);
                 entity.Property(e => e.CantidadPrendas).HasColumnName("cantidad_prendas");
                 entity.Property(e => e.Nota).HasColumnName("nota");
+                entity.Property(e => e.PagoId).HasColumnName("pago_id");
 
                 entity.HasOne<Modista>()
                       .WithMany()
                       .HasForeignKey(e => e.ModistaId)
                       .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<Pago>()
+                      .WithMany()
+                      .HasForeignKey(e => e.PagoId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<PrendaExtraModista>(entity =>

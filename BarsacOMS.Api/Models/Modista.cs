@@ -26,6 +26,10 @@ namespace BarsacOMS.Api.Models
         public decimal Importe { get; set; }
         public int CantidadPrendas { get; set; }
         public string? Nota { get; set; }
+
+        // El pago que se generó en la pantalla Pagos (concepto "Modistas"), así no se pierde
+        // de los egresos. Null en los pagos registrados antes de que existiera este vínculo.
+        public int? PagoId { get; set; }
     }
 
     public enum EstadoPrendaExtra

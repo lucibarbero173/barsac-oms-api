@@ -114,6 +114,9 @@ namespace BarsacOMS.Api.DTOs
     public class RegistrarPagoModistaDto
     {
         public string? Nota { get; set; }
+
+        // Con qué se le pagó (mismos medios que la pantalla Pagos)
+        public string? MedioPago { get; set; }
     }
 
     public class ResultadoPagoModistaDto

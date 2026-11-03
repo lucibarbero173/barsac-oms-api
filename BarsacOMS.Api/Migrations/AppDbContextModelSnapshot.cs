@@ -827,9 +827,15 @@ namespace BarsacOMS.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("nota");
 
+                    b.Property<int?>("PagoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("pago_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ModistaId");
+
+                    b.HasIndex("PagoId");
 
                     b.ToTable("pago_modista", (string)null);
                 });
@@ -1313,6 +1319,11 @@ namespace BarsacOMS.Api.Migrations
                         .HasForeignKey("ModistaId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("BarsacOMS.Api.Models.Pago", null)
+                        .WithMany()
+                        .HasForeignKey("PagoId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("BarsacOMS.Api.Models.PrecioProducto", b =>

@@ -20,6 +20,9 @@ namespace BarsacOMS.Api.Services
         }
 
         private static DateTime ALocal(DateTime utc) => utc + OffsetArgentina;
+
+        // Los mismos medios que ofrece la pantalla Pagos
+        private static readonly string[] MediosDePago = { "EFECTIVO", "ICBC", "MERCADO PAGO", "UALA", "CHEQUE" };
         private static DateTime AUtc(DateTime local) => local - OffsetArgentina;
 
         private static DateTime LunesDe(DateTime fecha)
@@ -314,9 +317,13 @@ namespace BarsacOMS.Api.Services
 
         // Liquida TODO lo cosido y no pagado. Las prendas que se cosieron sin tarifa toman la
         // tarifa vigente hoy; si sigue sin haber tarifa quedan afuera (y se avisa).
-        public async Task<(ResultadoPagoModistaDto? Resultado, string? Error)> RegistrarPagoAsync(int modistaId, string? nota)
+        public async Task<(ResultadoPagoModistaDto? Resultado, string? Error)> RegistrarPagoAsync(int modistaId, string? nota, string? medioPago)
         {
-            if (!await _context.Modistas.AnyAsync(m => m.Id == modistaId)) return (null, "Modista no encontrada.");
+            var modista = await _context.Modistas.FindAsync(modistaId);
+            if (modista == null) return (null, "Modista no encontrada.");
+
+            var medio = string.IsNullOrWhiteSpace(medioPago) ? "EFECTIVO" : medioPago.Trim().ToUpper();
+            if (!MediosDePago.Contains(medio)) return (null, "Medio de pago inválido.");
 
             var pendientes = await (
                 from u in _context.PrendasUnidad
@@ -372,6 +379,22 @@ namespace BarsacOMS.Api.Services
 
             await using var transaccion = await _context.Database.BeginTransactionAsync();
 
+            // El mismo pago queda también en la pantalla Pagos (egresos), con concepto "Modistas"
+            var hoy = ALocal(DateTime.UtcNow).Date;
+            var pagoGeneral = new Pago
+            {
+                FechaFactura = hoy,
+                FechaPago = hoy,
+                Proveedor = modista.Nombre,
+                Concepto = "Modistas",
+                MedioPago = medio,
+                Importe = pago.Importe,
+                Estado = EstadoPago.PAGADO
+            };
+            _context.Pagos.Add(pagoGeneral);
+            await _context.SaveChangesAsync();
+            pago.PagoId = pagoGeneral.Id;
+
             _context.PagosModista.Add(pago);
             await _context.SaveChangesAsync();
 
@@ -400,6 +423,13 @@ namespace BarsacOMS.Api.Services
 
             var extras = await _context.PrendasExtraModista.Where(e => e.PagoModistaId == pagoId).ToListAsync();
             extras.ForEach(e => e.PagoModistaId = null);
+
+            // También sale de la pantalla Pagos, si todavía está ahí
+            if (pago.PagoId != null)
+            {
+                var pagoGeneral = await _context.Pagos.FindAsync(pago.PagoId.Value);
+                if (pagoGeneral != null) _context.Pagos.Remove(pagoGeneral);
+            }
 
             _context.PagosModista.Remove(pago);
             await _context.SaveChangesAsync();

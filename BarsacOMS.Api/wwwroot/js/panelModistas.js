@@ -543,13 +543,14 @@ async function registrarPago() {
     if (modistaSeleccionada === null) return;
 
     const total = $('#detAPagarTotal').text();
-    if (!confirm(`¿Registrar el pago de ${total} a ${$('#tituloVista').text()}?\n\nSe liquida todo lo cosido pendiente de pago.`)) return;
+    const medio = $('#detMedioPago').val();
+    if (!confirm(`¿Registrar el pago de ${total} a ${$('#tituloVista').text()} (${medio})?\n\nSe liquida todo lo cosido pendiente de pago y queda cargado también en Pagos.`)) return;
 
     try {
         const res = await fetch(`${API_PANEL}/modista/${modistaSeleccionada}/pagos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nota: $('#detNotaPago').val() })
+            body: JSON.stringify({ nota: $('#detNotaPago').val(), medioPago: medio })
         });
 
         if (!res.ok) {
@@ -572,7 +573,7 @@ async function registrarPago() {
 }
 
 async function anularPago(pagoId) {
-    if (!confirm('¿Anular este pago? Sus prendas vuelven a quedar como "a pagar".')) return;
+    if (!confirm('¿Anular este pago? Sus prendas vuelven a quedar como "a pagar" y se borra también de Pagos.')) return;
 
     try {
         const res = await fetch(`${API_PANEL}/pagos/${pagoId}`, { method: 'DELETE' });
