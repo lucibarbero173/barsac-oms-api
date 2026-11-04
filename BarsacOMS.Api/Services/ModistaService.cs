@@ -68,11 +68,10 @@ namespace BarsacOMS.Api.Services
 
             var productos = await _context.Productos
                 .AsNoTracking()
-                .OrderBy(p => p.Nombre)
                 .Select(p => new { p.Id, p.Nombre })
                 .ToListAsync();
 
-            return productos.Select(p => new TarifaModistaDTO
+            return productos.OrderBy(p => p.Nombre.Trim(), StringComparer.InvariantCultureIgnoreCase).Select(p => new TarifaModistaDTO
             {
                 ProductoId = p.Id,
                 ProductoNombre = p.Nombre,

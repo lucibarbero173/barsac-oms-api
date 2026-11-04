@@ -16,7 +16,9 @@ namespace BarsacOMS.Api.Services
 
         public async Task<List<CostoProductoDto>> ObtenerTodosLosCostosAsync()
         {
-            var productos = await _context.Productos.OrderBy(p => p.Nombre).ToListAsync();
+            var productos = (await _context.Productos.ToListAsync())
+                .OrderBy(p => p.Nombre.Trim(), StringComparer.InvariantCultureIgnoreCase)
+                .ToList();
             var costos = await _context.CostosProducto
                 .Include(c => c.MateriaPrimaTela)
                 .ToDictionaryAsync(c => c.ProductoId);

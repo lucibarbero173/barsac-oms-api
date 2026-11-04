@@ -67,9 +67,9 @@ async function cargarClientesSelect() {
 
         // 1. Ordenar alfabéticamente por el nombre del cliente
         clientes.sort((a, b) => {
-            const nombreA = (a.nombre || "").toLowerCase();
-            const nombreB = (b.nombre || "").toLowerCase();
-            return nombreA.localeCompare(nombreB);
+            const nombreA = (a.nombre || "").trim();
+            const nombreB = (b.nombre || "").trim();
+            return nombreA.localeCompare(nombreB, "es", { sensitivity: "base" });
         });
 
         const select = document.getElementById("clienteSelect");
@@ -77,9 +77,10 @@ async function cargarClientesSelect() {
 
         select.innerHTML = '<option value="">Seleccione Cliente</option>';
 
-        // 2. Agregar cada cliente mostrando su número al lado
+        // 2. Agregar cada cliente con el nombre primero: al tocar una letra, el navegador salta
+        //    a la primera opción que EMPIEZA con esa letra (con "#12 - Nombre" no encontraba nada)
         clientes.forEach(c => {
-            select.innerHTML += `<option value="${c.id}">#${c.id} - ${c.nombre}</option>`;
+            select.innerHTML += `<option value="${c.id}">${(c.nombre || "").trim()} (#${c.id})</option>`;
         });
     } catch (e) {
         console.error("Error al cargar clientes:", e);

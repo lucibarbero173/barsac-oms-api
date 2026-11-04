@@ -23,7 +23,9 @@ namespace BarsacOMS.Api.Services
                 .Include(p => p.Precios)
                 .ToListAsync();
 
-            return productos.Select(MapearAProductoListDTO);
+            return productos
+                .OrderBy(p => p.Nombre.Trim(), StringComparer.InvariantCultureIgnoreCase)
+                .Select(MapearAProductoListDTO);
         }
 
         public async Task<ProductoListDTO?> ObtenerProductoPorIdAsync(int id)
