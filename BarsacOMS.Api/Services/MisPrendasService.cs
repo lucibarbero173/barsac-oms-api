@@ -57,7 +57,11 @@ namespace BarsacOMS.Api.Services
                             i.Detalle,
                             Asignadas = i.Unidades.Count(u => u.ModistaId == modistaId),
                             Cosidas = i.Unidades.Count(u => u.ModistaId == modistaId && u.Cosida),
-                            UltimaCosida = i.Unidades.Where(u => u.ModistaId == modistaId).Max(u => u.FechaCosida)
+                            UltimaCosida = i.Unidades.Where(u => u.ModistaId == modistaId).Max(u => u.FechaCosida),
+                            Faltantes = i.Unidades
+                                .Where(u => u.ModistaId == modistaId && u.CorteEstado == EstadoCorte.Faltante && !u.Cosida)
+                                .Select(u => new { u.CorteParteFaltante, u.CorteDetalleFaltante })
+                                .ToList()
                         })
                         .ToList()
                 })
@@ -90,7 +94,8 @@ namespace BarsacOMS.Api.Services
                     Nombre = r.Nombre,
                     Detalle = r.Detalle,
                     Asignadas = r.Asignadas,
-                    Cosidas = r.Cosidas
+                    Cosidas = r.Cosidas,
+                    Faltantes = ConfeccionService.AgruparFaltantes(r.Faltantes.Select(x => (x.CorteParteFaltante, x.CorteDetalleFaltante)))
                 }).ToList(),
                 Extras = extras[f.Id].Select(e => AExtraDto(e, f.OrdenId, f.Cliente)).ToList()
             });
@@ -122,6 +127,11 @@ namespace BarsacOMS.Api.Services
             if (cosidas < 0 || cosidas > mias.Count)
                 return (false, $"Tenés {mias.Count} prendas asignadas en este renglón.");
 
+            // Una prenda con faltante no se puede coser hasta que Corte la saque
+            var conFaltante = mias.Count(u => u.CorteEstado == EstadoCorte.Faltante && !u.Cosida);
+            if (cosidas > mias.Count - conFaltante)
+                return (false, $"{conFaltante} de estas prendas tienen faltante. Se pueden marcar cuando Corte las saque.");
+
             var yaCosidas = mias.Count(u => u.Cosida);
 
             if (cosidas > yaCosidas)
@@ -129,7 +139,7 @@ namespace BarsacOMS.Api.Services
                 var precio = await TarifaAsync(modistaId, detalle.Producto);
                 var ahora = DateTime.UtcNow;
 
-                foreach (var u in mias.Where(u => !u.Cosida).Take(cosidas - yaCosidas))
+                foreach (var u in mias.Where(u => !u.Cosida && u.CorteEstado != EstadoCorte.Faltante).Take(cosidas - yaCosidas))
                 {
                     u.Cosida = true;
                     u.FechaCosida = ahora;

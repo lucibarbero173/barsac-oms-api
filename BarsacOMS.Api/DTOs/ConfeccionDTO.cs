@@ -1,5 +1,15 @@
+using BarsacOMS.Api.Models;
+
 namespace BarsacOMS.Api.DTOs
 {
+    // Lo que Corte todavía tiene que sacar de un renglón (ej. Frente × 2)
+    public class FaltanteRenglonDto
+    {
+        public ParteFaltante? Parte { get; set; }
+        public string? Detalle { get; set; }
+        public int Cantidad { get; set; }
+    }
+
     public class ModistaConfeccionDto
     {
         public int Id { get; set; }
@@ -17,6 +27,7 @@ namespace BarsacOMS.Api.DTOs
         public int Total { get; set; }
         public int Asignadas { get; set; }
         public int Cosidas { get; set; }
+        public int Faltantes { get; set; }
         public string Modistas { get; set; } = string.Empty;
 
         // Solo en "recién asignadas": cuándo se asignó la última prenda.
@@ -42,6 +53,7 @@ namespace BarsacOMS.Api.DTOs
         public string? Nombre { get; set; }
         public string? Detalle { get; set; }
         public int Cantidad { get; set; }
+        public List<FaltanteRenglonDto> Faltantes { get; set; } = new();
         public List<AsignacionModistaDto> Asignaciones { get; set; } = new();
     }
 

@@ -5,6 +5,24 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarTerminadas();
 });
 
+// Mismo catálogo de partes que usan Corte y Estadísticas
+const PARTES_FALTANTE = {
+    0: 'Frente', 1: 'Espalda', 2: 'Manga', 3: 'Cuello/Puño', 4: 'Completa',
+    5: 'Frente Derecho', 6: 'Frente Izquierdo', 7: 'Cuello/Tapita', 8: 'Capucha',
+    9: 'Culo Derecho', 10: 'Culo Izquierdo', 11: 'Lado Derecho', 12: 'Lado Izquierdo',
+    13: 'Short Derecho', 14: 'Short Izquierdo'
+};
+
+function textoFaltantes(faltantes) {
+    return (faltantes || []).map(f =>
+        `${PARTES_FALTANTE[f.parte] || 'Faltante'} × ${f.cantidad}${f.detalle ? ` (${f.detalle})` : ''}`
+    ).join(', ');
+}
+
+function cantidadFaltantes(faltantes) {
+    return (faltantes || []).reduce((suma, f) => suma + f.cantidad, 0);
+}
+
 function escaparHtml(texto) {
     return $('<div>').text(texto ?? '').html();
 }
@@ -193,12 +211,17 @@ function htmlRenglon(r, terminada) {
     const datos = [r.talle ? `Talle ${escaparHtml(r.talle)}` : null, escaparHtml(nombreNumero), escaparHtml(r.detalle)]
         .filter(Boolean).join(' · ');
     const completo = r.cosidas === r.asignadas;
+    const conFaltante = cantidadFaltantes(r.faltantes);
+    const avisoFaltante = conFaltante > 0
+        ? `<div class="aviso-faltante"><i class="fas fa-exclamation-triangle mr-1"></i>Falta que Corte saque: ${escaparHtml(textoFaltantes(r.faltantes))}</div>`
+        : '';
 
     // En "Terminadas" se puede corregir igual, por si se marcó de más por error
     return `
-        <div class="renglon ${completo ? 'completo' : ''}" data-detalle-id="${r.detalleId}" data-asignadas="${r.asignadas}" data-cosidas="${r.cosidas}">
+        <div class="renglon ${completo ? 'completo' : ''}" data-detalle-id="${r.detalleId}" data-asignadas="${r.asignadas}" data-cosidas="${r.cosidas}" data-maximo="${r.asignadas - conFaltante}">
             <div class="renglon-titulo font-weight-bold">${escaparHtml(r.producto)}</div>
             <div class="small text-muted mb-2">${datos || '&nbsp;'}</div>
+            ${avisoFaltante}
             <div class="contador">
                 <button class="btn btn-outline-light" onclick="cambiarCosidas(this, -1)" title="Una menos"><i class="fas fa-minus"></i></button>
                 <div class="valor"><span class="valor-cosidas">${r.cosidas}</span> / ${r.asignadas}</div>
@@ -212,6 +235,11 @@ function htmlRenglon(r, terminada) {
 async function guardarCosidas($renglon, cosidas) {
     const asignadas = parseInt($renglon.data('asignadas'));
     if (cosidas < 0 || cosidas > asignadas) return;
+
+    if (cosidas > parseInt($renglon.data('maximo'))) {
+        alert('Las prendas que quedan tienen faltante. Vas a poder marcarlas cuando Corte las saque.');
+        return;
+    }
 
     $renglon.find('button').prop('disabled', true);
     try {
@@ -249,7 +277,7 @@ function cambiarCosidas(boton, delta) {
 
 function marcarTodas(boton) {
     const $renglon = $(boton).closest('.renglon');
-    guardarCosidas($renglon, parseInt($renglon.data('asignadas')));
+    guardarCosidas($renglon, parseInt($renglon.data('maximo')));
 }
 
 // =====================================================
@@ -336,7 +364,7 @@ async function imprimirPlanilla(fichaId) {
                 <td class="izq">${escaparHtml(r.producto)}</td>
                 <td>${escaparHtml(r.talle) || ''}</td>
                 <td>${escaparHtml(nombreNumero)}</td>
-                <td>${escaparHtml(r.detalle) || ''}</td>
+                <td>${escaparHtml(r.detalle) || ''}${cantidadFaltantes(r.faltantes) > 0 ? `<br><strong>Falta: ${escaparHtml(textoFaltantes(r.faltantes))}</strong>` : ''}</td>
                 <td class="grande">${r.asignadas}</td>
                 <td></td>
                 <td></td>

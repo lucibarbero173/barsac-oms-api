@@ -49,6 +49,9 @@ namespace BarsacOMS.Api.DTOs
         public string? Detalle { get; set; }
         public int Asignadas { get; set; }
         public int Cosidas { get; set; }
+
+        // Prendas suyas que Corte todavía no sacó: no se pueden marcar como cosidas
+        public List<FaltanteRenglonDto> Faltantes { get; set; } = new();
     }
 
     public class MarcarCosidasDto

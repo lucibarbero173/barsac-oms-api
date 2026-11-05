@@ -13,8 +13,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Mismo catálogo de partes que usan Corte y Estadísticas
+const PARTES_FALTANTE = {
+    0: 'Frente', 1: 'Espalda', 2: 'Manga', 3: 'Cuello/Puño', 4: 'Completa',
+    5: 'Frente Derecho', 6: 'Frente Izquierdo', 7: 'Cuello/Tapita', 8: 'Capucha',
+    9: 'Culo Derecho', 10: 'Culo Izquierdo', 11: 'Lado Derecho', 12: 'Lado Izquierdo',
+    13: 'Short Derecho', 14: 'Short Izquierdo'
+};
+
+function textoFaltantes(faltantes) {
+    return (faltantes || []).map(f =>
+        `${PARTES_FALTANTE[f.parte] || 'Faltante'} × ${f.cantidad}${f.detalle ? ` (${f.detalle})` : ''}`
+    ).join(', ');
+}
+
 function escaparHtml(texto) {
     return $('<div>').text(texto ?? '').html();
+}
+
+function badgeFaltantes(cantidad) {
+    return cantidad > 0 ? ` <span class="badge badge-warning">${cantidad} con faltante</span>` : '';
 }
 
 function formatearFecha(fechaIso) {
@@ -36,7 +54,7 @@ async function cargarFichas() {
         $body.empty();
 
         if (fichas.length === 0) {
-            $body.append('<tr><td colspan="7" class="text-center text-muted">No hay pedidos Apto Confección para repartir.</td></tr>');
+            $body.append('<tr><td colspan="7" class="text-center text-muted">No hay pedidos para repartir.</td></tr>');
             return;
         }
 
@@ -47,7 +65,7 @@ async function cargarFichas() {
                 <tr>
                     <td class="font-weight-bold">${f.fichaId}</td>
                     <td>${f.ordenId}</td>
-                    <td class="text-left">${escaparHtml(f.cliente)}</td>
+                    <td class="text-left">${escaparHtml(f.cliente)}${badgeFaltantes(f.faltantes)}</td>
                     <td>${formatearFecha(f.fechaEntrega)}</td>
                     <td>${f.asignadas > 0 ? escaparHtml(f.modistas) : '<span class="text-muted">-</span>'}</td>
                     <td>
@@ -88,7 +106,7 @@ async function cargarRecienAsignadas() {
                 <tr>
                     <td class="font-weight-bold">${f.fichaId}</td>
                     <td>${f.ordenId}</td>
-                    <td class="text-left">${escaparHtml(f.cliente)}</td>
+                    <td class="text-left">${escaparHtml(f.cliente)}${badgeFaltantes(f.faltantes)}</td>
                     <td>${escaparHtml(f.modistas)}</td>
                     <td>${formatearFecha(f.fechaAsignacion)}</td>
                     <td>${f.cosidas === f.total ? '<span class="badge badge-success">Todo cosido</span>' : `${f.cosidas}/${f.total}`}</td>
@@ -175,7 +193,7 @@ async function abrirFicha(fichaId) {
 
             const $fila = $(`
                 <tr data-detalle-id="${r.detalleId}" data-cantidad="${r.cantidad}">
-                    <td class="text-left align-middle">${escaparHtml(r.producto)}</td>
+                    <td class="text-left align-middle">${escaparHtml(r.producto)}${r.faltantes.length > 0 ? `<div class="small text-warning font-weight-bold"><i class="fas fa-exclamation-triangle mr-1"></i>Falta: ${escaparHtml(textoFaltantes(r.faltantes))}</div>` : ''}</td>
                     <td class="text-center align-middle">${escaparHtml(r.talle) || '-'}</td>
                     <td class="text-center align-middle">${escaparHtml(nombreNumero)}</td>
                     <td class="text-center align-middle">${escaparHtml(r.detalle) || '-'}</td>

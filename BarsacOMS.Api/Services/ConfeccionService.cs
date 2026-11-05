@@ -26,10 +26,17 @@ namespace BarsacOMS.Api.Services
 
         public async Task<List<FichaConfeccionResumenDto>> ObtenerFichasPorAsignarAsync()
         {
-            // Se mira el estado de la ORDEN (no el de la ficha): recién cuando todas las fichas
-            // del pedido terminaron el corte, el pedido queda Apto Confección y se reparte.
+            // Se mira el estado de la ORDEN (no el de la ficha): el pedido se reparte cuando todas
+            // sus fichas pasaron por el corte. Puede estar Apto Confección o tener faltantes, pero
+            // sin prendas que Corte todavía no revisó. Corte sigue viendo la ficha hasta resolverlos.
             var resumen = await ObtenerResumenesAsync(_context.FichasProduccion
-                .Where(f => f.Orden.Estado == EstadoOrden.AptoConfeccion
+                .Where(f => (f.Orden.Estado == EstadoOrden.AptoConfeccion
+                             || (f.Orden.Estado == EstadoOrden.CorteFaltantes
+                                 && !_context.FichasProduccion
+                                     .Where(o => o.OrdenId == f.OrdenId)
+                                     .SelectMany(o => o.Items)
+                                     .SelectMany(i => i.Unidades)
+                                     .Any(u => u.CorteEstado == EstadoCorte.Pendiente)))
                          && f.Items.SelectMany(i => i.Unidades).Any(u => u.ModistaId == null)));
 
             return resumen.OrderBy(f => f.FechaEntrega ?? DateTime.MaxValue).ToList();
@@ -57,7 +64,7 @@ namespace BarsacOMS.Api.Services
                     Cliente = f.Orden.NombreCliente,
                     f.Orden.FechaEntrega,
                     Unidades = f.Items.SelectMany(i => i.Unidades)
-                        .Select(u => new { u.ModistaId, u.FechaAsignacionModista, u.Cosida })
+                        .Select(u => new { u.ModistaId, u.FechaAsignacionModista, u.Cosida, u.CorteEstado })
                         .ToList()
                 })
                 .ToListAsync();
@@ -73,6 +80,7 @@ namespace BarsacOMS.Api.Services
                 Total = f.Unidades.Count,
                 Asignadas = f.Unidades.Count(u => u.ModistaId != null),
                 Cosidas = f.Unidades.Count(u => u.Cosida),
+                Faltantes = f.Unidades.Count(u => u.CorteEstado == EstadoCorte.Faltante && !u.Cosida),
                 Modistas = TextoModistas(f.Unidades.Select(u => u.ModistaId), nombres),
                 FechaAsignacion = f.Unidades.Max(u => u.FechaAsignacionModista)
             }).ToList();
@@ -109,6 +117,9 @@ namespace BarsacOMS.Api.Services
                         Nombre = i.Nombre,
                         Detalle = i.Detalle,
                         Cantidad = i.Unidades.Count,
+                        Faltantes = AgruparFaltantes(i.Unidades
+                            .Where(u => u.CorteEstado == EstadoCorte.Faltante && !u.Cosida)
+                            .Select(u => (u.CorteParteFaltante, u.CorteDetalleFaltante))),
                         Asignaciones = i.Unidades
                             .Where(u => u.ModistaId != null)
                             .GroupBy(u => u.ModistaId!.Value)
@@ -197,7 +208,8 @@ namespace BarsacOMS.Api.Services
                 foreach (var (modistaId, cantidad) in objetivo)
                 {
                     var faltan = cantidad - unidades.Count(u => u.ModistaId == modistaId);
-                    foreach (var u in unidades.Where(u => u.ModistaId == null).Take(faltan))
+                    // Primero las prendas ya cortadas; las que tienen faltante, al final
+                    foreach (var u in unidades.Where(u => u.ModistaId == null).OrderBy(u => u.CorteEstado == EstadoCorte.Faltante).Take(faltan).ToList())
                     {
                         u.ModistaId = modistaId;
                         u.FechaAsignacionModista = ahora;
@@ -211,6 +223,16 @@ namespace BarsacOMS.Api.Services
 
             await _context.SaveChangesAsync();
             return (true, null);
+        }
+
+        // Faltantes de un renglón agrupados por parte y detalle (ej. Frente × 2)
+        public static List<FaltanteRenglonDto> AgruparFaltantes(IEnumerable<(ParteFaltante? Parte, string? Detalle)> faltantes)
+        {
+            return faltantes
+                .GroupBy(f => f)
+                .Select(g => new FaltanteRenglonDto { Parte = g.Key.Parte, Detalle = g.Key.Detalle, Cantidad = g.Count() })
+                .OrderBy(f => f.Parte)
+                .ToList();
         }
 
         // Texto que se ve como "Modista" en la ficha (listado, ojito, impresión): las modistas
