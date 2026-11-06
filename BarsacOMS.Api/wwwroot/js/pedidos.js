@@ -29,10 +29,30 @@ $(document).ready(function () {
     $('#ordenesBody').on('click', '.btn-cobro', function () {
         abrirModalCobroPedido($(this).data('id'));
     });
+
+    // Selección de pedidos para sumar saldos
+    $('#ordenesBody').on('change', '.chk-pedido', function () {
+        marcarPedido(Number(this.value), this.checked);
+        actualizarSeleccionPedidos();
+    });
+
+    $('#chkTodosPedidos').on('change', function () {
+        const marcar = this.checked;
+        $('#dataTable').DataTable().rows({ search: 'applied' }).nodes().to$().find('.chk-pedido').each(function () {
+            this.checked = marcar;
+            marcarPedido(Number(this.value), marcar);
+        });
+        actualizarSeleccionPedidos();
+    });
+
+    $('#dataTable').on('draw.dt', actualizarChkTodosPedidos);
 });
 
 // Las órdenes cargadas en la tabla, para tomar cliente y saldo al registrar un cobro
 let ordenesPorId = {};
+
+// Pedidos tildados para sumar sus saldos (se mantienen al recargar la tabla)
+const pedidosSeleccionados = new Set();
 
 // =================
 // CARGAR ORDENES
@@ -51,6 +71,8 @@ function cargarOrdenes() {
             const tabla = $("#ordenesBody");
             tabla.empty();
             ordenesPorId = {};
+            const idsVigentes = new Set(data.map(o => o.id));
+            [...pedidosSeleccionados].forEach(id => { if (!idsVigentes.has(id)) pedidosSeleccionados.delete(id); });
 
             data.forEach(o => {
                 ordenesPorId[o.id] = o;
@@ -59,6 +81,7 @@ function cargarOrdenes() {
 
                 tabla.append(`
                     <tr>
+                        <td class="text-center"><input type="checkbox" class="chk-pedido" value="${o.id}" title="Seleccionar para sumar saldo" ${pedidosSeleccionados.has(o.id) ? 'checked' : ''}></td>
                         <td>${o.id}</td>
                         <td>${fecha}</td>
                         <td>${o.clienteId}</td>
@@ -91,6 +114,8 @@ function cargarOrdenes() {
 
             $('#dataTable').DataTable({
                 "autoWidth": false,
+                order: [[1, 'asc']],
+                columnDefs: [{ targets: 0, orderable: false, searchable: false }],
                 dom: 'Bfrtip',
                 buttons: [
                     {
@@ -109,7 +134,44 @@ function cargarOrdenes() {
             });
 
             if (busqueda) $('#dataTable').DataTable().search(busqueda).draw();
+            actualizarSeleccionPedidos();
         });
+}
+
+// =================
+// SELECCIÓN DE PEDIDOS: SUMA DE SALDOS
+// =================
+function marcarPedido(id, marcado) {
+    if (marcado) pedidosSeleccionados.add(id); else pedidosSeleccionados.delete(id);
+}
+
+function actualizarSeleccionPedidos() {
+    const pedidos = [...pedidosSeleccionados].map(id => ordenesPorId[id]).filter(Boolean);
+    const moneda = (valor) => `$ ${valor.toLocaleString('es-AR')}`;
+    const sumar = (campo) => pedidos.reduce((suma, o) => suma + (o[campo] || 0), 0);
+    const clientes = new Set(pedidos.map(o => o.clienteId)).size;
+
+    $('#selCantidad').text(pedidos.length === 1 ? '1 pedido seleccionado' : `${pedidos.length} pedidos seleccionados`);
+    $('#selClientes').text(clientes > 1 ? `(de ${clientes} clientes distintos)` : '');
+    $('#selImporte').text(moneda(sumar('importeTotal')));
+    $('#selCobrado').text(moneda(sumar('senas') + sumar('otrosCobros')));
+    $('#selSaldo').text(moneda(sumar('saldo')));
+    $('#barraSeleccionPedidos').toggleClass('d-none', pedidos.length === 0);
+
+    actualizarChkTodosPedidos();
+}
+
+// El tilde de arriba queda marcado si están tildados todos los pedidos que se ven con el filtro
+function actualizarChkTodosPedidos() {
+    if (!$.fn.dataTable.isDataTable('#dataTable')) return;
+    const checks = $('#dataTable').DataTable().rows({ search: 'applied' }).nodes().to$().find('.chk-pedido').toArray();
+    $('#chkTodosPedidos').prop('checked', checks.length > 0 && checks.every(c => c.checked));
+}
+
+function limpiarSeleccionPedidos() {
+    pedidosSeleccionados.clear();
+    $('#dataTable').DataTable().rows().nodes().to$().find('.chk-pedido').prop('checked', false);
+    actualizarSeleccionPedidos();
 }
 
 // =================

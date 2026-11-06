@@ -18,6 +18,142 @@ if (window.jQuery && $.fn && $.fn.dataTable) {
     });
 }
 
+// =====================================================
+// FILTROS POR COLUMNA en todas las tablas con buscador
+// =====================================================
+// Debajo de cada encabezado va un desplegable con los valores de esa columna. Se engancha a
+// cualquier DataTable, así las pantallas no tienen que hacer nada. Cada desplegable ofrece
+// solo lo que coincide con los otros filtros activos (ej. los estados de ese cliente).
+// Para dejar afuera una columna: class="no-filtrar" o "no-exportar" en su encabezado.
+if (window.jQuery && $.fn && $.fn.dataTable) {
+    (function () {
+        const VACIO = '(vacío)';
+        const FECHA = /^\d{4}-\d{2}-\d{2}|^\d{2}\/\d{2}\/\d{4}/;
+
+        // tabla -> { columna: valor elegido }. Sobrevive cuando una pantalla recarga su tabla.
+        const filtrosPorTabla = new WeakMap();
+        const filasContadas = new WeakMap();
+
+        function textoCelda(api, fila, columna) {
+            const celda = api.cell(fila, columna).node();
+            return (celda ? celda.textContent : '').replace(/\s+/g, ' ').trim() || VACIO;
+        }
+
+        // Cumple todos los filtros, salvo el de la columna indicada (para armar sus opciones)
+        function cumpleFiltros(api, fila, filtros, salvoColumna) {
+            return Object.keys(filtros).every((columna) =>
+                Number(columna) === salvoColumna || textoCelda(api, fila, Number(columna)) === filtros[columna]);
+        }
+
+        $.fn.dataTable.ext.search.push((settings, data, fila) => {
+            const filtros = filtrosPorTabla.get(settings.nTable);
+            if (!filtros || Object.keys(filtros).length === 0) return true;
+            return cumpleFiltros(new $.fn.dataTable.Api(settings), fila, filtros);
+        });
+
+        // Ordena fechas de la más nueva a la más vieja; lo demás alfabético y respetando números
+        function ordenarValores(valores) {
+            const fecha = (v) => (v.includes('/') ? v.split(' ')[0].split('/').reverse().join('-') : v);
+            return valores.sort((a, b) => {
+                if (a === VACIO) return 1;
+                if (b === VACIO) return -1;
+                if (FECHA.test(a) && FECHA.test(b)) return fecha(b).localeCompare(fecha(a));
+                return a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' });
+            });
+        }
+
+        function actualizarOpciones(api) {
+            const tabla = api.table().node();
+            const filtros = filtrosPorTabla.get(tabla) || {};
+            const filas = api.rows().indexes().toArray();
+
+            $(api.table().header()).find('.filtro-columna').each(function () {
+                const columna = Number(this.dataset.columna);
+                const valores = new Set();
+                filas.forEach((fila) => {
+                    if (cumpleFiltros(api, fila, filtros, columna)) valores.add(textoCelda(api, fila, columna));
+                });
+
+                const elegido = filtros[columna];
+                if (elegido) valores.add(elegido);
+
+                this.innerHTML = '<option value="">Todos</option>';
+                ordenarValores([...valores]).forEach((valor) => this.add(new Option(valor, valor)));
+                this.value = elegido || '';
+                this.classList.toggle('filtro-activo', !!elegido);
+            });
+
+            $(api.table().container()).find('.btn-limpiar-filtros').toggle(Object.keys(filtros).length > 0);
+        }
+
+        function aplicarFiltro(api, columna, valor) {
+            const tabla = api.table().node();
+            const filtros = filtrosPorTabla.get(tabla) || {};
+            if (valor) filtros[columna] = valor; else delete filtros[columna];
+            filtrosPorTabla.set(tabla, filtros);
+            api.draw();
+            actualizarOpciones(api);
+        }
+
+        function columnaFiltrable(api, columna) {
+            const th = api.column(columna).header();
+            const titulo = th.textContent.trim().toLowerCase();
+            if (!titulo || titulo === 'acciones' || th.classList.contains('no-filtrar') || th.classList.contains('no-exportar')) return false;
+            return !api.column(columna).nodes().toArray().some((td) => td.querySelector('input, select, button, textarea, img'));
+        }
+
+        function armarFiltros(api) {
+            const $thead = $(api.table().header());
+            $thead.find('.fila-filtros').remove();
+
+            const $fila = $('<tr class="fila-filtros"></tr>');
+            api.columns(':visible').indexes().toArray().forEach((columna) => {
+                const $celda = $('<td></td>').appendTo($fila);
+                if (!columnaFiltrable(api, columna)) return;
+
+                $('<select class="form-control form-control-sm filtro-columna" title="Filtrar por esta columna"></select>')
+                    .attr('data-columna', columna)
+                    .on('change', function () { aplicarFiltro(api, columna, this.value); })
+                    .appendTo($celda);
+            });
+            $thead.append($fila);
+
+            const $contenedor = $(api.table().container());
+            if ($contenedor.find('.btn-limpiar-filtros').length === 0) {
+                $('<button type="button" class="btn btn-link btn-sm btn-limpiar-filtros"><i class="fas fa-times mr-1"></i>Limpiar filtros</button>')
+                    .on('click', () => {
+                        filtrosPorTabla.delete(api.table().node());
+                        api.draw();
+                        actualizarOpciones(api);
+                    })
+                    .appendTo($contenedor.find('.dataTables_filter'));
+            }
+
+            filasContadas.set(api.table().node(), api.rows().count());
+            actualizarOpciones(api);
+        }
+
+        $(document).on('init.dt', (e, settings) => {
+            if (e.namespace !== 'dt') return;
+            const api = new $.fn.dataTable.Api(settings);
+            armarFiltros(api);
+            // Si había filtros antes de recargar la tabla, se vuelven a aplicar
+            if (Object.keys(filtrosPorTabla.get(settings.nTable) || {}).length > 0) api.draw();
+        });
+
+        // Pantallas que cargan las filas después de armar la tabla: se rehacen las opciones
+        $(document).on('draw.dt', (e, settings) => {
+            if (e.namespace !== 'dt' || !settings._bInitComplete) return;
+            const api = new $.fn.dataTable.Api(settings);
+            if (filasContadas.get(settings.nTable) !== api.rows().count()) armarFiltros(api);
+        });
+
+        $(document).on('destroy.dt', (e, settings) => {
+            if (e.namespace === 'dt') $(settings.nTHead).find('.fila-filtros').remove();
+        });
+    })();
+}
+
 // Click en cualquier imagen para verla grande (requiere <div id="modalZoomImagen"> en la página)
 function abrirZoomImagen(src) {
     if (!src) return;

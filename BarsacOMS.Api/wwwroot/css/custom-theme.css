@@ -705,3 +705,48 @@
     background: var(--bg-card);
     box-shadow: inset 0 -1px 0 var(--border-color);
 }
+
+
+/* Filtros por columna de las tablas (los arma app.js) */
+.fila-filtros td {
+    padding: 4px !important;
+}
+
+.filtro-columna {
+    width: 100%;
+    min-width: 0;
+    height: calc(1.4em + .5rem + 2px);
+    padding: 0 .2rem;
+    font-size: .75rem;
+    font-weight: normal;
+}
+
+.filtro-columna.filtro-activo {
+    border: 2px solid #4e73df;
+    font-weight: 700;
+}
+
+.btn-limpiar-filtros {
+    display: none;
+    padding: 0 0 0 .5rem;
+    vertical-align: baseline;
+}
+
+[data-theme="dark"] .filtro-columna {
+    background-color: #25252d;
+    color: #ffffff;
+    border-color: #3a3a42;
+}
+
+#barraSeleccionPedidos {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+/* En el celu la tabla ya se desliza de costado: los filtros pueden tener su ancho */
+@media (max-width: 767.98px) {
+    .filtro-columna {
+        min-width: 72px;
+    }
+}
