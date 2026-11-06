@@ -66,5 +66,14 @@ namespace BarsacOMS.Api.Controllers
         {
             return Ok(await _disenoService.ObtenerAlertasFaltantesAsync());
         }
+
+        // PUT: api/Diseno/unidades/5/faltante-preparado
+        [HttpPut("unidades/{id}/faltante-preparado")]
+        public async Task<IActionResult> MarcarFaltantePreparado(int id, [FromBody] MarcarFaltantePreparadoDto dto)
+        {
+            var ok = await _disenoService.MarcarFaltantePreparadoAsync(id, dto.Preparado);
+            if (!ok) return NotFound();
+            return NoContent();
+        }
     }
 }

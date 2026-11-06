@@ -115,6 +115,7 @@ namespace BarsacOMS.Api.Services
             if (unidad == null) return null;
 
             unidad.CorteEstado = EstadoCorte.Completo;
+            unidad.FaltantePreparado = false;
             // OJO: no se limpian CorteParteFaltante/CorteDetalleFaltante acá. Si la unidad
             // venía de un Faltante ya resuelto, se conservan como registro histórico para
             // poder sacar estadísticas de scrap aunque la prenda ya haya quedado bien.
@@ -128,6 +129,9 @@ namespace BarsacOMS.Api.Services
         {
             var unidad = await _context.PrendasUnidad.FindAsync(unidadId);
             if (unidad == null) return null;
+
+            // Si ahora falta otra parte, lo que Diseño había preparado ya no sirve
+            if (unidad.CorteParteFaltante != parte) unidad.FaltantePreparado = false;
 
             unidad.CorteEstado = EstadoCorte.Faltante;
             unidad.CorteParteFaltante = parte;
@@ -144,6 +148,7 @@ namespace BarsacOMS.Api.Services
             if (unidad == null) return null;
 
             unidad.CorteEstado = EstadoCorte.Pendiente;
+            unidad.FaltantePreparado = false;
             unidad.CorteParteFaltante = null;
             unidad.CorteDetalleFaltante = null;
             unidad.FechaCorte = null;

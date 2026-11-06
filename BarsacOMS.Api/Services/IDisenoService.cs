@@ -9,6 +9,7 @@ namespace BarsacOMS.Api.Services
         Task<FichaDetalleEtapaDto?> ObtenerFichaAsync(int fichaId);
         Task<ResultadoEtapaDto?> ToggleUnidadAsync(int unidadId, int? usuarioId);
         Task<List<AlertaFaltanteDto>> ObtenerAlertasFaltantesAsync();
+        Task<bool> MarcarFaltantePreparadoAsync(int unidadId, bool preparado);
         Task<bool> GuardarRutaImpresionAsync(int fichaId, string? ruta);
     }
 }

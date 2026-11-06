@@ -750,3 +750,24 @@
         min-width: 72px;
     }
 }
+
+/* Diseño: faltantes que ya tienen el archivo preparado */
+.fila-faltante {
+    cursor: pointer;
+}
+
+.fila-faltante .celda-que-falta {
+    color: #e74a3b;
+}
+
+.fila-faltante.faltante-preparado td {
+    background-color: rgba(28, 200, 138, .28);
+}
+
+.fila-faltante.faltante-preparado .celda-que-falta {
+    color: #0f7a53;
+}
+
+[data-theme="dark"] .fila-faltante.faltante-preparado .celda-que-falta {
+    color: #5cd08a;
+}

@@ -94,6 +94,11 @@ namespace BarsacOMS.Api.DTOs
     }
 
     // Para el banner de alertas en la pantalla de Diseño.
+    public class MarcarFaltantePreparadoDto
+    {
+        public bool Preparado { get; set; }
+    }
+
     public class AlertaFaltanteDto
     {
         public int FichaId { get; set; }
@@ -104,6 +109,8 @@ namespace BarsacOMS.Api.DTOs
 
     public class PrendaFaltanteDto
     {
+        public int UnidadId { get; set; }
+        public bool Preparado { get; set; }
         public string Producto { get; set; } = string.Empty;
         public string? Talle { get; set; }
         public string? Nombre { get; set; }

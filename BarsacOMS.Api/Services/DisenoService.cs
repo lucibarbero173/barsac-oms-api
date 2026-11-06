@@ -185,16 +185,21 @@ namespace BarsacOMS.Api.Services
                 .Where(f => f.EstadoFicha == EstadoOrden.CorteFaltantes)
                 .ToListAsync();
 
-            return fichas.Select(f => new AlertaFaltanteDto
+            // Siempre en el mismo orden: si Corte agrega faltantes, las filas no se mezclan
+            return fichas.OrderBy(f => f.Id).Select(f => new AlertaFaltanteDto
             {
                 FichaId = f.Id,
                 OrdenId = f.OrdenId,
                 Cliente = f.Orden.NombreCliente,
                 Faltantes = f.Items
+                    .OrderBy(i => i.Id)
                     .SelectMany(i => i.Unidades
                         .Where(u => u.CorteEstado == EstadoCorte.Faltante)
+                        .OrderBy(u => u.Id)
                         .Select(u => new PrendaFaltanteDto
                         {
+                            UnidadId = u.Id,
+                            Preparado = u.FaltantePreparado,
                             Producto = i.Producto,
                             Talle = i.Talle,
                             Nombre = i.Nombre,
@@ -204,6 +209,17 @@ namespace BarsacOMS.Api.Services
                         }))
                     .ToList()
             }).Where(a => a.Faltantes.Count > 0).ToList();
+        }
+
+        // Solo se puede marcar mientras siga siendo un faltante: si Corte ya lo resolvió, devuelve false.
+        public async Task<bool> MarcarFaltantePreparadoAsync(int unidadId, bool preparado)
+        {
+            var unidad = await _context.PrendasUnidad.FindAsync(unidadId);
+            if (unidad == null || unidad.CorteEstado != EstadoCorte.Faltante) return false;
+
+            unidad.FaltantePreparado = preparado;
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         private async Task<(int Completadas, int Total)> CalcularProgresoFichaAsync(int fichaId, Func<PrendaUnidad, bool> completadaPredicado)

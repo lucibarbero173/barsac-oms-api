@@ -985,6 +985,12 @@ namespace BarsacOMS.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("diseno_por_usuario_id");
 
+                    b.Property<bool>("FaltantePreparado")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("faltante_preparado");
+
                     b.Property<DateTime?>("FechaAsignacionModista")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("fecha_asignacion_modista");

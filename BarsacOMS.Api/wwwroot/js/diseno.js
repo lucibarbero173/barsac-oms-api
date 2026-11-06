@@ -159,16 +159,21 @@ async function cargarAlertasFaltantes() {
         if (alertas.length === 0) return;
 
         let filas = '';
+        let total = 0;
+        let preparados = 0;
         alertas.forEach(a => {
             a.faltantes.forEach(p => {
                 const detalleLinea = [p.talle ? `Talle ${p.talle}` : null, p.nombre, p.detalle].filter(Boolean).join(' · ');
                 const queFalta = [PARTES[p.parte] || 'Faltante', p.detalleFaltante].filter(Boolean).join(' — ');
+                total++;
+                if (p.preparado) preparados++;
                 filas += `
-                    <tr>
+                    <tr class="fila-faltante ${p.preparado ? 'faltante-preparado' : ''}" data-unidad-id="${p.unidadId}" title="Tocá la fila para marcarla como preparada">
+                        <td><input type="checkbox" class="chk-faltante" ${p.preparado ? 'checked' : ''}></td>
                         <td>#${a.ordenId}</td>
                         <td class="text-left">${a.cliente}</td>
                         <td class="text-left">${p.producto}${detalleLinea ? ' — ' + detalleLinea : ''}</td>
-                        <td class="text-left text-danger font-weight-bold">${queFalta}</td>
+                        <td class="text-left font-weight-bold celda-que-falta">${queFalta}</td>
                     </tr>
                 `;
             });
@@ -178,11 +183,13 @@ async function cargarAlertasFaltantes() {
             <div class="card shadow mb-4 border-danger">
                 <div class="card-header bg-danger text-white font-weight-bold py-3">
                     <i class="fas fa-exclamation-triangle mr-1"></i> Faltantes para armar
+                    <span class="float-right font-weight-normal small mt-1">Preparados: <span id="faltantesPreparados">${preparados}</span> de ${total}</span>
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-sm mb-0 text-center">
                         <thead>
                             <tr>
+                                <th title="Ya preparé el archivo"><i class="fas fa-check"></i></th>
                                 <th>Orden</th>
                                 <th class="text-left">Cliente</th>
                                 <th class="text-left">Prenda</th>
@@ -198,6 +205,43 @@ async function cargarAlertasFaltantes() {
         console.error(error);
     }
 }
+
+// Tocar la fila (o su tilde) la pinta como preparada. Queda guardado para todos y la fila se
+// va sola recién cuando Corte resuelve el faltante.
+$(document).on('click', '.fila-faltante', async function () {
+    const $fila = $(this);
+    if ($fila.data('guardando')) return;
+
+    const preparado = !$fila.hasClass('faltante-preparado');
+    const pintar = (valor) => {
+        $fila.toggleClass('faltante-preparado', valor);
+        $fila.find('.chk-faltante').prop('checked', valor);
+        $('#faltantesPreparados').text($('.fila-faltante.faltante-preparado').length);
+    };
+
+    pintar(preparado);
+    $fila.data('guardando', true);
+    try {
+        const res = await fetch(`${API_DISENO}/unidades/${$fila.data('unidad-id')}/faltante-preparado`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ preparado })
+        });
+
+        if (res.status === 404) {
+            alert('Ese faltante ya lo resolvió Corte.');
+            cargarAlertasFaltantes();
+        } else if (!res.ok) {
+            throw new Error('No se pudo guardar');
+        }
+    } catch (error) {
+        console.error(error);
+        pintar(!preparado);
+        alert('No se pudo guardar. Revisá la conexión.');
+    } finally {
+        $fila.data('guardando', false);
+    }
+});
 
 // =====================================================
 // MODAL DE FICHA

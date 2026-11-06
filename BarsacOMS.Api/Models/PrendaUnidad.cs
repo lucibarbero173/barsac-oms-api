@@ -50,6 +50,10 @@ namespace BarsacOMS.Api.Models
         public DateTime? FechaCorte { get; set; }
         public int? CortadoPorUsuarioId { get; set; }
 
+        // Diseño ya preparó el archivo de este faltante (pinta la fila). Se limpia cuando Corte
+        // lo resuelve, o si cambia qué parte falta y hay que volver a prepararlo.
+        public bool FaltantePreparado { get; set; } = false;
+
         // Etapa Control (escaneo de Mirta)
         public bool Controlada { get; set; } = false;
         public DateTime? FechaControl { get; set; }
