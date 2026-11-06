@@ -16,6 +16,16 @@ namespace BarsacOMS.Api.DTOs
         public decimal Saldo { get; set; }
         public string Origen { get; set; } = string.Empty; // "SaldoInicial" | "Cobro" | "Pago" | "Manual"
         public int? MovimientoManualId { get; set; } // solo si Origen == "Manual", para poder editar/borrar
+        public bool AntesDelCorte { get; set; } // anterior al Saldo Inicial: no tiene saldo corrido
+    }
+
+    // Lo que entró y salió de una cuenta entre dos fechas
+    public class PeriodoCuentaDto
+    {
+        public decimal Ingresos { get; set; }
+        public decimal Egresos { get; set; }
+        public decimal Neto { get; set; }
+        public List<MovimientoCuentaDto> Movimientos { get; set; } = new();
     }
 
     public class GuardarSaldoInicialDto

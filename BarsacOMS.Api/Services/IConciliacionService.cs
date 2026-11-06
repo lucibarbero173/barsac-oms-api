@@ -9,6 +9,7 @@ namespace BarsacOMS.Api.Services
 
         Task<List<ResumenCuentaDto>> ObtenerResumenCuentasAsync();
         Task<List<MovimientoCuentaDto>> ObtenerLibroAsync(string cuenta);
+        Task<PeriodoCuentaDto> ObtenerPeriodoAsync(string cuenta, DateTime? desde, DateTime? hasta);
 
         Task<SaldoInicialCuenta> ObtenerSaldoInicialAsync(string cuenta);
         Task<SaldoInicialCuenta> GuardarSaldoInicialAsync(string cuenta, GuardarSaldoInicialDto dto);

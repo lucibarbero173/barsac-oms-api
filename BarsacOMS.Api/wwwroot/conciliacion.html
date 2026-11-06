@@ -194,6 +194,42 @@
                         </div>
 
                         <div class="card-body">
+                            <!-- Cuánto entró y salió de la cuenta elegida entre dos fechas -->
+                            <form id="formFiltroPeriodo" class="form-row align-items-end mb-3">
+                                <div class="form-group col-6 col-md-3 mb-2">
+                                    <label for="filtroDesde" class="small mb-1">Desde</label>
+                                    <input type="date" id="filtroDesde" class="form-control form-control-sm">
+                                </div>
+                                <div class="form-group col-6 col-md-3 mb-2">
+                                    <label for="filtroHasta" class="small mb-1">Hasta</label>
+                                    <input type="date" id="filtroHasta" class="form-control form-control-sm">
+                                </div>
+                                <div class="form-group col-md-auto mb-2">
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter mr-1"></i>Ver período</button>
+                                    <button type="button" class="btn btn-link btn-sm d-none" id="btnLimpiarPeriodo" onclick="limpiarFiltroPeriodo()"><i class="fas fa-times mr-1"></i>Ver todo</button>
+                                </div>
+                            </form>
+
+                            <div class="d-none mb-3" id="resumenPeriodo">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="small text-muted">Entró</div>
+                                        <div class="h5 font-weight-bold text-success mb-0" id="periodoIngresos"></div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Salió</div>
+                                        <div class="h5 font-weight-bold text-danger mb-0" id="periodoEgresos"></div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Diferencia</div>
+                                        <div class="h5 font-weight-bold mb-0" id="periodoNeto"></div>
+                                    </div>
+                                </div>
+                                <div class="small text-muted text-center mt-2 d-none" id="periodoAvisoCorte">
+                                    Hay movimientos anteriores al Saldo Inicial: cuentan en estos totales, pero no tienen saldo.
+                                </div>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table table-bordered table-sm text-center" id="tablaLibroCuenta" width="100%">
                                     <thead>

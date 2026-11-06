@@ -2,6 +2,7 @@ const API_CONCILIACION = '/api/Conciliacion';
 
 let cuentaActiva = null;
 let libroActual = [];
+let periodoActivo = null; // { desde, hasta } mientras se está viendo un período
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarResumen();
@@ -14,6 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#formMovimientoManual').on('submit', async function (e) {
         e.preventDefault();
         await guardarMovimientoManual();
+    });
+
+    $('#formFiltroPeriodo').on('submit', async function (e) {
+        e.preventDefault();
+        await aplicarFiltroPeriodo();
     });
 });
 
@@ -123,15 +129,50 @@ async function guardarSaldoInicial() {
 // =====================================================
 async function cargarLibro() {
     try {
-        const res = await fetch(`${API_CONCILIACION}/${encodeURIComponent(cuentaActiva)}/libro`);
-        if (!res.ok) throw new Error('No se pudo obtener el libro de la cuenta');
-        libroActual = await res.json();
+        const cuenta = encodeURIComponent(cuentaActiva);
+        if (periodoActivo) {
+            const params = new URLSearchParams();
+            if (periodoActivo.desde) params.set('desde', periodoActivo.desde);
+            if (periodoActivo.hasta) params.set('hasta', periodoActivo.hasta);
 
+            const res = await fetch(`${API_CONCILIACION}/${cuenta}/periodo?${params}`);
+            if (!res.ok) throw new Error('No se pudo obtener el período de la cuenta');
+            const periodo = await res.json();
+
+            libroActual = periodo.movimientos;
+            $('#periodoIngresos').text(formatearMoneda(periodo.ingresos));
+            $('#periodoEgresos').text(formatearMoneda(periodo.egresos));
+            $('#periodoNeto').text((periodo.neto < 0 ? '-' : '') + formatearMoneda(Math.abs(periodo.neto)));
+            $('#periodoAvisoCorte').toggleClass('d-none', !libroActual.some(m => m.antesDelCorte));
+        } else {
+            const res = await fetch(`${API_CONCILIACION}/${cuenta}/libro`);
+            if (!res.ok) throw new Error('No se pudo obtener el libro de la cuenta');
+            libroActual = await res.json();
+        }
+
+        $('#resumenPeriodo, #btnLimpiarPeriodo').toggleClass('d-none', !periodoActivo);
         renderLibro();
     } catch (error) {
         console.error(error);
         alert('No se pudo cargar el detalle de la cuenta.');
     }
+}
+
+async function aplicarFiltroPeriodo() {
+    const desde = $('#filtroDesde').val();
+    const hasta = $('#filtroHasta').val();
+
+    if (!desde && !hasta) { alert('Elegí al menos una fecha.'); return; }
+    if (desde && hasta && desde > hasta) { alert('La fecha "Desde" no puede ser posterior a "Hasta".'); return; }
+
+    periodoActivo = { desde, hasta };
+    await cargarLibro();
+}
+
+async function limpiarFiltroPeriodo() {
+    periodoActivo = null;
+    $('#filtroDesde, #filtroHasta').val('');
+    await cargarLibro();
 }
 
 const ETIQUETAS_ORIGEN = {
@@ -144,6 +185,11 @@ const ETIQUETAS_ORIGEN = {
 function renderLibro() {
     const $body = $('#tablaLibroCuentaBody');
     $body.empty();
+
+    if (periodoActivo && libroActual.length === 0) {
+        $body.append('<tr><td colspan="7" class="text-center text-muted">No hay movimientos entre esas fechas.</td></tr>');
+        return;
+    }
 
     libroActual.forEach(m => {
         const esInicial = m.origen === 'SaldoInicial';
@@ -160,7 +206,7 @@ function renderLibro() {
                 <td class="text-left">${m.concepto}</td>
                 <td class="text-success">${m.ingreso > 0 ? formatearMoneda(m.ingreso) : ''}</td>
                 <td class="text-danger">${m.egreso > 0 ? formatearMoneda(m.egreso) : ''}</td>
-                <td class="font-weight-bold">${formatearMoneda(m.saldo)}</td>
+                <td class="font-weight-bold">${m.antesDelCorte ? '<span class="text-muted">-</span>' : formatearMoneda(m.saldo)}</td>
                 <td>${ETIQUETAS_ORIGEN[m.origen] || m.origen}</td>
                 <td class="text-nowrap">${acciones}</td>
             </tr>

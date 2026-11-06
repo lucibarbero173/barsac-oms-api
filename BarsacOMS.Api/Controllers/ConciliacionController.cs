@@ -35,6 +35,13 @@ namespace BarsacOMS.Api.Controllers
             return Ok(await _conciliacionService.ObtenerLibroAsync(cuenta));
         }
 
+        // GET: api/Conciliacion/EFECTIVO/periodo?desde=2026-11-01&hasta=2026-11-30
+        [HttpGet("{cuenta}/periodo")]
+        public async Task<IActionResult> GetPeriodo(string cuenta, [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
+        {
+            return Ok(await _conciliacionService.ObtenerPeriodoAsync(cuenta, desde, hasta));
+        }
+
         [HttpGet("{cuenta}/saldo-inicial")]
         public async Task<IActionResult> GetSaldoInicial(string cuenta)
         {

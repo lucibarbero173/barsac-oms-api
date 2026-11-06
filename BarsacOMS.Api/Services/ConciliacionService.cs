@@ -36,54 +36,7 @@ namespace BarsacOMS.Api.Services
         public async Task<List<MovimientoCuentaDto>> ObtenerLibroAsync(string cuenta)
         {
             var saldoInicial = await ObtenerSaldoInicialAsync(cuenta);
-
-            var cobros = await _context.Cobros
-                .Where(c => c.MedioCobro == cuenta && c.FechaCobro >= saldoInicial.Fecha)
-                .Select(c => new MovimientoCuentaDto
-                {
-                    Fecha = c.FechaCobro,
-                    Concepto = c.Concepto,
-                    Ingreso = c.Importe,
-                    Egreso = 0,
-                    Origen = "Cobro"
-                })
-                .ToListAsync();
-
-            var pagos = await _context.Pagos
-                .Where(p => p.MedioPago == cuenta && p.Estado == EstadoPago.PAGADO)
-                .ToListAsync();
-
-            var pagosDto = pagos
-                .Select(p => new { Fecha = p.FechaPago ?? p.FechaFactura, p.Concepto, p.Importe })
-                .Where(p => p.Fecha >= saldoInicial.Fecha)
-                .Select(p => new MovimientoCuentaDto
-                {
-                    Fecha = p.Fecha,
-                    Concepto = p.Concepto,
-                    Ingreso = 0,
-                    Egreso = p.Importe,
-                    Origen = "Pago"
-                })
-                .ToList();
-
-            var manuales = await _context.MovimientosManualesCuenta
-                .Where(m => m.Cuenta == cuenta && m.Fecha >= saldoInicial.Fecha)
-                .Select(m => new MovimientoCuentaDto
-                {
-                    Fecha = m.Fecha,
-                    Concepto = m.Concepto,
-                    Ingreso = m.EsIngreso ? m.Monto : 0,
-                    Egreso = m.EsIngreso ? 0 : m.Monto,
-                    Origen = "Manual",
-                    MovimientoManualId = m.Id
-                })
-                .ToListAsync();
-
-            var movimientos = cobros
-                .Concat(pagosDto)
-                .Concat(manuales)
-                .OrderBy(m => m.Fecha)
-                .ToList();
+            var movimientos = await ObtenerMovimientosAsync(cuenta, saldoInicial.Fecha, DateTime.MaxValue);
 
             var libro = new List<MovimientoCuentaDto>
             {
@@ -107,6 +60,89 @@ namespace BarsacOMS.Api.Services
             }
 
             return libro;
+        }
+
+        // Lo que entró y salió entre dos fechas (inclusive). Cuenta también lo anterior al Saldo
+        // Inicial: el corte es para el saldo, pero la plata de esos días igual entró.
+        public async Task<PeriodoCuentaDto> ObtenerPeriodoAsync(string cuenta, DateTime? desde, DateTime? hasta)
+        {
+            var inicio = desde?.Date ?? DateTime.MinValue;
+            var fin = hasta?.Date.AddDays(1) ?? DateTime.MaxValue;
+
+            var saldoInicial = await ObtenerSaldoInicialAsync(cuenta);
+            var libro = await ObtenerLibroAsync(cuenta);
+
+            var despuesDelCorte = libro
+                .Where(m => m.Origen != "SaldoInicial" && m.Fecha >= inicio && m.Fecha < fin)
+                .ToList();
+
+            var finAntesDelCorte = fin < saldoInicial.Fecha ? fin : saldoInicial.Fecha;
+            var antesDelCorte = await ObtenerMovimientosAsync(cuenta, inicio, finAntesDelCorte);
+            antesDelCorte.ForEach(m => m.AntesDelCorte = true);
+
+            var movimientos = antesDelCorte.Concat(despuesDelCorte).ToList();
+            var ingresos = movimientos.Sum(m => m.Ingreso);
+            var egresos = movimientos.Sum(m => m.Egreso);
+
+            return new PeriodoCuentaDto
+            {
+                Ingresos = ingresos,
+                Egresos = egresos,
+                Neto = ingresos - egresos,
+                Movimientos = movimientos
+            };
+        }
+
+        // Cobros, pagos y movimientos manuales de la cuenta con fecha >= desde y < hasta
+        private async Task<List<MovimientoCuentaDto>> ObtenerMovimientosAsync(string cuenta, DateTime desde, DateTime hasta)
+        {
+            var cobros = await _context.Cobros
+                .Where(c => c.MedioCobro == cuenta && c.FechaCobro >= desde && c.FechaCobro < hasta)
+                .Select(c => new MovimientoCuentaDto
+                {
+                    Fecha = c.FechaCobro,
+                    Concepto = c.Concepto,
+                    Ingreso = c.Importe,
+                    Egreso = 0,
+                    Origen = "Cobro"
+                })
+                .ToListAsync();
+
+            var pagos = await _context.Pagos
+                .Where(p => p.MedioPago == cuenta && p.Estado == EstadoPago.PAGADO)
+                .ToListAsync();
+
+            var pagosDto = pagos
+                .Select(p => new { Fecha = p.FechaPago ?? p.FechaFactura, p.Concepto, p.Importe })
+                .Where(p => p.Fecha >= desde && p.Fecha < hasta)
+                .Select(p => new MovimientoCuentaDto
+                {
+                    Fecha = p.Fecha,
+                    Concepto = p.Concepto,
+                    Ingreso = 0,
+                    Egreso = p.Importe,
+                    Origen = "Pago"
+                })
+                .ToList();
+
+            var manuales = await _context.MovimientosManualesCuenta
+                .Where(m => m.Cuenta == cuenta && m.Fecha >= desde && m.Fecha < hasta)
+                .Select(m => new MovimientoCuentaDto
+                {
+                    Fecha = m.Fecha,
+                    Concepto = m.Concepto,
+                    Ingreso = m.EsIngreso ? m.Monto : 0,
+                    Egreso = m.EsIngreso ? 0 : m.Monto,
+                    Origen = "Manual",
+                    MovimientoManualId = m.Id
+                })
+                .ToListAsync();
+
+            return cobros
+                .Concat(pagosDto)
+                .Concat(manuales)
+                .OrderBy(m => m.Fecha)
+                .ToList();
         }
 
         public async Task<SaldoInicialCuenta> ObtenerSaldoInicialAsync(string cuenta)
