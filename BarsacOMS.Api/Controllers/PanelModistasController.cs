@@ -42,6 +42,15 @@ namespace BarsacOMS.Api.Controllers
             return Ok(resultado);
         }
 
+        // PUT: api/PanelModistas/modista/5/precio  (precio pactado a mano para algunas prendas)
+        [HttpPut("modista/{id}/precio")]
+        public async Task<IActionResult> CambiarPrecio(int id, [FromBody] CambiarPrecioModistaDto dto)
+        {
+            var (exito, error) = await _panelService.CambiarPrecioAsync(id, dto);
+            if (!exito) return BadRequest(error);
+            return NoContent();
+        }
+
         // POST: api/PanelModistas/extras/3/aprobar  |  api/PanelModistas/extras/3/rechazar
         [HttpPost("extras/{id}/{accion}")]
         public async Task<IActionResult> RevisarExtra(int id, string accion)

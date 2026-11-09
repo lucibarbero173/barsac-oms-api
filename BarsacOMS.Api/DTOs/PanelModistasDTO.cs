@@ -100,6 +100,20 @@ namespace BarsacOMS.Api.DTOs
         public int Cantidad { get; set; }
         public decimal Subtotal { get; set; }
         public bool EsExtra { get; set; }
+
+        // Tarifa cargada hoy para ese producto: si no coincide con Precio, es un precio pactado
+        // aparte (o la tarifa cambió después de coserla)
+        public decimal? TarifaActual { get; set; }
+    }
+
+    // Precio pactado a mano para algunas prendas de un renglón de "A pagar"
+    public class CambiarPrecioModistaDto
+    {
+        public string Producto { get; set; } = string.Empty;
+        public decimal? PrecioActual { get; set; } // el del renglón (null = sin tarifa)
+        public bool EsExtra { get; set; }
+        public int Cantidad { get; set; }
+        public decimal PrecioNuevo { get; set; }
     }
 
     public class PagoModistaDto

@@ -8,6 +8,7 @@ namespace BarsacOMS.Api.Services
         Task<DetalleModistaPanelDto?> ObtenerDetalleAsync(int modistaId);
         Task<(ResultadoPagoModistaDto? Resultado, string? Error)> RegistrarPagoAsync(int modistaId, string? nota, string? medioPago);
         Task<bool> AnularPagoAsync(int pagoId);
+        Task<(bool Exito, string? Error)> CambiarPrecioAsync(int modistaId, CambiarPrecioModistaDto dto);
         Task<(bool Exito, string? Error)> RevisarExtraAsync(int extraId, bool aprobar);
     }
 }

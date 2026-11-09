@@ -293,6 +293,14 @@ namespace BarsacOMS.Api.Services
                     EsExtra = true
                 }));
 
+            var tarifas = (await _context.TarifasModista
+                .Where(t => t.ModistaId == modistaId)
+                .Select(t => new { Nombre = t.Producto!.Nombre, t.Precio })
+                .ToListAsync())
+                .GroupBy(t => t.Nombre.Trim().ToLower())
+                .ToDictionary(g => g.Key, g => g.First().Precio);
+            aPagar.ForEach(l => l.TarifaActual = tarifas.TryGetValue(l.Producto.Trim().ToLower(), out var t) ? t : null);
+
             return new DetalleModistaPanelDto
             {
                 ModistaId = modista.Id,
@@ -410,6 +418,70 @@ namespace BarsacOMS.Api.Services
                 CantidadPrendas = pago.CantidadPrendas,
                 SinTarifa = sinTarifa
             }, null);
+        }
+
+        // Precio arreglado a mano con la modista para "Cantidad" prendas de un renglón de A pagar
+        // (mismo producto y mismo precio actual). Solo lo que todavía no se le pagó.
+        public async Task<(bool Exito, string? Error)> CambiarPrecioAsync(int modistaId, CambiarPrecioModistaDto dto)
+        {
+            if (dto.PrecioNuevo < 0) return (false, "El precio no puede ser negativo.");
+            if (dto.Cantidad <= 0) return (false, "La cantidad tiene que ser mayor a cero.");
+
+            if (!dto.EsExtra)
+            {
+                var unidades = await (
+                    from u in _context.PrendasUnidad
+                    join d in _context.DetallesFichaProduccion on u.DetalleFichaProduccionId equals d.Id
+                    where u.ModistaId == modistaId && u.Cosida && u.PagoModistaId == null
+                          && d.Producto == dto.Producto && u.PrecioCosido == dto.PrecioActual
+                    orderby u.FechaCosida, u.Id
+                    select u
+                ).ToListAsync();
+
+                if (dto.Cantidad > unidades.Count)
+                    return (false, $"En ese renglón hay {unidades.Count} prendas a pagar. Recargá la pantalla si cambió algo.");
+
+                unidades.Take(dto.Cantidad).ToList().ForEach(u => u.PrecioCosido = dto.PrecioNuevo);
+            }
+            else
+            {
+                var extras = await _context.PrendasExtraModista
+                    .Where(e => e.ModistaId == modistaId && e.Estado == EstadoPrendaExtra.Aprobada && e.PagoModistaId == null
+                             && e.Producto == dto.Producto && e.PrecioUnitario == dto.PrecioActual)
+                    .OrderBy(e => e.FechaCarga).ThenBy(e => e.Id)
+                    .ToListAsync();
+
+                if (dto.Cantidad > extras.Sum(e => e.Cantidad))
+                    return (false, $"En ese renglón hay {extras.Sum(e => e.Cantidad)} prendas a pagar. Recargá la pantalla si cambió algo.");
+
+                // Una carga de "cosí de más" se parte en dos si el precio nuevo es solo para una parte
+                var falta = dto.Cantidad;
+                foreach (var e in extras)
+                {
+                    if (falta == 0) break;
+                    if (e.Cantidad > falta)
+                    {
+                        _context.PrendasExtraModista.Add(new PrendaExtraModista
+                        {
+                            ModistaId = e.ModistaId,
+                            FichaProduccionId = e.FichaProduccionId,
+                            Producto = e.Producto,
+                            Cantidad = e.Cantidad - falta,
+                            Nota = e.Nota,
+                            FechaCarga = e.FechaCarga,
+                            Estado = e.Estado,
+                            FechaRevision = e.FechaRevision,
+                            PrecioUnitario = e.PrecioUnitario
+                        });
+                        e.Cantidad = falta;
+                    }
+                    e.PrecioUnitario = dto.PrecioNuevo;
+                    falta -= e.Cantidad;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return (true, null);
         }
 
         // Por si se registró un pago por error: sus prendas vuelven a quedar a pagar.

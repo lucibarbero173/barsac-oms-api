@@ -400,16 +400,26 @@ function renderAPagar(lineas) {
     const cantSinPrecio = lineas.filter(l => l.precio === null).reduce((s, l) => s + l.cantidad, 0);
 
     if (lineas.length === 0) {
-        $body.append('<tr><td colspan="4" class="text-center text-muted">No hay prendas cosidas pendientes de pago.</td></tr>');
+        $body.append('<tr><td colspan="5" class="text-center text-muted">No hay prendas cosidas pendientes de pago.</td></tr>');
     }
 
-    lineas.forEach(l => {
+    lineasAPagar = lineas;
+    lineas.forEach((l, i) => {
+        // Precio distinto a la tarifa de hoy: pactado a mano (o la tarifa cambió después de coserla)
+        const distinto = l.precio !== null && l.tarifaActual !== null && l.precio !== l.tarifaActual;
+        const aviso = distinto ? `<div class="small text-info">Tarifa actual: ${moneda(l.tarifaActual)}</div>` : '';
+
         $body.append(`
             <tr>
                 <td class="text-left">${escaparHtml(l.producto)}${l.esExtra ? ' <span class="badge badge-warning">cosió de más</span>' : ''}</td>
                 <td>${l.cantidad}</td>
-                <td>${l.precio !== null ? moneda(l.precio) : '<span class="text-warning"><i class="fas fa-exclamation-triangle mr-1"></i>Sin tarifa</span>'}</td>
+                <td>${l.precio !== null ? moneda(l.precio) : '<span class="text-warning"><i class="fas fa-exclamation-triangle mr-1"></i>Sin tarifa</span>'}${aviso}</td>
                 <td>${l.precio !== null ? moneda(l.subtotal) : '-'}</td>
+                <td class="text-nowrap">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="abrirPrecioEspecial(${i})" title="Cambiar el precio (precio pactado)">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                </td>
             </tr>
         `);
     });
@@ -421,6 +431,71 @@ function renderAPagar(lineas) {
         .html(`<i class="fas fa-exclamation-triangle mr-1"></i>${plural(cantSinPrecio, 'prenda')} se cosieron sin tarifa cargada. Al registrar el pago se usa la tarifa vigente hoy; las que sigan sin tarifa quedan para el próximo pago.`);
 
     $('#btnRegistrarPago').prop('disabled', lineas.length === 0);
+}
+
+// =====================================================
+// PRECIO PACTADO A MANO
+// =====================================================
+let lineasAPagar = [];
+let lineaPrecioEspecial = null;
+
+function abrirPrecioEspecial(indice) {
+    const l = lineasAPagar[indice];
+    if (!l) return;
+
+    lineaPrecioEspecial = l;
+    $('#peProducto').text(l.producto + (l.esExtra ? ' (cosió de más)' : ''));
+    $('#peActual').text(`${plural(l.cantidad, 'prenda')}${l.precio !== null ? ' a ' + moneda(l.precio) : ', sin tarifa'}`
+        + (l.tarifaActual !== null ? ` · tarifa actual ${moneda(l.tarifaActual)}` : ''));
+    $('#peCantidad').val(l.cantidad).attr('max', l.cantidad);
+    $('#peCantidadAyuda').text(`De 1 a ${l.cantidad}`);
+    $('#pePrecio').val(l.precio !== null ? l.precio : (l.tarifaActual ?? ''));
+    actualizarSubtotalPrecioEspecial();
+    $('#modalPrecioEspecial').modal('show');
+}
+
+function actualizarSubtotalPrecioEspecial() {
+    const cantidad = parseInt($('#peCantidad').val()) || 0;
+    const precio = parseFloat($('#pePrecio').val());
+    $('#peSubtotal').text(isNaN(precio) ? '' : `Subtotal: ${moneda(cantidad * precio)}`);
+}
+
+$(document).on('input', '#peCantidad, #pePrecio', actualizarSubtotalPrecioEspecial);
+
+async function guardarPrecioEspecial() {
+    const l = lineaPrecioEspecial;
+    if (!l || modistaSeleccionada === null) return;
+
+    const cantidad = parseInt($('#peCantidad').val());
+    const precio = parseFloat($('#pePrecio').val());
+
+    if (!cantidad || cantidad < 1 || cantidad > l.cantidad) return alert(`La cantidad tiene que ser entre 1 y ${l.cantidad}.`);
+    if (isNaN(precio) || precio < 0) return alert('Escribí un precio válido.');
+
+    try {
+        const res = await fetch(`${API_PANEL}/modista/${modistaSeleccionada}/precio`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                producto: l.producto,
+                precioActual: l.precio,
+                esExtra: l.esExtra,
+                cantidad,
+                precioNuevo: precio
+            })
+        });
+
+        if (!res.ok) {
+            alert(await res.text() || 'No se pudo cambiar el precio.');
+            return;
+        }
+
+        $('#modalPrecioEspecial').modal('hide');
+        cargarPanel();
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo cambiar el precio. Revisá la conexión.');
+    }
 }
 
 function renderPagos(pagos) {
