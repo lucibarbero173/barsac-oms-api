@@ -8,7 +8,7 @@ namespace BarsacOMS.Api.Services
         Task<IEnumerable<Pago>> ObtenerTodosAsync();
         Task<Pago?> ObtenerPorIdAsync(int id);
         Task<Pago> CrearAsync(CrearPagoDTO dto);
-        Task<bool> ActualizarAsync(int id, CrearPagoDTO dto);
+        Task<(bool Encontrado, string? Error)> ActualizarAsync(int id, CrearPagoDTO dto);
         Task<bool> EliminarAsync(int id);
     }
 }

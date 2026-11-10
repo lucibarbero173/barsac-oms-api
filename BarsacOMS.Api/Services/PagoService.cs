@@ -8,22 +8,46 @@ namespace BarsacOMS.Api.Services
     public class PagoService : IPagoService
     {
         private readonly AppDbContext _context;
+        private readonly IPanelModistasService _panelModistas;
 
-        public PagoService(AppDbContext context)
+        public PagoService(AppDbContext context, IPanelModistasService panelModistas)
         {
             _context = context;
+            _panelModistas = panelModistas;
         }
 
         public async Task<IEnumerable<Pago>> ObtenerTodosAsync()
         {
-            return await _context.Pagos
+            var pagos = await _context.Pagos
                 .OrderByDescending(p => p.FechaFactura)
                 .ToListAsync();
+
+            var liquidaciones = await _context.PagosModista
+                .Where(pm => pm.PagoId != null)
+                .Select(pm => new { PagoId = pm.PagoId!.Value, pm.Id, pm.CantidadPrendas })
+                .ToListAsync();
+            var porPago = liquidaciones.GroupBy(l => l.PagoId).ToDictionary(g => g.Key, g => g.First());
+
+            foreach (var p in pagos)
+            {
+                if (porPago.TryGetValue(p.Id, out var l))
+                {
+                    p.PagoModistaId = l.Id;
+                    p.CantidadPrendasModista = l.CantidadPrendas;
+                }
+            }
+            return pagos;
         }
 
         public async Task<Pago?> ObtenerPorIdAsync(int id)
         {
-            return await _context.Pagos.FindAsync(id);
+            var pago = await _context.Pagos.FindAsync(id);
+            if (pago == null) return null;
+
+            var liquidacion = await BuscarLiquidacionAsync(id);
+            pago.PagoModistaId = liquidacion?.Id;
+            pago.CantidadPrendasModista = liquidacion?.CantidadPrendas;
+            return pago;
         }
 
         public async Task<Pago> CrearAsync(CrearPagoDTO dto)
@@ -44,10 +68,21 @@ namespace BarsacOMS.Api.Services
             return pago;
         }
 
-        public async Task<bool> ActualizarAsync(int id, CrearPagoDTO dto)
+        public async Task<(bool Encontrado, string? Error)> ActualizarAsync(int id, CrearPagoDTO dto)
         {
             var pago = await _context.Pagos.FindAsync(id);
-            if (pago == null) return false;
+            if (pago == null) return (false, null);
+
+            // Un pago de modista tiene que seguir valiendo lo mismo que las prendas que liquidó
+            var liquidacion = await BuscarLiquidacionAsync(id);
+            if (liquidacion != null)
+            {
+                if (Math.Round(dto.Importe, 2) != Math.Round(pago.Importe, 2))
+                    return (true, "Este pago es la liquidación de una modista: el importe tiene que coincidir con las prendas que se le pagaron. " +
+                                  "Si hay que cambiarlo, anulalo (desde acá o desde Panel Modistas), ajustá el precio con el lápiz en \"A pagar\" y volvé a registrar el pago.");
+                if (dto.Estado != EstadoPago.PAGADO)
+                    return (true, "Este pago es la liquidación de una modista y ya se le pagó: no puede quedar PENDIENTE. Si no se le pagó, eliminalo.");
+            }
 
             pago.FechaFactura = dto.FechaFactura;
             pago.Proveedor = dto.Proveedor;
@@ -58,7 +93,7 @@ namespace BarsacOMS.Api.Services
             pago.FechaPago = dto.Estado == EstadoPago.PAGADO ? (dto.FechaPago ?? DateTime.Now) : null;
 
             await _context.SaveChangesAsync();
-            return true;
+            return (true, null);
         }
 
         public async Task<bool> EliminarAsync(int id)
@@ -66,9 +101,20 @@ namespace BarsacOMS.Api.Services
             var pago = await _context.Pagos.FindAsync(id);
             if (pago == null) return false;
 
+            // Si es la liquidación de una modista, se anula también ahí: las prendas vuelven a
+            // "A pagar" (lo mismo que anularlo desde Panel Modistas, que borra este Pago).
+            var liquidacion = await BuscarLiquidacionAsync(id);
+            if (liquidacion != null)
+            {
+                return await _panelModistas.AnularPagoAsync(liquidacion.Id);
+            }
+
             _context.Pagos.Remove(pago);
             await _context.SaveChangesAsync();
             return true;
         }
+
+        private Task<PagoModista?> BuscarLiquidacionAsync(int pagoId) =>
+            _context.PagosModista.FirstOrDefaultAsync(pm => pm.PagoId == pagoId);
     }
 }

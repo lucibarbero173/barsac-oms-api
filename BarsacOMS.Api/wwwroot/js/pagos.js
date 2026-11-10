@@ -2,7 +2,27 @@
 
 $(document).ready(function () {
     cargarPagos();
+
+    // Un pago nuevo con concepto "Modistas" no descuenta nada de lo que se le debe a la modista
+    $('#selectConcepto').on('change', function () {
+        if (parseInt($('#inputPagoId').val()) > 0) return;
+        if ($(this).val() === 'Modistas') {
+            mostrarAvisoModista('<i class="fas fa-info-circle mr-1"></i> Para pagarle a una modista lo que cosió, usá <b>Registrar pago</b> en <b>Panel Modistas</b>: así se descuenta de lo que le debés y queda cargado acá solo. Usá esta ventana solo para pagos que no sean por prendas cosidas.');
+        } else {
+            mostrarAvisoModista(null);
+        }
+    });
 });
+
+function mostrarAvisoModista(html) {
+    $('#avisoPagoModista').html(html || '').toggleClass('d-none', !html);
+}
+
+// Las liquidaciones de modistas no pueden cambiar de importe ni quedar pendientes
+function bloquearCamposModista(bloquear) {
+    $('#inputImporte').prop('readonly', bloquear);
+    $('#selectEstado').prop('disabled', bloquear);
+}
 
 async function cargarPagos() {
     try {
@@ -29,7 +49,7 @@ async function cargarPagos() {
             tbody.append(`
                 <tr>
                     <td>${fechaFact}</td>
-                    <td class="font-weight-bold">${p.proveedor}</td>
+                    <td class="font-weight-bold">${p.proveedor}${p.pagoModistaId ? ` <span class="badge badge-light border ml-1" title="Generado con Registrar pago en Panel Modistas (${p.cantidadPrendasModista} prendas)"><i class="fas fa-cut mr-1"></i>Liquidación modista</span>` : ''}</td>
                     <td><span class="badge badge-secondary px-2 py-1">${p.concepto}</span></td>
                     <td><span class="badge badge-info px-2 py-1">${p.medioPago}</span></td>
                     <td class="text-right font-weight-bold">$${Number(p.importe).toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
@@ -40,7 +60,7 @@ async function cargarPagos() {
                         <button class="btn btn-sm btn-info mr-1" title="Editar" onclick="editarPago(${p.id})">
                             <i class="fas fa-pencil-alt"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" title="Eliminar" onclick="eliminarPago(${p.id})">
+                        <button class="btn btn-sm btn-danger" title="Eliminar" onclick="eliminarPago(${p.id}, ${p.pagoModistaId ? p.cantidadPrendasModista || 0 : -1})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -68,7 +88,9 @@ function abrirModalNuevoPago() {
     $("#inputFechaFactura").val(hoy);
     $("#inputFechaPago").val(hoy);
     $("#selectEstado").val("1").trigger("change");
-    
+    mostrarAvisoModista(null);
+    bloquearCamposModista(false);
+
     $("#textoTituloModal").text("Registrar Nuevo Pago");
     $("#modalNuevoPago").modal("show");
 }
@@ -96,6 +118,12 @@ async function editarPago(id) {
         $("#selectEstado").val(estadoVal);
         
         toggleFechaPago();
+
+        const esModista = !!pago.pagoModistaId;
+        bloquearCamposModista(esModista);
+        mostrarAvisoModista(esModista
+            ? `<i class="fas fa-cut mr-1"></i> Es la liquidación de una modista (${pago.cantidadPrendasModista} prendas). Podés cambiar la fecha, el medio de pago o el proveedor; el <b>importe</b> no, porque tiene que coincidir con las prendas pagadas. Para cambiarlo, eliminá este pago (las prendas vuelven a "A pagar" en Panel Modistas), ajustá el precio y volvé a registrarlo.`
+            : null);
 
         if (estadoVal === "1" && pago.fechaPago) {
             $("#inputFechaPago").val(pago.fechaPago.split("T")[0]);
@@ -153,15 +181,20 @@ async function guardarPago() {
             $("#modalNuevoPago").modal("hide");
             cargarPagos();
         } else {
-            alert("Ocurrió un error al guardar el pago.");
+            const err = await res.json().catch(() => null);
+            alert(err?.mensaje || "Ocurrió un error al guardar el pago.");
         }
     } catch (e) {
         console.error("Error al guardar pago:", e);
     }
 }
 
-async function eliminarPago(id) {
-    if (!confirm("¿Está seguro de eliminar este registro de pago?")) return;
+// prendasModista = -1 si es un pago común; si no, las prendas de esa liquidación de modista
+async function eliminarPago(id, prendasModista = -1) {
+    const mensaje = prendasModista >= 0
+        ? `Este pago es la liquidación de una modista (${prendasModista} prendas).\n\nSi lo eliminás, también se anula en Panel Modistas y esas prendas vuelven a "A pagar".\n\n¿Eliminarlo?`
+        : "¿Está seguro de eliminar este registro de pago?";
+    if (!confirm(mensaje)) return;
     try {
         const res = await fetch(`https://barsac-oms-api-production.up.railway.app/api/pago/${id}`, { method: "DELETE" });
         if (res.ok) cargarPagos();

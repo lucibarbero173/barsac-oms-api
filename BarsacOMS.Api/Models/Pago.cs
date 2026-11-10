@@ -36,5 +36,13 @@ namespace BarsacOMS.Api.Models
 
         // Propiedad calculada o autogenerada para el Mes de Pago
         public int MesPago => FechaPago.HasValue ? FechaPago.Value.Month : FechaFactura.Month;
+
+        // Si este pago es la liquidación de una modista (Registrar pago en Panel Modistas).
+        // No es columna: lo completa PagoService para que la pantalla Pagos lo sepa.
+        [NotMapped]
+        public int? PagoModistaId { get; set; }
+
+        [NotMapped]
+        public int? CantidadPrendasModista { get; set; }
     }
 }

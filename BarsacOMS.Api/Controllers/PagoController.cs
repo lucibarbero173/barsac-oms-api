@@ -47,8 +47,9 @@ namespace BarsacOMS.Api.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var actualizado = await _pagoService.ActualizarAsync(id, dto);
-            if (!actualizado) return NotFound(new { mensaje = "Pago no encontrado" });
+            var (encontrado, error) = await _pagoService.ActualizarAsync(id, dto);
+            if (!encontrado) return NotFound(new { mensaje = "Pago no encontrado" });
+            if (error != null) return BadRequest(new { mensaje = error });
 
             return NoContent();
         }
