@@ -270,11 +270,12 @@
                     <div id="vistaModista" class="d-none">
                         <!-- Resumen por pedido: cuánto cosió y cuándo terminó -->
                         <div class="card shadow mb-4">
-                            <div class="card-header py-3">
+                            <div class="card-header py-3 d-flex flex-wrap align-items-center justify-content-between">
                                 <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-check mr-1"></i> Pedidos que cosió</h6>
+                                <input type="search" class="form-control form-control-sm buscador-tabla" data-tabla="detTrabajosBody" placeholder="Buscar orden, ficha, cliente..." aria-label="Buscar en Pedidos que cosió">
                             </div>
                             <div class="card-body">
-                                <div class="table-responsive">
+                                <div class="table-responsive tabla-scroll">
                                     <table class="table table-bordered table-sm text-center align-middle mb-0">
                                         <thead>
                                             <tr>
@@ -296,11 +297,12 @@
 
                         <!-- "Cosí de más" que cargó la modista: se aprueban antes de pagarse -->
                         <div class="card shadow mb-4 border-left-warning d-none" id="cardExtras">
-                            <div class="card-header py-3">
+                            <div class="card-header py-3 d-flex flex-wrap align-items-center justify-content-between">
                                 <h6 class="m-0 font-weight-bold text-warning"><i class="fas fa-plus-circle mr-1"></i> Cosió de más (cargado por ella)</h6>
+                                <input type="search" class="form-control form-control-sm buscador-tabla" data-tabla="detExtrasBody" placeholder="Buscar ficha, cliente, producto..." aria-label="Buscar en Cosió de más">
                             </div>
                             <div class="card-body">
-                                <div class="table-responsive">
+                                <div class="table-responsive tabla-scroll">
                                     <table class="table table-bordered table-sm text-center align-middle mb-0">
                                         <thead>
                                             <tr>
@@ -321,11 +323,12 @@
                         </div>
 
                         <div class="card shadow mb-4">
-                            <div class="card-header py-3">
+                            <div class="card-header py-3 d-flex flex-wrap align-items-center justify-content-between">
                                 <h6 class="m-0 font-weight-bold text-primary">Falta coser</h6>
+                                <input type="search" class="form-control form-control-sm buscador-tabla" data-tabla="detFaltaCoserBody" placeholder="Buscar ficha, cliente, producto, nombre..." aria-label="Buscar en Falta coser">
                             </div>
                             <div class="card-body">
-                                <div class="table-responsive">
+                                <div class="table-responsive tabla-scroll">
                                     <table class="table table-bordered table-sm text-center align-middle">
                                         <thead>
                                             <tr>
@@ -352,7 +355,7 @@
                                         <h6 class="m-0 font-weight-bold text-success">A pagar</h6>
                                     </div>
                                     <div class="card-body">
-                                        <div class="table-responsive">
+                                        <div class="table-responsive tabla-scroll">
                                             <table class="table table-bordered table-sm text-center align-middle">
                                                 <thead>
                                                     <tr>
@@ -401,11 +404,12 @@
 
                             <div class="col-lg-5 mb-4">
                                 <div class="card shadow h-100">
-                                    <div class="card-header py-3">
+                                    <div class="card-header py-3 d-flex flex-wrap align-items-center justify-content-between">
                                         <h6 class="m-0 font-weight-bold text-primary">Historial de pagos</h6>
+                                        <input type="search" class="form-control form-control-sm buscador-tabla" data-tabla="detPagosBody" placeholder="Buscar fecha, nota..." aria-label="Buscar en Historial de pagos">
                                     </div>
                                     <div class="card-body">
-                                        <div class="table-responsive">
+                                        <div class="table-responsive tabla-scroll">
                                             <table class="table table-bordered table-sm text-center align-middle">
                                                 <thead>
                                                     <tr>

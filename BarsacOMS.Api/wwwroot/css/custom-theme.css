@@ -691,19 +691,42 @@
     }
 }
 
-/* Estadísticas: tablas de faltantes con alto fijo y barrita para subir y bajar
-   (crecen para siempre). El encabezado queda fijo arriba al scrollear. */
-.tabla-scroll-faltantes {
+/* Tablas que crecen para siempre (faltantes de Estadísticas, Panel Modistas...): alto fijo
+   y barrita para subir y bajar. El encabezado queda fijo arriba y el total fijo abajo. */
+.tabla-scroll-faltantes,
+.tabla-scroll {
     max-height: 420px;
     overflow-y: auto;
 }
 
-.tabla-scroll-faltantes thead th {
+.tabla-scroll-faltantes thead th,
+.tabla-scroll thead th {
     position: sticky;
     top: 0;
     z-index: 2;
     background: var(--bg-card);
     box-shadow: inset 0 -1px 0 var(--border-color);
+}
+
+.tabla-scroll tfoot td {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--bg-card);
+    box-shadow: inset 0 1px 0 var(--border-color);
+}
+
+/* Buscador en el encabezado de una tarjeta (lo maneja app.js) */
+.buscador-tabla {
+    max-width: 260px;
+}
+
+@media (max-width: 576px) {
+    .buscador-tabla {
+        max-width: none;
+        width: 100%;
+        margin-top: .5rem;
+    }
 }
 
 

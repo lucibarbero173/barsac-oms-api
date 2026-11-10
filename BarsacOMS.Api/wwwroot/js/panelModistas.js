@@ -102,6 +102,8 @@ async function cargarPanel() {
 }
 
 async function seleccionar(modistaId) {
+    // Al cambiar de modista los buscadores arrancan vacíos (al recargar la misma, se conservan)
+    if (modistaId !== modistaSeleccionada) $('.buscador-tabla').val('');
     modistaSeleccionada = modistaId;
     await renderTodo();
 }

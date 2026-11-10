@@ -288,3 +288,59 @@ document.addEventListener('DOMContentLoaded', () => {
     s.src = 'js/chat.js';
     document.body.appendChild(s);
 })();
+
+// =====================================================
+// BUSCADOR DE TABLAS SIMPLES (las que no son DataTables)
+// <input class="buscador-tabla" data-tabla="idDelTbody"> filtra las filas de ese tbody por
+// cualquier texto (sin importar mayúsculas ni tildes). Si la tabla se vuelve a dibujar
+// (ej. al cambiar de modista o recargar), el filtro escrito se vuelve a aplicar solo.
+// =====================================================
+(function () {
+    const normalizar = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const observados = new WeakSet();
+
+    function filtrar(input) {
+        const tbody = document.getElementById(input.dataset.tabla);
+        if (!tbody) return;
+        const texto = normalizar(input.value);
+        let visibles = 0;
+        let filas = 0;
+
+        Array.from(tbody.rows).forEach(fila => {
+            // Las filas de aviso ("Todavía no...") ocupan todas las columnas: se ocultan al buscar
+            const esAviso = fila.cells.length === 1 && fila.cells[0].colSpan > 1;
+            if (esAviso) { fila.style.display = texto ? 'none' : ''; return; }
+            filas++;
+            const coincide = !texto || normalizar(fila.innerText).includes(texto);
+            fila.style.display = coincide ? '' : 'none';
+            if (coincide) visibles++;
+        });
+
+        // Cartelito "sin resultados" debajo de la tabla
+        const contenedor = tbody.closest('.table-responsive') || tbody.closest('table');
+        let aviso = contenedor.nextElementSibling;
+        if (!aviso || !aviso.classList.contains('buscador-sin-resultados')) {
+            aviso = document.createElement('div');
+            aviso.className = 'buscador-sin-resultados small text-muted text-center py-2 d-none';
+            contenedor.after(aviso);
+        }
+        const sinResultados = texto && filas > 0 && visibles === 0;
+        aviso.textContent = sinResultados ? `No hay resultados para "${input.value.trim()}".` : '';
+        aviso.classList.toggle('d-none', !sinResultados);
+    }
+
+    function observar(input) {
+        const tbody = document.getElementById(input.dataset.tabla);
+        if (!tbody || observados.has(tbody)) return;
+        observados.add(tbody);
+        new MutationObserver(() => filtrar(input)).observe(tbody, { childList: true });
+    }
+
+    document.addEventListener('input', (e) => {
+        if (e.target.classList && e.target.classList.contains('buscador-tabla')) filtrar(e.target);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.buscador-tabla').forEach(observar);
+    });
+})();
