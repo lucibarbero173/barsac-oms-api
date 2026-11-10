@@ -159,7 +159,7 @@ function eliminarCliente(id) {
             if (res.ok) {
                 cargarClientes();
             } else {
-                alert("Error al eliminar cliente");
+                res.text().then(t => alert(t || "Error al eliminar cliente"));
             }
         });
 }

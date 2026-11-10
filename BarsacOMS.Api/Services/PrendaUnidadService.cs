@@ -115,7 +115,8 @@ namespace BarsacOMS.Api.Services
             if (listoParaEntregar)
             {
                 var orden = await _context.Ordenes.FindAsync(ordenId);
-                if (orden != null && orden.Estado != EstadoOrden.Entregado)
+                // No pisa una entrega ya hecha (total o parcial): eso lo decide quien entrega
+                if (orden != null && orden.Estado != EstadoOrden.Entregado && orden.Estado != EstadoOrden.EntregadoParcial)
                 {
                     orden.Estado = EstadoOrden.ListoParaEntregar;
                     await _context.SaveChangesAsync();

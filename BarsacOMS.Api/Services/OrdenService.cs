@@ -29,7 +29,7 @@ namespace BarsacOMS.Api.Services
                 ListaPrecios = cliente.ListaPrecios ?? "",
                 FechaPedido = dto.FechaPedido,
                 FechaEntrega = dto.FechaEntrega,
-                Estado = dto.Estado,
+                Estado = dto.Estado ?? EstadoOrden.Pendiente,
                 // Seña y otros cobros NO se cargan desde el pedido: los suma CobroService
                 // cada vez que se registra un cobro (botón Registrar Cobro o pantalla Cobros),
                 // así lo que dice el pedido siempre coincide con Cobros y Conciliación.
@@ -58,6 +58,8 @@ namespace BarsacOMS.Api.Services
             var cliente = await _context.Clientes.FindAsync(dto.ClienteId)
                 ?? throw new InvalidOperationException($"El cliente especificado ({dto.ClienteId}) no existe.");
 
+            await ValidarContraFichasAsync(id, dto.Detalles);
+
             // Actualizar Snapshot del Cliente y Fechas/Cobros
             orden.ClienteId = cliente.Id;
             orden.NombreCliente = cliente.Nombre ?? "";
@@ -67,7 +69,9 @@ namespace BarsacOMS.Api.Services
             orden.ListaPrecios = cliente.ListaPrecios ?? "";
             orden.FechaPedido = dto.FechaPedido;
             orden.FechaEntrega = dto.FechaEntrega;
-            orden.Estado = dto.Estado;
+            // El estado lo van moviendo las estaciones (Diseño, Corte, Control...). Solo se pisa
+            // si en el formulario se cambió a mano; si no, viene null y queda el que tiene ahora.
+            if (dto.Estado.HasValue) orden.Estado = dto.Estado.Value;
             // Senas / OtrosCobros no se tocan: solo cambian al registrar, editar o borrar un cobro
             orden.FormaPago = dto.FormaPago;
 
@@ -136,6 +140,22 @@ namespace BarsacOMS.Api.Services
 
             if (orden == null) return false;
 
+            // Con cobros: si se borra, esa plata queda en Cobros/Conciliación sin pedido
+            var cobros = await _context.Cobros.Where(c => c.OrdenId == id).Select(c => c.Importe).ToListAsync();
+            cobros.AddRange(await _context.Set<CobroAsignacion>().Where(a => a.OrdenId == id).Select(a => a.Importe).ToListAsync());
+            if (cobros.Count > 0)
+                throw new InvalidOperationException(
+                    $"No se puede eliminar el pedido #{id}: tiene {cobros.Count} cobro(s) registrado(s) por {ControlBorrados.Moneda(cobros.Sum())}. " +
+                    "Primero eliminá esos cobros o pasalos a otro pedido desde Cobros.");
+
+            // Con producción en marcha: la cascada se llevaría fichas, prendas cosidas y pagos a modistas
+            var fichaIds = await _context.FichasProduccion.Where(f => f.OrdenId == id).Select(f => f.Id).ToListAsync();
+            var avance = await ControlBorrados.AvanceDeFichasAsync(_context, fichaIds);
+            if (avance != null)
+                throw new InvalidOperationException(
+                    $"No se puede eliminar el pedido #{id}: su producción ya avanzó ({avance}). " +
+                    "Si se borra, se pierde ese trabajo (y lo que se les debe a las modistas).");
+
             _context.Ordenes.Remove(orden);
             await _context.SaveChangesAsync();
             return true;
@@ -149,6 +169,42 @@ namespace BarsacOMS.Api.Services
             orden.Estado = nuevoEstado;
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        // Las cantidades del pedido no pueden quedar por debajo de lo que ya se repartió en fichas
+        // (se compara por producto, igual que la disponibilidad de Fichas de Producción).
+        private async Task ValidarContraFichasAsync(int ordenId, List<CrearDetalleDTO>? detallesDto)
+        {
+            static string Clave(string? nombre) => (nombre ?? "").Trim().ToLower();
+
+            var enFichas = (await (
+                    from f in _context.FichasProduccion
+                    where f.OrdenId == ordenId
+                    join d in _context.DetallesFichaProduccion on f.Id equals d.FichaProduccionId
+                    select new { d.Producto, d.Cantidades }
+                ).ToListAsync())
+                .GroupBy(x => Clave(x.Producto))
+                .Select(g => new { Clave = g.Key, Nombre = g.First().Producto, Cantidad = g.Sum(x => x.Cantidades) })
+                .ToList();
+            if (enFichas.Count == 0) return;
+
+            detallesDto ??= new List<CrearDetalleDTO>();
+            var ids = detallesDto.Select(d => d.ProductoId).Distinct().ToList();
+            var nombres = await _context.Productos.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id, p => p.Nombre);
+            var pedido = detallesDto
+                .GroupBy(d => Clave(nombres.GetValueOrDefault(d.ProductoId)))
+                .ToDictionary(g => g.Key, g => g.Sum(d => d.Cantidad));
+
+            var problemas = enFichas
+                .Where(f => pedido.GetValueOrDefault(f.Clave) < f.Cantidad)
+                .Select(f => $"• {f.Nombre}: hay {f.Cantidad} en fichas y el pedido quedaría con {pedido.GetValueOrDefault(f.Clave)}")
+                .ToList();
+
+            if (problemas.Count > 0)
+                throw new InvalidOperationException(
+                    "No se puede bajar el pedido por debajo de lo que ya está en fichas de producción:\n" +
+                    string.Join("\n", problemas) +
+                    "\nPrimero ajustá o eliminá esas fichas.");
         }
 
         private async Task MapearYCalcularDetallesAsync(OrdenTrabajo orden, List<CrearDetalleDTO> detallesDto)

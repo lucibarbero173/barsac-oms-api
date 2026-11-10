@@ -94,8 +94,9 @@ namespace BarsacOMS.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _fichaService.DeleteAsync(id);
-            if (!result) return NotFound();
+            var (encontrada, error) = await _fichaService.DeleteAsync(id);
+            if (!encontrada) return NotFound();
+            if (error != null) return BadRequest(error);
             return NoContent();
         }
     }

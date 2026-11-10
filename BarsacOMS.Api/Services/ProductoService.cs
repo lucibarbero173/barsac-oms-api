@@ -107,6 +107,24 @@ namespace BarsacOMS.Api.Services
             var producto = await _context.Productos.FindAsync(id);
             if (producto == null) return false;
 
+            // Si se borra, la base se lleva el renglón de todos los pedidos que lo tienen (y el
+            // total del pedido deja de coincidir). Las fichas lo guardan por nombre.
+            var pedidos = await _context.Detalles.Where(d => d.ProductoId == id).Select(d => d.OrdenId).Distinct().CountAsync();
+            var nombre = (producto.Nombre ?? "").Trim().ToLower();
+            var fichas = await _context.DetallesFichaProduccion
+                .Where(d => d.Producto.Trim().ToLower() == nombre)
+                .Select(d => d.FichaProduccionId).Distinct().CountAsync();
+
+            if (pedidos > 0 || fichas > 0)
+            {
+                var usos = new List<string>();
+                if (pedidos > 0) usos.Add($"{pedidos} pedido(s)");
+                if (fichas > 0) usos.Add($"{fichas} ficha(s) de producción");
+                throw new InvalidOperationException(
+                    $"No se puede eliminar \"{producto.Nombre}\": lo usan {string.Join(" y ", usos)}. " +
+                    "Si se borra, desaparece de esos pedidos y sus totales dejan de coincidir.");
+            }
+
             _context.Productos.Remove(producto);
             await _context.SaveChangesAsync();
             return true;

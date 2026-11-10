@@ -1,6 +1,7 @@
 ﻿let productosGlobal = [];
 let idOrdenEdicion = null;
 let cargandoEdicion = false; // Candado para evitar recálculos automáticos indebidos
+let estadoCargado = null; // Estado con el que se abrió el pedido: si no se toca, no se manda (lo mueven las estaciones)
 
 // ==========================================
 // FUNCIÓN MAPEADORA DE FORMA DE PAGO (Ámbito Global)
@@ -315,6 +316,7 @@ async function cargarOrdenParaEditar(id) {
 
         if (orden.estado !== undefined && document.getElementById("estadoSelect")) {
             document.getElementById("estadoSelect").value = orden.estado;
+            estadoCargado = document.getElementById("estadoSelect").value;
         }
 
         if (document.getElementById("cobrado")) document.getElementById("cobrado").value = (orden.senas || 0) + (orden.otrosCobros || 0);
@@ -441,7 +443,9 @@ async function guardarPedido() {
             formaPago: document.getElementById("formaPago")?.value || "efectivo",
             fechaPedido: document.getElementById("fechaPedido").value,
             fechaEntrega: document.getElementById("fechaEntrega").value,
-            estado: estadoVal,
+            // Al editar, si no se cambió el estado va null: así no se pisa lo que avanzaron
+            // Diseño, Corte o Control mientras el pedido estaba abierto
+            estado: (idOrdenEdicion && document.getElementById("estadoSelect")?.value === estadoCargado) ? null : estadoVal,
             // Seña y otros cobros ya no se cargan acá: se registran desde Cobros
             detalles: detalles
         };
@@ -462,7 +466,7 @@ async function guardarPedido() {
 
         if (!response.ok) {
             const errorText = await response.text();
-            alert("Error del servidor: " + errorText);
+            alert(errorText || "No se pudo guardar el pedido.");
             return;
         }
 

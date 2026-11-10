@@ -349,7 +349,7 @@ function eliminarOrden(id) {
             if (res.ok) {
                 cargarOrdenes();
             } else {
-                alert("Error al eliminar");
+                res.text().then(t => alert(t || "Error al eliminar"));
             }
         });
 }

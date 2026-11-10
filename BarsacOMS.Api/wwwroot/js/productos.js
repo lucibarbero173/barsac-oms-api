@@ -137,7 +137,8 @@ async function eliminarProducto(id) {
             if (response.ok) {
                 obtenerProductos();
             } else {
-                alert('No se pudo eliminar el producto de la base de datos.');
+                const motivo = await response.text();
+                alert(response.status === 400 && motivo ? motivo : 'No se pudo eliminar el producto de la base de datos.');
             }
         } catch (error) {
             console.error('Error al intentar eliminar:', error);

@@ -344,14 +344,30 @@ namespace BarsacOMS.Api.Services
                 .FirstOrDefaultAsync(f => f.OrdenId == ordenId);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<(bool Encontrada, string? Error)> DeleteAsync(int id)
         {
             var ficha = await _context.FichasProduccion.FindAsync(id);
-            if (ficha == null) return false;
+            if (ficha == null) return (false, null);
 
+            // Igual que al editar: no se pierde trabajo hecho (ni lo que se les debe a las modistas)
+            var avance = await ControlBorrados.AvanceDeFichasAsync(_context, new List<int> { id });
+            if (avance != null)
+                return (true, $"No se puede eliminar la ficha #{id}: ya tiene avance ({avance}).");
+
+            var ordenId = ficha.OrdenId;
             _context.FichasProduccion.Remove(ficha);
             await _context.SaveChangesAsync();
-            return true;
+
+            // La orden pasa a la etapa de las fichas que le quedan (o a Pendiente si no le queda ninguna)
+            var orden = await _context.Ordenes.FindAsync(ordenId);
+            if (orden != null && EstadosDeProduccion.Contains(orden.Estado))
+            {
+                var restantes = await _context.FichasProduccion.Where(f => f.OrdenId == ordenId).Select(f => f.EstadoFicha).ToListAsync();
+                orden.Estado = restantes.Count == 0 ? EstadoOrden.Pendiente : EtapasProduccion.MasAtrasada(restantes);
+                await _context.SaveChangesAsync();
+            }
+
+            return (true, null);
         }
 
         // Solo estos valores son estados de PRODUCCIÓN (los que puede tomar una ficha).

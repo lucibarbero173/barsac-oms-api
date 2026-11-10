@@ -64,6 +64,12 @@ namespace BarsacOMS.Api.Controllers
             if (cliente == null)
                 return NotFound();
 
+            // Borrar el cliente borra en cascada todos sus pedidos, fichas y prendas
+            var pedidos = await _context.Ordenes.CountAsync(o => o.ClienteId == id);
+            if (pedidos > 0)
+                return BadRequest($"No se puede eliminar a {cliente.Nombre}: tiene {pedidos} pedido(s) cargado(s). " +
+                                  "Si se borra, se borran también sus pedidos, fichas y prendas.");
+
             _context.Clientes.Remove(cliente);
             await _context.SaveChangesAsync();
 

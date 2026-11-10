@@ -10,7 +10,7 @@ namespace BarsacOMS.Api.Services
         Task<FichaProduccion?> ObtenerFichaPorOrdenAsync(int ordenId); // <--- Agrega esta línea
         Task<FichaProduccion> CreateAsync(FichaProduccion ficha);
         Task<ResultadoActualizacionFicha> UpdateAsync(FichaProduccion ficha);
-        Task<bool> DeleteAsync(int id);
+        Task<(bool Encontrada, string? Error)> DeleteAsync(int id);
         Task<List<OrdenTrabajo>> GetOrdenesConSaldoPendienteAsync();
         Task<DisponibilidadOrdenDto> ObtenerDisponibilidadAsync(int ordenId, int? excluirFichaId);
         Task<bool> MarcarEntregadaAsync(int fichaId);
