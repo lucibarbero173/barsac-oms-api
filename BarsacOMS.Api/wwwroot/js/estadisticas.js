@@ -150,7 +150,7 @@ function renderizarTablaSaldos(saldos) {
     tbody.innerHTML = "";
 
     if (!saldos || saldos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No hay órdenes entregadas con saldo pendiente.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No hay órdenes entregadas (total o parcialmente) con saldo pendiente.</td></tr>`;
         return;
     }
 

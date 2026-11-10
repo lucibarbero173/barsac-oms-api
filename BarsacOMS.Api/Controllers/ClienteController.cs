@@ -51,6 +51,25 @@ namespace BarsacOMS.Api.Controllers
                 return BadRequest();
 
             _context.Entry(cliente).State = EntityState.Modified;
+
+            // Los pedidos guardan una copia de los datos del cliente: se actualiza para que en
+            // Pedidos, Fichas, Impresión, Cobros, etc. aparezca con el nombre y contacto de hoy.
+            // La lista de precios no se toca: los precios de cada pedido ya quedaron cargados.
+            var pedidos = await _context.Ordenes.Where(o => o.ClienteId == id).ToListAsync();
+            foreach (var o in pedidos)
+            {
+                o.NombreCliente = cliente.Nombre ?? "";
+                o.Telefono = cliente.Telefono ?? "";
+                o.Solicitante = cliente.Solicitante ?? "";
+                o.Disciplina = cliente.Disciplina ?? "";
+            }
+
+            var idsPedidos = pedidos.Select(o => o.Id).ToList();
+            var cobros = await _context.Cobros
+                .Where(c => c.ClienteId == id || (c.OrdenId != null && idsPedidos.Contains(c.OrdenId.Value)))
+                .ToListAsync();
+            cobros.ForEach(c => c.NombreCliente = cliente.Nombre);
+
             await _context.SaveChangesAsync();
 
             return Ok(cliente);

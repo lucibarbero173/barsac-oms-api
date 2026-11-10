@@ -24,7 +24,8 @@ namespace BarsacOMS.Api.Services
             var ordenesImpagasQuery = _context.Ordenes
                 .Include(o => o.Cliente)
                 .Include(o => o.Detalles)
-                .Where(o => o.Saldo > 0 && o.Estado == EstadoOrden.Entregado);
+                // Entregados del todo o en parte: el cliente ya se llevó prendas y todavía debe
+                .Where(o => o.Saldo > 0 && (o.Estado == EstadoOrden.Entregado || o.Estado == EstadoOrden.EntregadoParcial));
 
             var totalSaldoImpago = await ordenesImpagasQuery.SumAsync(o => (decimal?)o.Saldo) ?? 0;
             var cantOrdenesSaldo = await ordenesImpagasQuery.CountAsync();
@@ -50,28 +51,23 @@ namespace BarsacOMS.Api.Services
                 .SumAsync(c => (decimal?)c.Importe) ?? 0;
 
             // 3. EGRESOS EN EL MES (Evaluado de forma segura en memoria para evitar errores de traducción SQL con nulos)
-            var pagosList = await _context.Pagos.ToListAsync();
+            // Solo lo que efectivamente se pagó (igual que Conciliación), por la fecha en que se pagó.
+            // Los PENDIENTES todavía no son egreso.
+            var pagosList = await _context.Pagos.Where(p => p.Estado == EstadoPago.PAGADO).ToListAsync();
             var pagosMes = pagosList.Where(p =>
-                (p.FechaPago != null && p.FechaPago.Value.Month == mesActual && p.FechaPago.Value.Year == anioActual) ||
-                (p.FechaPago == null && p.FechaFactura.Month == mesActual && p.FechaFactura.Year == anioActual)
-            ).ToList();
+            {
+                var fecha = p.FechaPago ?? p.FechaFactura;
+                return fecha.Month == mesActual && fecha.Year == anioActual;
+            }).ToList();
 
-            var egresosSueldos = pagosMes
-                .Where(p => (!string.IsNullOrEmpty(p.Concepto) && p.Concepto.Contains("Sueldo", StringComparison.OrdinalIgnoreCase)) ||
-                            (!string.IsNullOrEmpty(p.Proveedor) && p.Proveedor.Contains("Sueldo", StringComparison.OrdinalIgnoreCase)))
-                .Sum(p => p.Importe);
+            // Por concepto: "Modistas" es lo que se les paga por coser ("Insumo modistas" es un
+            // insumo, va a Otros); "Sueldo..." son los sueldos.
+            static bool EsSueldo(Pago p) => (p.Concepto ?? "").Contains("Sueldo", StringComparison.OrdinalIgnoreCase);
+            static bool EsModista(Pago p) => string.Equals((p.Concepto ?? "").Trim(), "Modistas", StringComparison.OrdinalIgnoreCase);
 
-            var egresosModistas = pagosMes
-                .Where(p => (!string.IsNullOrEmpty(p.Concepto) && p.Concepto.Contains("Modista", StringComparison.OrdinalIgnoreCase)) ||
-                            (!string.IsNullOrEmpty(p.Proveedor) && p.Proveedor.Contains("Modista", StringComparison.OrdinalIgnoreCase)))
-                .Sum(p => p.Importe);
-
-            var egresosOtros = pagosMes
-                .Where(p =>
-                    (string.IsNullOrEmpty(p.Concepto) || (!p.Concepto.Contains("Sueldo", StringComparison.OrdinalIgnoreCase) && !p.Concepto.Contains("Modista", StringComparison.OrdinalIgnoreCase))) &&
-                    (string.IsNullOrEmpty(p.Proveedor) || (!p.Proveedor.Contains("Sueldo", StringComparison.OrdinalIgnoreCase) && !p.Proveedor.Contains("Modista", StringComparison.OrdinalIgnoreCase)))
-                )
-                .Sum(p => p.Importe);
+            var egresosSueldos = pagosMes.Where(EsSueldo).Sum(p => p.Importe);
+            var egresosModistas = pagosMes.Where(p => !EsSueldo(p) && EsModista(p)).Sum(p => p.Importe);
+            var egresosOtros = pagosMes.Where(p => !EsSueldo(p) && !EsModista(p)).Sum(p => p.Importe);
 
             // 4. PRENDAS PRODUCIDAS EN EL MES
             var ordenesMes = await _context.Ordenes

@@ -95,7 +95,28 @@ namespace BarsacOMS.Api.Services
 
             if (producto == null) return false;
 
-            producto.Nombre = dto.Nombre;
+            var nombreNuevo = (dto.Nombre ?? "").Trim();
+            var claveVieja = (producto.Nombre ?? "").Trim().ToLower();
+            var claveNueva = nombreNuevo.ToLower();
+
+            if (claveNueva != claveVieja)
+            {
+                // Dos productos con el mismo nombre se mezclarían en fichas, tarifas y estadísticas
+                var otros = await _context.Productos.Where(p => p.Id != id).Select(p => p.Nombre).ToListAsync();
+                if (otros.Any(n => (n ?? "").Trim().ToLower() == claveNueva))
+                    throw new InvalidOperationException($"Ya existe otro producto llamado \"{nombreNuevo}\".");
+
+                // Las fichas, los "cosí de más" y las entregas guardan el producto por nombre:
+                // se renombran también, así siguen tomando la tarifa de la modista y la disponibilidad.
+                var renglonesFicha = await _context.DetallesFichaProduccion.Where(d => d.Producto.Trim().ToLower() == claveVieja).ToListAsync();
+                renglonesFicha.ForEach(d => d.Producto = nombreNuevo);
+                var extras = await _context.PrendasExtraModista.Where(e => e.Producto.Trim().ToLower() == claveVieja).ToListAsync();
+                extras.ForEach(e => e.Producto = nombreNuevo);
+                var entregas = await _context.EntregasParciales.Where(e => e.Producto.Trim().ToLower() == claveVieja).ToListAsync();
+                entregas.ForEach(e => e.Producto = nombreNuevo);
+            }
+
+            producto.Nombre = nombreNuevo;
             MapearOActualizarPrecios(producto, dto);
 
             await _context.SaveChangesAsync();

@@ -119,7 +119,8 @@ $('#formProducto').on('submit', async function (e) {
             $('#modalAgregarProducto').modal('hide');
             obtenerProductos(); // Recargar tabla
         } else {
-            alert('Hubo un problema al procesar la solicitud en el servidor.');
+            const motivo = response.status === 400 ? await response.text() : '';
+            alert(motivo || 'Hubo un problema al procesar la solicitud en el servidor.');
         }
     } catch (error) {
         console.error('Error en la petición fetch:', error);

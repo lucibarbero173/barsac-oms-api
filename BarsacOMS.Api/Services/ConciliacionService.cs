@@ -7,7 +7,7 @@ namespace BarsacOMS.Api.Services
 {
     public class ConciliacionService : IConciliacionService
     {
-        private static readonly string[] Cuentas = { "EFECTIVO", "MERCADO PAGO", "UALA", "ICBC" };
+        private static readonly string[] Cuentas = { "EFECTIVO", "MERCADO PAGO", "UALA", "ICBC", "CHEQUE" };
 
         private readonly AppDbContext _context;
 

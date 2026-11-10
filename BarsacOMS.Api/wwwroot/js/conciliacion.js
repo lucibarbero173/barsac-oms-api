@@ -47,7 +47,7 @@ async function cargarResumen() {
 
         resumen.forEach(r => {
             $contenedor.append(`
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-lg col-md-4 col-sm-6 mb-4">
                     <div class="card shadow tarjeta-cuenta h-100" data-cuenta="${r.cuenta}" onclick="seleccionarCuenta('${r.cuenta}')">
                         <div class="card-body">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">${r.cuenta}</div>

@@ -97,6 +97,10 @@ namespace BarsacOMS.Api.Controllers
 
                 return NoContent();
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = ex.Message, inner = ex.InnerException?.Message });
