@@ -271,9 +271,9 @@ function calcularTotales() {
         cantidadTotalPrendas += cant;
     });
 
-    const senas = Number(document.getElementById("senas")?.value || 0);
-    const otrosCobros = Number(document.getElementById("otrosCobros")?.value || 0);
-    const saldo = totalGeneral - senas - otrosCobros;
+    // Lo cobrado viene de la pantalla Cobros (no se edita desde el pedido)
+    const cobrado = Number(document.getElementById("cobrado")?.value || 0);
+    const saldo = totalGeneral - cobrado;
 
     if (document.getElementById("totalPrendas")) document.getElementById("totalPrendas").value = cantidadTotalPrendas;
     if (document.getElementById("importeTotal")) document.getElementById("importeTotal").value = totalGeneral;
@@ -317,8 +317,7 @@ async function cargarOrdenParaEditar(id) {
             document.getElementById("estadoSelect").value = orden.estado;
         }
 
-        if (document.getElementById("senas")) document.getElementById("senas").value = orden.senas || "";
-        if (document.getElementById("otrosCobros")) document.getElementById("otrosCobros").value = orden.otrosCobros || "";
+        if (document.getElementById("cobrado")) document.getElementById("cobrado").value = (orden.senas || 0) + (orden.otrosCobros || 0);
 
         const tbody = document.getElementById("detalleBody");
         tbody.innerHTML = "";
@@ -437,20 +436,13 @@ async function guardarPedido() {
 
         const estadoVal = Number(document.getElementById("estadoSelect")?.value || 0);
 
-        const senasInput = document.getElementById("senas")?.value;
-        const senasVal = (senasInput && Number(senasInput) > 0) ? Number(senasInput) : null;
-
-        const otrosCobrosInput = document.getElementById("otrosCobros")?.value;
-        const otrosCobrosVal = (otrosCobrosInput && Number(otrosCobrosInput) > 0) ? Number(otrosCobrosInput) : null;
-
         const pedido = {
             clienteId: Number(clienteVal),
             formaPago: document.getElementById("formaPago")?.value || "efectivo",
             fechaPedido: document.getElementById("fechaPedido").value,
             fechaEntrega: document.getElementById("fechaEntrega").value,
             estado: estadoVal,
-            senas: senasVal,
-            otrosCobros: otrosCobrosVal,
+            // Seña y otros cobros ya no se cargan acá: se registran desde Cobros
             detalles: detalles
         };
 

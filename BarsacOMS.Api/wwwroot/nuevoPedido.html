@@ -261,12 +261,12 @@
                     <!-- COBROS -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Cobros y Saldo</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Forma de Pago y Saldo</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-md-3 form-group mb-2">
-                                    <label for="formaPago">Forma de Pago</label>
+                                <div class="col-md-4 form-group mb-2">
+                                    <label for="formaPago">Forma de Pago <small class="text-muted">(define la lista de precios)</small></label>
                                     <select id="formaPago" class="form-control">
                                         <option value="">Seleccione</option>
                                         <option value="efectivo">Efectivo</option>
@@ -276,19 +276,19 @@
                                         <option value="ICBC">ICBC</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3 form-group mb-2">
-                                    <label for="senas">Seña</label>
-                                    <input type="number" id="senas" value="0" class="form-control">
+                                <div class="col-md-4 form-group mb-2">
+                                    <label for="cobrado">Cobrado</label>
+                                    <input type="number" id="cobrado" value="0" class="form-control" readonly>
                                 </div>
-                                <div class="col-md-3 form-group mb-2">
-                                    <label for="otrosCobros">Otros Cobros</label>
-                                    <input type="number" id="otrosCobros" value="0" class="form-control">
-                                </div>
-                                <div class="col-md-3 form-group mb-2">
+                                <div class="col-md-4 form-group mb-2">
                                     <label for="saldo">Saldo</label>
                                     <input type="number" id="saldo" class="form-control font-weight-bold" readonly>
                                 </div>
                             </div>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Las señas y los pagos del cliente se cargan con el botón <b>Registrar Cobro</b> ($) del pedido en Pedidos, o desde la pantalla <b>Cobros</b>. Así quedan en Cobros y en Conciliación.
+                            </small>
                         </div>
                     </div>
 

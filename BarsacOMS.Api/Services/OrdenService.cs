@@ -30,64 +30,19 @@ namespace BarsacOMS.Api.Services
                 FechaPedido = dto.FechaPedido,
                 FechaEntrega = dto.FechaEntrega,
                 Estado = dto.Estado,
-                Senas = dto.Senas,
-                OtrosCobros = dto.OtrosCobros,
-                FormaPago = dto.FormaPago, // 👈 Asegurate que tu DTO pase la FormaPago
+                // Seña y otros cobros NO se cargan desde el pedido: los suma CobroService
+                // cada vez que se registra un cobro (botón Registrar Cobro o pantalla Cobros),
+                // así lo que dice el pedido siempre coincide con Cobros y Conciliación.
+                Senas = 0,
+                OtrosCobros = 0,
+                FormaPago = dto.FormaPago, // define la lista de precios (efectivo / transferencia)
                 Detalles = new List<DetallePedido>()
             };
 
             await MapearYCalcularDetallesAsync(orden, dto.Detalles);
 
             _context.Ordenes.Add(orden);
-
-            // 1. Guardamos la Orden para generar el Id (orden.Id)
             await _context.SaveChangesAsync();
-
-            // ⚡ 2. CREACIÓN AUTOMÁTICA DE COBROS ⚡
-            bool huboCobrosIniciales = false;
-            string medioPago = string.IsNullOrWhiteSpace(dto.FormaPago) ? "EFECTIVO" : dto.FormaPago;
-
-            // Si hay Seña mayor a 0
-            if (orden.Senas.HasValue && orden.Senas.Value > 0)
-            {
-                var cobroSena = new Cobro
-                {
-                    OrdenId = orden.Id,
-                    FechaCobro = orden.FechaPedido,
-                    ClienteId = orden.ClienteId,
-                    NombreCliente = orden.NombreCliente,
-                    NombreOrdenante = orden.Solicitante,
-                    Concepto = "REFUERZO SEÑA", // tiene que incluir "SEÑA" para que Cobros la siga contando como seña
-                    MedioCobro = medioPago,
-                    Importe = orden.Senas.Value
-                };
-                _context.Cobros.Add(cobroSena);
-                huboCobrosIniciales = true;
-            }
-
-            // Si hay Otros Cobros mayor a 0
-            if (orden.OtrosCobros.HasValue && orden.OtrosCobros.Value > 0)
-            {
-                var cobroOtros = new Cobro
-                {
-                    OrdenId = orden.Id,
-                    FechaCobro = orden.FechaPedido,
-                    ClienteId = orden.ClienteId,
-                    NombreCliente = orden.NombreCliente,
-                    NombreOrdenante = orden.Solicitante,
-                    Concepto = "OTRO",
-                    MedioCobro = medioPago,
-                    Importe = orden.OtrosCobros.Value
-                };
-                _context.Cobros.Add(cobroOtros);
-                huboCobrosIniciales = true;
-            }
-
-            // 3. Guardamos los cobros generados
-            if (huboCobrosIniciales)
-            {
-                await _context.SaveChangesAsync();
-            }
 
             return orden;
         }
@@ -113,8 +68,7 @@ namespace BarsacOMS.Api.Services
             orden.FechaPedido = dto.FechaPedido;
             orden.FechaEntrega = dto.FechaEntrega;
             orden.Estado = dto.Estado;
-            orden.Senas = dto.Senas;
-            orden.OtrosCobros = dto.OtrosCobros;
+            // Senas / OtrosCobros no se tocan: solo cambian al registrar, editar o borrar un cobro
             orden.FormaPago = dto.FormaPago;
 
             // Reemplazar renglones viejos por los nuevos

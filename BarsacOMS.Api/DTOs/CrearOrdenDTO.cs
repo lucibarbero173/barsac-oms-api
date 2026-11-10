@@ -13,9 +13,6 @@ namespace BarsacOMS.Api.DTOs
 
         public string FormaPago { get; set; } = "efectivo";
 
-        public decimal? Senas { get; set; }
-        public decimal? OtrosCobros { get; set; }
-
         public List<CrearDetalleDTO> Detalles { get; set; }
     }
 }
