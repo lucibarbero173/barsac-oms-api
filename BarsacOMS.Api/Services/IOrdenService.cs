@@ -11,6 +11,7 @@ namespace BarsacOMS.Api.Services
         Task<IEnumerable<OrdenListDTO>> ObtenerOrdenesAsync();
         Task<bool> CambiarEstadoAsync(int id, EstadoOrden nuevoEstado);
         Task<bool> EliminarOrdenAsync(int id);
+        Task<EstadoOrden?> MarcarEntregadoAsync(int id, bool deshacer);
 
     }
 }

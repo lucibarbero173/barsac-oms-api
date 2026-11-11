@@ -344,3 +344,25 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.buscador-tabla').forEach(observar);
     });
 })();
+
+// =====================================================
+// CANDADO CONTRA DOBLE CLIC al guardar plata (cobros, pagos, movimientos...)
+// ejecutarUnaVez(boton, funcionQueGuarda): mientras se está guardando el botón queda
+// deshabilitado y un segundo clic no hace nada. Así no se cargan dos cobros iguales cuando
+// el servidor tarda un segundo y se aprieta de nuevo. La función tiene que devolver la promesa.
+// =====================================================
+window.ejecutarUnaVez = async function (boton, tarea) {
+    if (boton && boton.dataset.ocupado === '1') return;
+    if (boton) {
+        boton.dataset.ocupado = '1';
+        boton.disabled = true;
+    }
+    try {
+        return await tarea();
+    } finally {
+        if (boton) {
+            boton.dataset.ocupado = '';
+            boton.disabled = false;
+        }
+    }
+};

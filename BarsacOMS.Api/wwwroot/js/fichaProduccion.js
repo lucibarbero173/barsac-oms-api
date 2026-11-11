@@ -281,11 +281,10 @@ async function cargarTablaFichas() {
             const fechaPedido = ficha.fechaPedido ? ficha.fechaPedido.split('T')[0] : '-';
             const fechaEntrega = ficha.fechaEntrega ? ficha.fechaEntrega.split('T')[0] : '-';
 
+            // La entrega se marca con el camioncito de cada pedido en Pedidos (todo el pedido junto)
             const botonEntregarFicha = ficha.entregada
-                ? '<span class="badge badge-success" title="Esta tanda ya se le entregó al cliente"><i class="fas fa-check"></i> Entregada</span>'
-                : `<button class="btn btn-primary btn-circle btn-sm" onclick="marcarFichaEntregada(${ficha.id})" title="Marcar esta ficha (tanda) como entregada al cliente">
-                        <i class="fas fa-truck"></i>
-                   </button>`;
+                ? '<span class="badge badge-success" title="Ya se le entregó al cliente"><i class="fas fa-check"></i> Entregada</span>'
+                : '';
 
             const acciones = `
                 <button class="btn btn-info btn-circle btn-sm mr-1" onclick="verFicha(${ficha.id})" title="Ver / Imprimir">

@@ -184,7 +184,7 @@
                                 </div>
                             </div>
                             <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <table class="table table-bordered tabla-compacta" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
                                         <tr>
                                             <th style="width: 2%;" class="text-center no-exportar">
@@ -193,7 +193,7 @@
                                             <th style="width: 3%;">N° Ord.</th>
                                             <th style="width: 8%;">Fecha</th>
                                             <th style="width: 3%;">N° Cliente</th>
-                                            <th style="width: 18%;">Cliente</th>
+                                            <th style="width: 12%;">Cliente</th>
                                             <th style="width: 11%;">Solicitante</th>
                                             <th style="width: 8%;">Disciplina</th>
                                             <th style="width: 5%;">Cant. Prendas</th>
@@ -202,7 +202,7 @@
                                             <th style="width: 7%;">Otros Cobros</th>
                                             <th style="width: 7%;">Saldo</th>
                                             <th style="width: 6%;">Estado</th>
-                                            <th style="width: 17%;" class="text-center no-exportar">Acciones</th>
+                                            <th style="width: 23%;" class="text-center no-exportar">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody id="ordenesBody"></tbody>
@@ -310,7 +310,7 @@
 
                 <div class="modal-footer">
                     <button class="btn btn-secondary px-4" data-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-success px-4" onclick="guardarCobroPedido()">Guardar</button>
+                    <button class="btn btn-success px-4" onclick="ejecutarUnaVez(this, guardarCobroPedido)">Guardar</button>
                 </div>
             </div>
         </div>

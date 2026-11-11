@@ -9,12 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('#formSaldoInicial').on('submit', async function (e) {
         e.preventDefault();
-        await guardarSaldoInicial();
+        await ejecutarUnaVez($(this).find("button[type=submit]")[0] || this, guardarSaldoInicial);
     });
 
     $('#formMovimientoManual').on('submit', async function (e) {
         e.preventDefault();
-        await guardarMovimientoManual();
+        await ejecutarUnaVez($(this).find("button[type=submit]")[0] || this, guardarMovimientoManual);
     });
 
     $('#formFiltroPeriodo').on('submit', async function (e) {

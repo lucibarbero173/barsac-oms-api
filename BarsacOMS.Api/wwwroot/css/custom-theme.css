@@ -794,3 +794,23 @@
 [data-theme="dark"] .fila-faltante.faltante-preparado .celda-que-falta {
     color: #5cd08a;
 }
+
+/* Tablas con muchas columnas (Pedidos): menos relleno y letra un poco más chica para que
+   entren sin barrita horizontal. Los botones de acciones van siempre en un solo renglón. */
+.tabla-compacta th,
+.tabla-compacta td {
+    padding: .45rem .4rem;
+    font-size: .85rem;
+}
+
+.tabla-compacta thead th {
+    padding-right: 1.1rem; /* lugar para las flechitas de ordenar */
+}
+
+.tabla-compacta .acciones-pedido {
+    white-space: nowrap;
+}
+
+.tabla-compacta .acciones-pedido .btn {
+    padding: .2rem .4rem;
+}

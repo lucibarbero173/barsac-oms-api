@@ -642,7 +642,7 @@ async function registrarPago() {
         }
         alert(mensaje);
 
-        cargarPanel();
+        await cargarPanel();
     } catch (error) {
         console.error(error);
         alert('Ocurrió un error al registrar el pago.');

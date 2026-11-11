@@ -30,6 +30,11 @@ $(document).ready(function () {
         abrirModalCobroPedido($(this).data('id'));
     });
 
+    // Camioncito: el pedido entero se le entregó al cliente (o deshacerlo)
+    $('#ordenesBody').on('click', '.btn-entregar', function () {
+        marcarPedidoEntregado($(this).data('id'), $(this).data('deshacer') === true);
+    });
+
     // Selección de pedidos para sumar saldos
     $('#ordenesBody').on('change', '.chk-pedido', function () {
         marcarPedido(Number(this.value), this.checked);
@@ -94,7 +99,7 @@ function cargarOrdenes() {
                         <td>$ ${(o.otrosCobros || 0).toLocaleString('es-AR')}</td>
                         <td>$ ${(o.saldo || 0).toLocaleString('es-AR')}</td>
                         <td>${formatearEstado(o.estado, o.prendasControladas)}</td>
-                        <td class="text-center">
+                        <td class="text-center acciones-pedido">
                             <button class="btn btn-info btn-sm btn-ver" data-id="${o.id}" title="Ver Detalle">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -104,6 +109,13 @@ function cargarOrdenes() {
                             <button class="btn btn-success btn-sm btn-cobro" data-id="${o.id}" title="Registrar Cobro">
                                 <i class="fas fa-dollar-sign"></i>
                             </button>
+                            ${o.estado === 2
+                                ? `<button class="btn btn-outline-success btn-sm btn-entregar" data-id="${o.id}" data-deshacer="true" title="Entregado. Tocá para deshacer si fue un error">
+                                       <i class="fas fa-check"></i>
+                                   </button>`
+                                : `<button class="btn btn-warning btn-sm btn-entregar" data-id="${o.id}" title="Marcar el pedido como entregado al cliente">
+                                       <i class="fas fa-truck"></i>
+                                   </button>`}
                             <button class="btn btn-danger btn-sm btn-eliminar" data-id="${o.id}" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -223,7 +235,7 @@ function guardarCobroPedido() {
         medioCobro: $('#cpMedio').val()
     };
 
-    fetch('/api/Cobros', {
+    return fetch('/api/Cobros', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cobroDto)
@@ -337,6 +349,33 @@ function nuevoPedido() {
 
 function editarOrden(id) {
     window.location.href = "nuevoPedido.html?id=" + id;
+}
+
+async function marcarPedidoEntregado(id, deshacer) {
+    const orden = ordenesPorId[id];
+    let mensaje;
+    if (deshacer) {
+        mensaje = `¿Deshacer la entrega del pedido #${id}?\n\nVuelve a quedar sin entregar (y sus fichas también).`;
+    } else {
+        mensaje = `¿Confirmás que le entregaste al cliente el pedido #${id} completo?`;
+        // 3 = Listo para entregar (Control ya revisó todo)
+        if (orden && orden.estado !== 3) {
+            mensaje = `⚠️ El pedido #${id} todavía no figura como "Listo para entregar" (Control no revisó todas las prendas).\n\n` + mensaje;
+        }
+        if (orden && orden.saldo > 0) {
+            mensaje += `\n\nOjo: le queda un saldo de $ ${orden.saldo.toLocaleString('es-AR')}.`;
+        }
+    }
+    if (!confirm(mensaje)) return;
+
+    try {
+        const res = await fetch(`/api/Orden/${id}/entregar${deshacer ? '?deshacer=true' : ''}`, { method: 'PUT' });
+        if (!res.ok) throw new Error(await res.text());
+        cargarOrdenes();
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo marcar el pedido como entregado.');
+    }
 }
 
 function eliminarOrden(id) {

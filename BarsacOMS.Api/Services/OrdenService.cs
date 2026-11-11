@@ -161,6 +161,51 @@ namespace BarsacOMS.Api.Services
             return true;
         }
 
+        // El camioncito de Pedidos: el pedido entero (todas sus fichas) se le entregó al cliente.
+        // Con deshacer=true vuelve atrás por si se tocó por error: las fichas quedan sin entregar
+        // y el pedido vuelve a "Listo para entregar" si Control ya revisó todo, o a su etapa de
+        // producción si no. Devuelve el estado en que quedó (null = no existe el pedido).
+        public async Task<EstadoOrden?> MarcarEntregadoAsync(int id, bool deshacer)
+        {
+            var orden = await _context.Ordenes.FindAsync(id);
+            if (orden == null) return null;
+
+            var fichas = await _context.FichasProduccion.Where(f => f.OrdenId == id).ToListAsync();
+
+            if (!deshacer)
+            {
+                foreach (var f in fichas.Where(f => !f.Entregada))
+                {
+                    f.Entregada = true;
+                    f.FechaEntregaFicha = DateTime.UtcNow;
+                }
+                orden.Estado = EstadoOrden.Entregado;
+            }
+            else
+            {
+                foreach (var f in fichas)
+                {
+                    f.Entregada = false;
+                    f.FechaEntregaFicha = null;
+                }
+
+                var fichaIds = fichas.Select(f => f.Id).ToList();
+                var controladas = await (
+                    from d in _context.DetallesFichaProduccion
+                    where fichaIds.Contains(d.FichaProduccionId)
+                    join u in _context.PrendasUnidad on d.Id equals u.DetalleFichaProduccionId
+                    select u.Controlada
+                ).ToListAsync();
+
+                orden.Estado = controladas.Count > 0 && controladas.All(c => c)
+                    ? EstadoOrden.ListoParaEntregar
+                    : fichas.Count == 0 ? EstadoOrden.Pendiente : EtapasProduccion.MasAtrasada(fichas.Select(f => f.EstadoFicha));
+            }
+
+            await _context.SaveChangesAsync();
+            return orden.Estado;
+        }
+
         public async Task<bool> CambiarEstadoAsync(int id, EstadoOrden nuevoEstado)
         {
             var orden = await _context.Ordenes.FindAsync(id);

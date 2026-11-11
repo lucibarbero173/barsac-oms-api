@@ -409,7 +409,7 @@ function guardarCobro() {
     };
 
     const isEdit = id > 0;
-    fetch(isEdit ? `${API_COBROS}/${id}` : API_COBROS, {
+    return fetch(isEdit ? `${API_COBROS}/${id}` : API_COBROS, {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cobroDto)

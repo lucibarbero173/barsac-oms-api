@@ -73,6 +73,15 @@ namespace BarsacOMS.Api.Controllers
             return Ok();
         }
 
+        // PUT api/Orden/5/entregar  (?deshacer=true para volver atrás)
+        [HttpPut("{id}/entregar")]
+        public async Task<IActionResult> MarcarEntregado(int id, [FromQuery] bool deshacer = false)
+        {
+            var estado = await _ordenService.MarcarEntregadoAsync(id, deshacer);
+            if (estado == null) return NotFound("La orden no existe");
+            return Ok(new { estado });
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> EliminarOrden(int id)
         {
