@@ -1,6 +1,16 @@
 ﻿let tablePagos = null;
+let pagosPorId = {};
+let sumaPagos = null; // tildar pagos para sumarlos (ej. cuánto se le pagó a una modista)
 
 $(document).ready(function () {
+    sumaPagos = crearSumaSeleccion({
+        tabla: '#dataTablePagos',
+        registro: id => pagosPorId[id],
+        importe: p => p.importe,
+        nombre: ['pago', 'pagos'],
+        agrupar: p => p.proveedor,
+        grupo: ['proveedor', 'proveedores']
+    });
     cargarPagos();
 
     // Un pago nuevo con concepto "Modistas" no descuenta nada de lo que se le debe a la modista
@@ -36,8 +46,10 @@ async function cargarPagos() {
 
         const tbody = $("#pagosBody");
         tbody.empty();
+        pagosPorId = {};
 
         pagos.forEach(p => {
+            pagosPorId[p.id] = p;
             const fechaFact = p.fechaFactura ? p.fechaFactura.split("T")[0].split("-").reverse().join("/") : "";
             const fechaPag = p.fechaPago ? p.fechaPago.split("T")[0].split("-").reverse().join("/") : "-";
             const mes = p.mesPago || (p.fechaPago ? new Date(p.fechaPago).getMonth() + 1 : "-");
@@ -48,7 +60,8 @@ async function cargarPagos() {
 
             tbody.append(`
                 <tr>
-                    <td>${fechaFact}</td>
+                    <td class="text-center">${sumaPagos.chk(p.id)}</td>
+                    <td data-order="${p.fechaFactura || ''}">${fechaFact}</td>
                     <td class="font-weight-bold">${p.proveedor}${p.pagoModistaId ? ` <span class="badge badge-light border ml-1" title="Generado con Registrar pago en Panel Modistas (${p.cantidadPrendasModista} prendas)"><i class="fas fa-cut mr-1"></i>Liquidación modista</span>` : ''}</td>
                     <td><span class="badge badge-secondary px-2 py-1">${p.concepto}</span></td>
                     <td><span class="badge badge-info px-2 py-1">${p.medioPago}</span></td>
@@ -72,8 +85,10 @@ async function cargarPagos() {
             language: {
                 url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json'
             },
-            order: [[0, 'desc']]
+            order: [[1, 'desc']],
+            columnDefs: [{ targets: 0, orderable: false, searchable: false }]
         });
+        sumaPagos.actualizar();
 
     } catch (e) {
         console.error("Error al cargar pagos:", e);

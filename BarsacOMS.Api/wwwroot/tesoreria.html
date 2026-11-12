@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <!-- Protección de sesión inmediata -->
+    <script src="js/auth-guard.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- App instalable (ícono en escritorio / celu) -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="img/favicon-32.png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <meta name="theme-color" content="#0a1946">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Barsac System">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Barsac² - Tesorería</title>
+
+    <!-- Custom fonts for this template -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+    <!-- TU CSS PERSONALIZADO -->
+    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <link href="css/custom-theme.css" rel="stylesheet">
+
+    <style>
+        .cuenta-item { padding: .85rem 1rem; border-bottom: 1px solid var(--border-color, #e3e6f0); cursor: pointer; }
+        .cuenta-item:hover { background: rgba(78,115,223,.05); }
+        .cuenta-item.activa { border-left: 4px solid #4e73df; background: rgba(78,115,223,.08); }
+        .modal-tesoreria { max-width: 96vw; }
+        .tabla-conciliar { max-height: 52vh; }
+        .tabla-conciliar td { vertical-align: middle; font-size: .85rem; }
+        .fila-conciliada { background: rgba(28,200,138,.10); }
+        .fila-conciliada td { color: var(--text-muted, #858796); }
+        .fila-par { box-shadow: inset 4px 0 0 #4e73df; background: rgba(78,115,223,.14) !important; }
+        .fila-seleccionada { background: rgba(246,194,62,.22) !important; }
+        .fila-tildable { cursor: pointer; }
+        .barra-conciliar { position: sticky; bottom: 0; z-index: 3; padding: .6rem .8rem; border-radius: .35rem; background: var(--bg-card, #fff); box-shadow: 0 -2px 8px rgba(0,0,0,.12); }
+        .previa-invalida { background: rgba(231,74,59,.12); }
+        .importe-mas { color: #1cc88a; }
+        .importe-menos { color: #e74a3b; }
+        .map-col { height: auto; padding-top: .25rem; padding-bottom: .25rem; }
+    </style>
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="estadisticas.html">
+                <img src="img/logo.png" alt="Barsac" style="max-width: 100%; max-height: 48px; height: auto;">
+            </a>
+            <hr class="sidebar-divider my-0">
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Compras</div>
+            <li class="nav-item"><a class="nav-link" href="proveedores.html"><i class="fas fa-fw fa-truck"></i><span>Proveedores</span></a></li>
+            <li class="nav-item" data-roles="super"><a class="nav-link" href="pagos.html"><i class="fas fa-fw fa-file-invoice-dollar"></i><span>Pagos</span></a></li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMateria" aria-expanded="false" aria-controls="collapseMateria">
+                    <i class="fas fa-fw fa-box"></i><span>Materia Prima</span>
+                </a>
+                <div id="collapseMateria" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="materiaPrimaTela.html">Telas</a>
+                        <a class="collapse-item" href="materiaPrimaPapel.html">Papel</a>
+                        <a class="collapse-item" href="materiaPrimaInsumo.html">Insumos DTF</a>
+                        <a class="collapse-item" href="materiaPrimaMerceria.html">Merceria</a>
+                        <a class="collapse-item" href="materiaPrimaOtros.html">Otros</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item" data-roles="admin,super"><a class="nav-link" href="costos.html"><i class="fas fa-fw fa-calculator"></i><span>Costos</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="productos.html"><i class="fas fa-fw fa-box"></i><span>Productos</span></a></li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Gestion</div>
+            <li class="nav-item"><a class="nav-link" href="clientes.html"><i class="fas fa-fw fa-users"></i><span>Clientes</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="pedidos.html"><i class="fas fa-fw fa-table"></i><span>Pedidos</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="fichaProduccion.html"><i class="fas fa-fw fa-cut"></i><span>Fichas Producción</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="cobros.html"><i class="fas fa-fw fa-hand-holding-usd"></i><span>Cobros</span></a></li>
+            <li class="nav-item" data-roles="super"><a class="nav-link" href="conciliacion.html"><i class="fas fa-fw fa-balance-scale"></i><span>Conciliación</span></a></li>
+            <li class="nav-item active" data-roles="super"><a class="nav-link" href="tesoreria.html"><i class="fas fa-fw fa-university"></i><span>Tesorería</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="alertas.html"><i class="fas fa-fw fa-bell"></i><span>Alertas</span></a></li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Pantallas</div>
+            <li class="nav-item"><a class="nav-link" href="estadisticas.html"><i class="fas fa-fw fa-chart-bar"></i><span>Estadisticas</span></a></li>
+            <li class="nav-item" data-roles="admin,super"><a class="nav-link" href="diseno.html"><i class="fas fa-fw fa-pencil-ruler"></i><span>Diseño</span></a></li>
+            <li class="nav-item" data-roles="admin,super"><a class="nav-link" href="impresion.html"><i class="fas fa-fw fa-print"></i><span>Impresión</span></a></li>
+            <li class="nav-item" data-roles="admin,super"><a class="nav-link" href="corte.html"><i class="fas fa-fw fa-crop-alt"></i><span>Corte</span></a></li>
+            <li class="nav-item" data-roles="admin,super"><a class="nav-link" href="confeccion.html"><i class="fas fa-fw fa-tasks"></i><span>Confección</span></a></li>
+            <li class="nav-item" data-roles="admin,super"><a class="nav-link" href="modistas.html"><i class="fas fa-fw fa-tshirt"></i><span>Modistas</span></a></li>
+            <li class="nav-item" data-roles="admin,super"><a class="nav-link" href="panelModistas.html"><i class="fas fa-fw fa-chart-pie"></i><span>Panel Modistas</span></a></li>
+            <li class="nav-item" data-roles="admin,super"><a class="nav-link" href="usuarios.html"><i class="fas fa-fw fa-user-cog"></i><span>Usuarios</span></a></li>
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <!-- End of Sidebar -->
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto align-items-center">
+                        <li class="nav-item">
+                            <button id="themeToggle" class="btn btn-link rounded-circle mr-3 border-0" title="Cambiar Tema">
+                                <i id="themeIcon" class="fas fa-moon text-gray-600 font-size-18"></i>
+                            </button>
+                        </li>
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small font-weight-bold" id="lblNombreUsuario">
+                                    Usuario
+                                </span>
+                                <div class="img-profile rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="perfil.html">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Editar Perfil
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" id="btnLogout">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Cerrar Sesión
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- End of Topbar -->
+
+                <div class="container-fluid pt-2">
+                    <div class="d-flex flex-wrap align-items-baseline justify-content-between mb-3">
+                        <h1 class="h3 mb-1 font-weight-bold">Tesorería</h1>
+                        <span class="small text-muted">Cada cuenta contra el extracto del banco: cuando no queda nada sin tildar y la diferencia da $ 0, está conciliada.</span>
+                    </div>
+
+                    <div class="row">
+                        <!-- Cajas y bancos -->
+                        <div class="col-xl-3 col-lg-4 mb-4">
+                            <div class="card shadow">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-university mr-1"></i> Cajas y bancos</h6>
+                                </div>
+                                <div class="card-body p-0" id="listaCuentas">
+                                    <div class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-9 col-lg-8">
+                            <!-- Gráfico -->
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Saldo, ingresos y egresos — <span class="nombre-cuenta-activa"></span> <span class="small text-muted font-weight-normal">(últimos 12 meses)</span></h6>
+                                </div>
+                                <div class="card-body">
+                                    <div style="position: relative; height: 240px;">
+                                        <canvas id="graficoTesoreria"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Movimientos de la cuenta -->
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-wrap align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Movimientos — <span class="nombre-cuenta-activa"></span></h6>
+                                    <form class="form-inline mt-2 mt-md-0" id="formFiltroMovimientos">
+                                        <label class="small mr-1" for="movDesde">Desde</label>
+                                        <input type="date" id="movDesde" class="form-control form-control-sm mr-2">
+                                        <label class="small mr-1" for="movHasta">Hasta</label>
+                                        <input type="date" id="movHasta" class="form-control form-control-sm mr-2">
+                                        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter"></i></button>
+                                    </form>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm" id="tablaMovimientos" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>Fecha</th>
+                                                    <th>Tipo</th>
+                                                    <th>Concepto</th>
+                                                    <th>Cliente / Proveedor</th>
+                                                    <th class="text-right">Ingreso</th>
+                                                    <th class="text-right">Egreso</th>
+                                                    <th class="text-right">Saldo</th>
+                                                    <th class="text-center">Conciliado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tablaMovimientosBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== MODAL CONCILIAR ===================== -->
+                <div class="modal fade" id="modalConciliar" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-xl modal-tesoreria" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <div>
+                                    <h5 class="modal-title font-weight-bold">Conciliar <span class="nombre-cuenta-activa"></span></h5>
+                                    <div class="small text-muted" id="conciliarResumen"></div>
+                                </div>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                            </div>
+                            <div class="modal-body pt-2">
+                                <ul class="nav nav-tabs mb-3" role="tablist">
+                                    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tabConciliar" role="tab" id="lnkTabConciliar"><i class="fas fa-check-double mr-1"></i> Conciliar</a></li>
+                                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tabExtracto" role="tab" id="lnkTabExtracto"><i class="fas fa-file-upload mr-1"></i> Cargar extracto</a></li>
+                                </ul>
+
+                                <div class="tab-content">
+                                    <!-- ===== Conciliar: banco a la izquierda, Barsac a la derecha ===== -->
+                                    <div class="tab-pane fade show active" id="tabConciliar" role="tabpanel">
+                                        <form class="form-inline mb-2" id="formFiltroConciliar">
+                                            <label class="small mr-1" for="concDesde">Desde</label>
+                                            <input type="date" id="concDesde" class="form-control form-control-sm mr-2 mb-1">
+                                            <label class="small mr-1" for="concHasta">Hasta</label>
+                                            <input type="date" id="concHasta" class="form-control form-control-sm mr-2 mb-1">
+                                            <button type="submit" class="btn btn-primary btn-sm mr-3 mb-1"><i class="fas fa-sync-alt mr-1"></i>Ver</button>
+                                            <div class="custom-control custom-checkbox mr-3 mb-1">
+                                                <input type="checkbox" class="custom-control-input" id="chkMostrarConciliados">
+                                                <label class="custom-control-label small" for="chkMostrarConciliados">Mostrar lo ya conciliado</label>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="ejecutarUnaVez(this, conciliarAutomatico)" title="Tilda solo lo obvio: mismo importe y a pocos días">
+                                                <i class="fas fa-magic mr-1"></i>Conciliar automático
+                                            </button>
+                                        </form>
+
+                                        <div class="alert alert-warning py-2 small d-none" id="avisoARevisar"></div>
+
+                                        <div class="row">
+                                            <div class="col-lg-6 mb-3">
+                                                <div class="card h-100">
+                                                    <div class="card-header py-2 d-flex flex-wrap align-items-center justify-content-between">
+                                                        <h6 class="m-0 font-weight-bold text-info"><i class="fas fa-university mr-1"></i> Extracto del banco</h6>
+                                                        <input type="search" class="form-control form-control-sm buscador-tabla" data-tabla="cbBancoBody" placeholder="Buscar..." aria-label="Buscar en el extracto">
+                                                    </div>
+                                                    <div class="card-body p-2">
+                                                        <div class="table-responsive tabla-scroll tabla-conciliar">
+                                                            <table class="table table-sm table-hover mb-0">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style="width: 28px;"></th>
+                                                                        <th>Fecha</th>
+                                                                        <th>Descripción</th>
+                                                                        <th class="text-right">Importe</th>
+                                                                        <th style="width: 44px;"></th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="cbBancoBody"></tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-footer py-2 small d-flex justify-content-between align-items-center">
+                                                        <span id="pieBanco"></span>
+                                                        <button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="ejecutarUnaVez(this, eliminarSeleccionBanco)" title="Borrar del extracto los renglones tildados (cargados por error)">
+                                                            <i class="fas fa-trash mr-1"></i>Borrar tildados del extracto
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6 mb-3">
+                                                <div class="card h-100">
+                                                    <div class="card-header py-2 d-flex flex-wrap align-items-center justify-content-between">
+                                                        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-store mr-1"></i> Barsac (cobros, pagos y movimientos)</h6>
+                                                        <input type="search" class="form-control form-control-sm buscador-tabla" data-tabla="cbBarsacBody" placeholder="Buscar..." aria-label="Buscar en los movimientos de Barsac">
+                                                    </div>
+                                                    <div class="card-body p-2">
+                                                        <div class="table-responsive tabla-scroll tabla-conciliar">
+                                                            <table class="table table-sm table-hover mb-0">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style="width: 28px;"></th>
+                                                                        <th>Fecha</th>
+                                                                        <th>Concepto</th>
+                                                                        <th class="text-right">Importe</th>
+                                                                        <th style="width: 50px;"></th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="cbBarsacBody"></tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-footer py-2 small" id="pieBarsac"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Barra de lo tildado -->
+                                        <div class="barra-conciliar d-flex flex-wrap align-items-center justify-content-between">
+                                            <div class="small" id="barraSeleccion">Tildá de cada lado lo que se corresponde.</div>
+                                            <div>
+                                                <button type="button" class="btn btn-link btn-sm" onclick="limpiarSeleccion()">Limpiar</button>
+                                                <button type="button" class="btn btn-success btn-sm" id="btnConciliar" onclick="ejecutarUnaVez(this, conciliarSeleccion)" disabled>
+                                                    <i class="fas fa-check-double mr-1"></i>Conciliar tildados
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ===== Cargar extracto ===== -->
+                                    <div class="tab-pane fade" id="tabExtracto" role="tabpanel">
+                                        <div class="btn-group btn-group-toggle mb-3 flex-wrap" data-toggle="buttons" id="modoCarga">
+                                            <label class="btn btn-outline-primary btn-sm active">
+                                                <input type="radio" name="modoCarga" value="archivo" checked> <i class="fas fa-file-excel mr-1"></i>Archivo Excel / CSV
+                                            </label>
+                                            <label class="btn btn-outline-primary btn-sm">
+                                                <input type="radio" name="modoCarga" value="pegar"> <i class="fas fa-paste mr-1"></i>Pegar (desde el PDF o la web)
+                                            </label>
+                                            <label class="btn btn-outline-primary btn-sm">
+                                                <input type="radio" name="modoCarga" value="mano"> <i class="fas fa-keyboard mr-1"></i>A mano
+                                            </label>
+                                        </div>
+
+                                        <!-- Archivo -->
+                                        <div class="modo-carga" data-modo="archivo">
+                                            <div class="custom-file mb-2" style="max-width: 520px;">
+                                                <input type="file" class="custom-file-input" id="archivoExtracto" accept=".xlsx,.xls,.csv,.txt">
+                                                <label class="custom-file-label" for="archivoExtracto" id="archivoExtractoNombre" data-browse="Elegir archivo">Elegí el extracto (.xlsx, .xls o .csv)</label>
+                                            </div>
+                                            <div id="mapeoColumnas" class="d-none">
+                                                <div class="small text-muted mb-2">Indicá qué columna es cada cosa (ya lo adiviné por los títulos; revisalo):</div>
+                                                <div class="form-row">
+                                                    <div class="col-md-2 col-6 mb-2">
+                                                        <label class="small mb-0" for="mapTitulos">Fila de títulos</label>
+                                                        <select id="mapTitulos" class="form-control form-control-sm map-col"></select>
+                                                    </div>
+                                                    <div class="col-md-2 col-6 mb-2">
+                                                        <label class="small mb-0" for="mapFecha">Fecha *</label>
+                                                        <select id="mapFecha" class="form-control form-control-sm map-col"></select>
+                                                    </div>
+                                                    <div class="col-md-2 col-6 mb-2">
+                                                        <label class="small mb-0" for="mapDesc">Descripción</label>
+                                                        <select id="mapDesc" class="form-control form-control-sm map-col"></select>
+                                                    </div>
+                                                    <div class="col-md-2 col-6 mb-2">
+                                                        <label class="small mb-0" for="mapImporte">Importe (con signo)</label>
+                                                        <select id="mapImporte" class="form-control form-control-sm map-col"></select>
+                                                    </div>
+                                                    <div class="col-md-1 col-6 mb-2">
+                                                        <label class="small mb-0" for="mapDebito">Débito</label>
+                                                        <select id="mapDebito" class="form-control form-control-sm map-col"></select>
+                                                    </div>
+                                                    <div class="col-md-1 col-6 mb-2">
+                                                        <label class="small mb-0" for="mapCredito">Crédito</label>
+                                                        <select id="mapCredito" class="form-control form-control-sm map-col"></select>
+                                                    </div>
+                                                    <div class="col-md-2 col-6 mb-2">
+                                                        <label class="small mb-0" for="mapSaldo">Saldo (opcional)</label>
+                                                        <select id="mapSaldo" class="form-control form-control-sm map-col"></select>
+                                                    </div>
+                                                </div>
+                                                <div class="small text-muted">Si el banco trae débito y crédito en columnas separadas, dejá "Importe" vacío y elegí esas dos.</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Pegar -->
+                                        <div class="modo-carga d-none" data-modo="pegar">
+                                            <textarea id="textoPegado" class="form-control form-control-sm mb-2" rows="6" placeholder="Copiá los renglones del extracto (desde el PDF, la web del banco o un Excel) y pegalos acá. Cada renglón tiene que tener la fecha y el importe; si trae el saldo, mejor (así sé solo si entró o salió)."></textarea>
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="leerTextoPegado()"><i class="fas fa-search mr-1"></i>Leer renglones</button>
+                                        </div>
+
+                                        <!-- A mano -->
+                                        <div class="modo-carga d-none" data-modo="mano">
+                                            <form class="form-row align-items-end" id="formRenglonMano">
+                                                <div class="col-md-2 col-6 mb-2">
+                                                    <label class="small mb-0" for="manoFecha">Fecha</label>
+                                                    <input type="date" id="manoFecha" class="form-control form-control-sm" required>
+                                                </div>
+                                                <div class="col-md-5 col-6 mb-2">
+                                                    <label class="small mb-0" for="manoDesc">Descripción</label>
+                                                    <input type="text" id="manoDesc" class="form-control form-control-sm" placeholder="Ej: Transferencia de Club X">
+                                                </div>
+                                                <div class="col-md-2 col-6 mb-2">
+                                                    <label class="small mb-0" for="manoTipo">Tipo</label>
+                                                    <select id="manoTipo" class="form-control form-control-sm">
+                                                        <option value="1">Entró (+)</option>
+                                                        <option value="-1">Salió (−)</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 col-6 mb-2">
+                                                    <label class="small mb-0" for="manoImporte">Importe</label>
+                                                    <input type="number" step="0.01" min="0.01" id="manoImporte" class="form-control form-control-sm" required>
+                                                </div>
+                                                <div class="col-md-1 col-12 mb-2">
+                                                    <button type="submit" class="btn btn-primary btn-sm btn-block"><i class="fas fa-plus"></i></button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <!-- Vista previa (común a las tres formas) -->
+                                        <div id="previaExtracto" class="d-none mt-3">
+                                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+                                                <div class="small" id="previaResumen"></div>
+                                                <div>
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="invertirSignos()" title="Si quedaron al revés lo que entró y lo que salió"><i class="fas fa-exchange-alt mr-1"></i>Invertir signos</button>
+                                                    <button type="button" class="btn btn-link btn-sm text-danger" onclick="vaciarPrevia()">Vaciar</button>
+                                                </div>
+                                            </div>
+                                            <div class="table-responsive tabla-scroll">
+                                                <table class="table table-sm table-bordered mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="width: 130px;">Fecha</th>
+                                                            <th>Descripción</th>
+                                                            <th style="width: 170px;" class="text-right">Importe</th>
+                                                            <th style="width: 130px;" class="text-right">Saldo</th>
+                                                            <th style="width: 40px;"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="previaBody"></tbody>
+                                                </table>
+                                            </div>
+                                            <div class="text-right mt-2">
+                                                <button type="button" class="btn btn-success" id="btnCargarExtracto" onclick="ejecutarUnaVez(this, cargarExtracto)">
+                                                    <i class="fas fa-upload mr-1"></i><span id="txtCargarExtracto">Cargar al extracto</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- End of Main Content -->
+            <footer class="sticky-footer">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; BARSAC OMS 2026</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- JS Scripts Base -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="vendor/chart.js/Chart.min.js"></script>
+
+    <!-- JS de la vista -->
+    <script src="js/tesoreria.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>

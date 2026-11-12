@@ -501,6 +501,7 @@ namespace BarsacOMS.Api.Services
             {
                 var pagoGeneral = await _context.Pagos.FindAsync(pago.PagoId.Value);
                 if (pagoGeneral != null) _context.Pagos.Remove(pagoGeneral);
+                await TesoreriaService.DesconciliarAsync(_context, "Pago", pago.PagoId.Value);
             }
 
             _context.PagosModista.Remove(pago);

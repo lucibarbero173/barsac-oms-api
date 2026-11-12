@@ -84,6 +84,10 @@ namespace BarsacOMS.Api.Services
                     return (true, "Este pago es la liquidación de una modista y ya se le pagó: no puede quedar PENDIENTE. Si no se le pagó, eliminalo.");
             }
 
+            // Conciliado en Tesorería con otro importe, otra cuenta o que deja de estar pagado: deja de valer
+            if (Math.Round(dto.Importe, 2) != Math.Round(pago.Importe, 2) || dto.MedioPago != pago.MedioPago || dto.Estado != pago.Estado)
+                await TesoreriaService.DesconciliarAsync(_context, "Pago", id);
+
             pago.FechaFactura = dto.FechaFactura;
             pago.Proveedor = dto.Proveedor;
             pago.Concepto = dto.Concepto;
@@ -109,6 +113,7 @@ namespace BarsacOMS.Api.Services
                 return await _panelModistas.AnularPagoAsync(liquidacion.Id);
             }
 
+            await TesoreriaService.DesconciliarAsync(_context, "Pago", id);
             _context.Pagos.Remove(pago);
             await _context.SaveChangesAsync();
             return true;

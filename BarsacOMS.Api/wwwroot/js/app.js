@@ -366,3 +366,97 @@ window.ejecutarUnaVez = async function (boton, tarea) {
         }
     }
 };
+
+// =====================================================
+// SUMA DE FILAS TILDADAS (Pagos, Cobros...)
+// const suma = crearSumaSeleccion({ tabla, registro: id => obj, importe: obj => n,
+//     nombre: ['pago', 'pagos'], agrupar: obj => texto, grupo: ['proveedor', 'proveedores'] });
+// En cada fila: <td>${suma.chk(id)}</td>. En el encabezado: <input type="checkbox" class="chk-suma-todos">
+// (tilda todo lo que se ve con los filtros). Arriba de la tabla aparece la barra con el total.
+// =====================================================
+window.crearSumaSeleccion = function (cfg) {
+    const sel = new Set();
+    const $t = $(cfg.tabla);
+    const formato = (n) => '$ ' + Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // La barra va justo arriba de la tabla
+    const $barra = $(`
+        <div class="alert alert-primary barra-suma d-none">
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                <div>
+                    <strong class="suma-cantidad"></strong>
+                    <div class="small suma-grupos"></div>
+                </div>
+                <div class="text-right">
+                    <div class="small">Total tildado</div>
+                    <div class="h4 font-weight-bold mb-0 suma-total"></div>
+                </div>
+                <button type="button" class="btn btn-link btn-sm suma-limpiar"><i class="fas fa-times mr-1"></i>Limpiar selección</button>
+            </div>
+        </div>`);
+    ($t.closest('.table-responsive').length ? $t.closest('.table-responsive') : $t).before($barra);
+
+    const filasVisibles = () => $.fn.dataTable.isDataTable(cfg.tabla)
+        ? $(cfg.tabla).DataTable().rows({ search: 'applied' }).nodes().to$()
+        : $t.find('tbody tr');
+
+    function actualizarTodos() {
+        const checks = filasVisibles().find('.chk-suma').toArray();
+        $t.find('.chk-suma-todos').prop('checked', checks.length > 0 && checks.every(c => c.checked));
+    }
+
+    function actualizar() {
+        [...sel].forEach(id => { if (!cfg.registro(id)) sel.delete(id); }); // ya no existen (ej. se borraron)
+        const registros = [...sel].map(cfg.registro);
+        const total = registros.reduce((s, r) => s + (Number(cfg.importe(r)) || 0), 0);
+
+        $barra.find('.suma-cantidad').text(`${registros.length} ${registros.length === 1 ? cfg.nombre[0] : cfg.nombre[1]} tildado${registros.length === 1 ? '' : 's'}`);
+        let grupos = '';
+        if (cfg.agrupar && registros.length) {
+            const porGrupo = {};
+            registros.forEach(r => {
+                const g = String(cfg.agrupar(r) || '-').trim() || '-';
+                porGrupo[g] = (porGrupo[g] || 0) + (Number(cfg.importe(r)) || 0);
+            });
+            const nombres = Object.keys(porGrupo);
+            grupos = nombres.length === 1
+                ? `de ${nombres[0]}`
+                : nombres.length <= 5
+                    ? nombres.map(n => `${n}: ${formato(porGrupo[n])}`).join(' · ')
+                    : `de ${nombres.length} ${cfg.grupo ? cfg.grupo[1] : 'distintos'}`;
+        }
+        $barra.find('.suma-grupos').text(grupos);
+        $barra.find('.suma-total').text(formato(total));
+        $barra.toggleClass('d-none', registros.length === 0);
+        actualizarTodos();
+    }
+
+    function limpiar() {
+        sel.clear();
+        $t.find('.chk-suma, .chk-suma-todos').prop('checked', false);
+        if ($.fn.dataTable.isDataTable(cfg.tabla)) $(cfg.tabla).DataTable().rows().nodes().to$().find('.chk-suma').prop('checked', false);
+        actualizar();
+    }
+
+    $t.on('change', '.chk-suma', function () {
+        this.checked ? sel.add(this.value) : sel.delete(this.value);
+        actualizar();
+    });
+    $t.on('click', '.chk-suma-todos', (e) => e.stopPropagation()); // que no ordene la columna
+    $t.on('change', '.chk-suma-todos', function () {
+        const marcar = this.checked;
+        filasVisibles().find('.chk-suma').each(function () {
+            this.checked = marcar;
+            marcar ? sel.add(this.value) : sel.delete(this.value);
+        });
+        actualizar();
+    });
+    $t.on('draw.dt', actualizarTodos);
+    $barra.find('.suma-limpiar').on('click', limpiar);
+
+    return {
+        chk: (id) => `<input type="checkbox" class="chk-suma" value="${id}" ${sel.has(String(id)) ? 'checked' : ''} title="Tildar para sumar">`,
+        actualizar,
+        limpiar
+    };
+};

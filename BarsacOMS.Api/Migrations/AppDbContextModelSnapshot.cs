@@ -226,6 +226,78 @@ namespace BarsacOMS.Api.Migrations
                     b.ToTable("cobro_asignacion", (string)null);
                 });
 
+            modelBuilder.Entity("BarsacOMS.Api.Models.ConciliacionBanco", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Automatica")
+                        .HasColumnType("boolean")
+                        .HasColumnName("automatica");
+
+                    b.Property<string>("Cuenta")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("cuenta");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("fecha");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Cuenta");
+
+                    b.ToTable("conciliacion_banco", (string)null);
+                });
+
+            modelBuilder.Entity("BarsacOMS.Api.Models.ConciliacionBarsac", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConciliacionBancoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("conciliacion_banco_id");
+
+                    b.Property<decimal>("Importe")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("importe");
+
+                    b.Property<string>("Origen")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("origen");
+
+                    b.Property<int>("OrigenId")
+                        .HasColumnType("integer")
+                        .HasColumnName("origen_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConciliacionBancoId");
+
+                    b.HasIndex("Origen", "OrigenId")
+                        .IsUnique();
+
+                    b.ToTable("conciliacion_barsac", (string)null);
+                });
+
             modelBuilder.Entity("BarsacOMS.Api.Models.ConfiguracionCostos", b =>
                 {
                     b.Property<int>("Id")
@@ -465,6 +537,63 @@ namespace BarsacOMS.Api.Migrations
                     b.HasIndex("FichaProduccionId");
 
                     b.ToTable("EntregaParcial", (string)null);
+                });
+
+            modelBuilder.Entity("BarsacOMS.Api.Models.ExtractoMovimiento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ConciliacionBancoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("conciliacion_banco_id");
+
+                    b.Property<string>("Cuenta")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("cuenta");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("descripcion");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("fecha");
+
+                    b.Property<DateTime>("FechaCarga")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("fecha_carga");
+
+                    b.Property<decimal>("Importe")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("importe");
+
+                    b.Property<string>("Origen")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("origen");
+
+                    b.Property<decimal?>("SaldoBanco")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("saldo_banco");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConciliacionBancoId");
+
+                    b.HasIndex("Cuenta", "Fecha");
+
+                    b.ToTable("extracto_movimiento", (string)null);
                 });
 
             modelBuilder.Entity("BarsacOMS.Api.Models.FichaProduccion", b =>
@@ -1222,6 +1351,15 @@ namespace BarsacOMS.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("BarsacOMS.Api.Models.ConciliacionBarsac", b =>
+                {
+                    b.HasOne("BarsacOMS.Api.Models.ConciliacionBanco", null)
+                        .WithMany("MovimientosBarsac")
+                        .HasForeignKey("ConciliacionBancoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("BarsacOMS.Api.Models.CostoProducto", b =>
                 {
                     b.HasOne("BarsacOMS.Api.Models.MateriaPrima", "MateriaPrimaTela")
@@ -1275,6 +1413,14 @@ namespace BarsacOMS.Api.Migrations
                         .HasForeignKey("FichaProduccionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BarsacOMS.Api.Models.ExtractoMovimiento", b =>
+                {
+                    b.HasOne("BarsacOMS.Api.Models.ConciliacionBanco", null)
+                        .WithMany()
+                        .HasForeignKey("ConciliacionBancoId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("BarsacOMS.Api.Models.FichaProduccion", b =>
@@ -1422,6 +1568,11 @@ namespace BarsacOMS.Api.Migrations
             modelBuilder.Entity("BarsacOMS.Api.Models.Cobro", b =>
                 {
                     b.Navigation("Asignaciones");
+                });
+
+            modelBuilder.Entity("BarsacOMS.Api.Models.ConciliacionBanco", b =>
+                {
+                    b.Navigation("MovimientosBarsac");
                 });
 
             modelBuilder.Entity("BarsacOMS.Api.Models.DetalleFichaProduccion", b =>

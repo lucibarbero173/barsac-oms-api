@@ -78,6 +78,7 @@ namespace BarsacOMS.Api.Services
             var concepto = cobro.Concepto;
             var importe = cobro.Importe;
 
+            await TesoreriaService.DesconciliarAsync(_context, "Cobro", id); // si estaba tildado en Tesorería
             _context.Cobros.Remove(cobro); // la cascada se lleva sus asignaciones
             await _context.SaveChangesAsync();
 
@@ -98,6 +99,7 @@ namespace BarsacOMS.Api.Services
                 .Select(a => new CobroAsignacion { OrdenId = a.OrdenId, Importe = a.Importe }).ToList();
             var conceptoAnterior = cobroExistente.Concepto;
             var importeAnterior = cobroExistente.Importe;
+            var medioAnterior = cobroExistente.MedioCobro;
 
             NormalizarReparto(cobro);
 
@@ -110,6 +112,10 @@ namespace BarsacOMS.Api.Services
             cobroExistente.Concepto = cobro.Concepto;
             cobroExistente.MedioCobro = cobro.MedioCobro;
             cobroExistente.Importe = cobro.Importe;
+
+            // Conciliado en Tesorería con otro importe u otra cuenta: deja de valer
+            if (Math.Round(cobro.Importe, 2) != Math.Round(importeAnterior, 2) || cobro.MedioCobro != medioAnterior)
+                await TesoreriaService.DesconciliarAsync(_context, "Cobro", id);
 
             _context.RemoveRange(cobroExistente.Asignaciones);
             cobroExistente.Asignaciones = cobro.Asignaciones

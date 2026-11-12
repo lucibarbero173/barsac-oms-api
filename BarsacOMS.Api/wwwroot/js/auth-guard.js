@@ -51,7 +51,7 @@ const PAGINAS_POR_ROL = {
 };
 
 const PAGINAS_BLOQUEADAS_POR_ROL = {
-    admin: ['pagos.html', 'conciliacion.html']
+    admin: ['pagos.html', 'conciliacion.html', 'tesoreria.html']
 };
 
 (function () {

@@ -5,8 +5,17 @@
 let ordenesCache = {};
 let asignadoOriginal = {};
 let cobrosPorId = {};
+let sumaCobros = null; // tildar cobros para sumarlos (ej. cuánto pagó un cliente)
 
 $(document).ready(function () {
+    sumaCobros = crearSumaSeleccion({
+        tabla: '#dataTableCobros',
+        registro: id => cobrosPorId[id],
+        importe: c => c.importe,
+        nombre: ['cobro', 'cobros'],
+        agrupar: c => c.nombreCliente,
+        grupo: ['cliente', 'clientes']
+    });
     cargarCobros();
 
     $('#repartoBody').on('change', '.input-reparto-pedido', function () {
@@ -94,6 +103,7 @@ function cargarCobros() {
 
                 tabla.append(`
                     <tr>
+                        <td class="text-center">${sumaCobros.chk(c.id)}</td>
                         <td class="font-weight-bold text-primary" data-search="${c.ordenId || ''} ${pedidosBuscables}">${celdaPedido(c)}</td>
                         <td data-order="${fechaIso}">${fechaFormateada}</td>
                         <td>${mes}</td>
@@ -116,11 +126,13 @@ function cargarCobros() {
             });
 
             $('#dataTableCobros').DataTable({
-                "order": [[1, "desc"]],
+                "order": [[2, "desc"]],
+                "columnDefs": [{ targets: 0, orderable: false, searchable: false }],
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
                 }
             });
+            sumaCobros.actualizar();
         })
         .catch(err => console.error("Error al cargar cobros:", err));
 }

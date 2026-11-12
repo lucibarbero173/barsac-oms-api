@@ -16,6 +16,8 @@ namespace BarsacOMS.Api.DTOs
         public decimal Saldo { get; set; }
         public string Origen { get; set; } = string.Empty; // "SaldoInicial" | "Cobro" | "Pago" | "Manual"
         public int? MovimientoManualId { get; set; } // solo si Origen == "Manual", para poder editar/borrar
+        public int OrigenId { get; set; } // Id del cobro, pago o movimiento manual (para Tesorería)
+        public string? Detalle { get; set; } // Cliente / proveedor, para reconocerlo al conciliar
         public bool AntesDelCorte { get; set; } // anterior al Saldo Inicial: no tiene saldo corrido
     }
 

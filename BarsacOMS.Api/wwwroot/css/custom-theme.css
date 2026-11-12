@@ -814,3 +814,10 @@
 .tabla-compacta .acciones-pedido .btn {
     padding: .2rem .4rem;
 }
+
+/* Barra con el total de las filas tildadas (Pagos, Cobros): queda a la vista al bajar */
+.barra-suma {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}

@@ -33,6 +33,9 @@ namespace BarsacOMS.Api.Data
         public DbSet<PrendaExtraModista> PrendasExtraModista { get; set; }
         public DbSet<ChatMensaje> ChatMensajes { get; set; }
         public DbSet<ChatLectura> ChatLecturas { get; set; }
+        public DbSet<ExtractoMovimiento> ExtractoMovimientos { get; set; }
+        public DbSet<ConciliacionBanco> ConciliacionesBanco { get; set; }
+        public DbSet<ConciliacionBarsac> ConciliacionesBarsac { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -457,6 +460,61 @@ namespace BarsacOMS.Api.Data
                 entity.Property(e => e.EsIngreso).HasColumnName("es_ingreso");
 
                 entity.HasIndex(e => e.Cuenta);
+            });
+
+            // =====================
+            // TESORERÍA (conciliación contra el extracto del banco)
+            // =====================
+            modelBuilder.Entity<ConciliacionBanco>(entity =>
+            {
+                entity.ToTable("conciliacion_banco");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Cuenta).HasColumnName("cuenta").HasMaxLength(50);
+                entity.Property(e => e.Fecha).HasColumnName("fecha");
+                entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+                entity.Property(e => e.Automatica).HasColumnName("automatica");
+
+                entity.HasMany(e => e.MovimientosBarsac)
+                      .WithOne()
+                      .HasForeignKey(e => e.ConciliacionBancoId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.Cuenta);
+            });
+
+            modelBuilder.Entity<ConciliacionBarsac>(entity =>
+            {
+                entity.ToTable("conciliacion_barsac");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.ConciliacionBancoId).HasColumnName("conciliacion_banco_id");
+                entity.Property(e => e.Origen).HasColumnName("origen").HasMaxLength(20);
+                entity.Property(e => e.OrigenId).HasColumnName("origen_id");
+                entity.Property(e => e.Importe).HasColumnName("importe").HasPrecision(18, 2);
+
+                // Un cobro/pago/movimiento se concilia una sola vez
+                entity.HasIndex(e => new { e.Origen, e.OrigenId }).IsUnique();
+            });
+
+            modelBuilder.Entity<ExtractoMovimiento>(entity =>
+            {
+                entity.ToTable("extracto_movimiento");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Cuenta).HasColumnName("cuenta").HasMaxLength(50);
+                entity.Property(e => e.Fecha).HasColumnName("fecha");
+                entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(500);
+                entity.Property(e => e.Importe).HasColumnName("importe").HasPrecision(18, 2);
+                entity.Property(e => e.SaldoBanco).HasColumnName("saldo_banco").HasPrecision(18, 2);
+                entity.Property(e => e.Origen).HasColumnName("origen").HasMaxLength(200);
+                entity.Property(e => e.FechaCarga).HasColumnName("fecha_carga");
+                entity.Property(e => e.ConciliacionBancoId).HasColumnName("conciliacion_banco_id");
+
+                // Al deshacer una conciliación, sus renglones del banco quedan sin conciliar
+                entity.HasOne<ConciliacionBanco>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ConciliacionBancoId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(e => new { e.Cuenta, e.Fecha });
             });
 
             // =====================

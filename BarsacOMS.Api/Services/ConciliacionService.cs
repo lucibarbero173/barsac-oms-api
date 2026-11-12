@@ -94,7 +94,7 @@ namespace BarsacOMS.Api.Services
         }
 
         // Cobros, pagos y movimientos manuales de la cuenta con fecha >= desde y < hasta
-        private async Task<List<MovimientoCuentaDto>> ObtenerMovimientosAsync(string cuenta, DateTime desde, DateTime hasta)
+        public async Task<List<MovimientoCuentaDto>> ObtenerMovimientosAsync(string cuenta, DateTime desde, DateTime hasta)
         {
             var cobros = await _context.Cobros
                 .Where(c => c.MedioCobro == cuenta && c.FechaCobro >= desde && c.FechaCobro < hasta)
@@ -104,7 +104,9 @@ namespace BarsacOMS.Api.Services
                     Concepto = c.Concepto,
                     Ingreso = c.Importe,
                     Egreso = 0,
-                    Origen = "Cobro"
+                    Origen = "Cobro",
+                    OrigenId = c.Id,
+                    Detalle = c.NombreCliente
                 })
                 .ToListAsync();
 
@@ -113,7 +115,7 @@ namespace BarsacOMS.Api.Services
                 .ToListAsync();
 
             var pagosDto = pagos
-                .Select(p => new { Fecha = p.FechaPago ?? p.FechaFactura, p.Concepto, p.Importe })
+                .Select(p => new { p.Id, Fecha = p.FechaPago ?? p.FechaFactura, p.Concepto, p.Importe, p.Proveedor })
                 .Where(p => p.Fecha >= desde && p.Fecha < hasta)
                 .Select(p => new MovimientoCuentaDto
                 {
@@ -121,7 +123,9 @@ namespace BarsacOMS.Api.Services
                     Concepto = p.Concepto,
                     Ingreso = 0,
                     Egreso = p.Importe,
-                    Origen = "Pago"
+                    Origen = "Pago",
+                    OrigenId = p.Id,
+                    Detalle = p.Proveedor
                 })
                 .ToList();
 
@@ -134,7 +138,8 @@ namespace BarsacOMS.Api.Services
                     Ingreso = m.EsIngreso ? m.Monto : 0,
                     Egreso = m.EsIngreso ? 0 : m.Monto,
                     Origen = "Manual",
-                    MovimientoManualId = m.Id
+                    MovimientoManualId = m.Id,
+                    OrigenId = m.Id
                 })
                 .ToListAsync();
 
@@ -192,6 +197,10 @@ namespace BarsacOMS.Api.Services
             var existente = await _context.MovimientosManualesCuenta.FindAsync(id);
             if (existente == null) return false;
 
+            // Conciliado en Tesorería con otro importe, sentido o cuenta: deja de valer
+            if (Math.Round(dto.Monto, 2) != Math.Round(existente.Monto, 2) || dto.EsIngreso != existente.EsIngreso || dto.Cuenta != existente.Cuenta)
+                await TesoreriaService.DesconciliarAsync(_context, "Manual", id);
+
             existente.Cuenta = dto.Cuenta;
             existente.Fecha = dto.Fecha;
             existente.Concepto = dto.Concepto;
@@ -207,6 +216,7 @@ namespace BarsacOMS.Api.Services
             var existente = await _context.MovimientosManualesCuenta.FindAsync(id);
             if (existente == null) return false;
 
+            await TesoreriaService.DesconciliarAsync(_context, "Manual", id);
             _context.MovimientosManualesCuenta.Remove(existente);
             await _context.SaveChangesAsync();
             return true;
