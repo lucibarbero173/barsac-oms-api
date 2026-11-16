@@ -150,7 +150,7 @@ function renderizarTablaSaldos(saldos) {
     tbody.innerHTML = "";
 
     if (!saldos || saldos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No hay órdenes entregadas (total o parcialmente) con saldo pendiente.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No hay órdenes entregadas (total o parcialmente) con saldo pendiente.</td></tr>`;
         return;
     }
 
@@ -159,10 +159,11 @@ function renderizarTablaSaldos(saldos) {
         tr.innerHTML = `
             <td><strong>#${item.numeroOrden}</strong></td>
             <td>${item.clienteNombre}</td>
+            <td class="text-nowrap">${item.telefono || '-'}</td>
             <td data-order="${item.fechaEntregaIso}">${item.fechaEntrega}</td>
-            <td>$${item.total.toLocaleString('es-AR')}</td>
-            <td class="text-success">$${item.montoPagado.toLocaleString('es-AR')}</td>
-            <td class="text-danger font-weight-bold">$${item.saldoPendiente.toLocaleString('es-AR')}</td>
+            <td data-valor="${item.total}">$${item.total.toLocaleString('es-AR')}</td>
+            <td class="text-success" data-valor="${item.montoPagado}">$${item.montoPagado.toLocaleString('es-AR')}</td>
+            <td class="text-danger font-weight-bold" data-valor="${item.saldoPendiente}">$${item.saldoPendiente.toLocaleString('es-AR')}</td>
             <td class="text-center">
                 <a href="pedidos.html?id=${item.numeroOrden}" class="btn btn-sm btn-primary" title="Ver Pedido">
                     <i class="fas fa-eye"></i>
@@ -176,10 +177,53 @@ function renderizarTablaSaldos(saldos) {
     if ($.fn.DataTable.isDataTable('#dataTableSaldos')) {
         $('#dataTableSaldos').DataTable().destroy();
     }
+    // Título con la fecha y el total de lo que se ve (respeta el buscador y los filtros)
+    const resumenSaldos = () => {
+        const api = $('#dataTableSaldos').DataTable();
+        const filas = api.rows({ search: 'applied' }).nodes().toArray();
+        const total = filas.reduce((s, tr) => s + Number([...tr.querySelectorAll('[data-valor]')].pop()?.dataset.valor || 0), 0);
+        return `Al ${new Date().toLocaleDateString('es-AR')} · ${filas.length} pedido(s) · Saldo total: $ ${total.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+    const tituloSaldos = 'Pedidos entregados con saldo pendiente';
+
     $('#dataTableSaldos').DataTable({
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
-        }
+        },
+        order: [[3, 'asc']],
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: 'excelHtml5',
+                text: '<i class="fas fa-file-excel mr-1"></i>Exportar a Excel',
+                className: 'btn btn-success btn-sm',
+                title: tituloSaldos,
+                messageTop: resumenSaldos,
+                exportOptions: {
+                    columns: ':not(.no-exportar)',
+                    modifier: { search: 'applied' },
+                    // Los importes van como números, así en el Excel se pueden sumar
+                    format: { body: (data, fila, col, nodo) => nodo && nodo.dataset && nodo.dataset.valor !== undefined ? Number(nodo.dataset.valor) : $('<div>').html(data).text().trim() }
+                }
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print mr-1"></i>Imprimir',
+                className: 'btn btn-primary btn-sm',
+                title: tituloSaldos,
+                messageTop: resumenSaldos,
+                exportOptions: {
+                    columns: ':not(.no-exportar)',
+                    modifier: { search: 'applied' },
+                    format: { body: (data, fila, col, nodo) => nodo && nodo.dataset && nodo.dataset.valor !== undefined ? '$ ' + Number(nodo.dataset.valor).toLocaleString('es-AR') : $('<div>').html(data).text().trim() }
+                },
+                customize: (win) => {
+                    $(win.document.body).css('font-size', '11pt');
+                    $(win.document.body).find('h1').css({ 'font-size': '16pt', 'margin-bottom': '4px' });
+                    $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
+                }
+            }
+        ]
     });
 }
 
