@@ -14,11 +14,12 @@ namespace BarsacOMS.Api.Services
             _context = context;
         }
 
-        public async Task<DashboardEstadisticasDto> ObtenerDashboardEstadisticasAsync()
+        // anio/mes: el mes a mirar (por defecto el actual). Los saldos impagos son siempre "a hoy".
+        public async Task<DashboardEstadisticasDto> ObtenerDashboardEstadisticasAsync(int? anio = null, int? mes = null)
         {
             var hoy = DateTime.UtcNow;
-            var mesActual = hoy.Month;
-            var anioActual = hoy.Year;
+            var mesActual = mes is >= 1 and <= 12 ? mes.Value : hoy.Month;
+            var anioActual = anio is >= 2000 and <= 2100 ? anio.Value : hoy.Year;
 
             // 1. SALDOS IMPAGOS DE PEDIDOS ENTREGADOS (Protegido contra nulos)
             var ordenesImpagasQuery = _context.Ordenes
@@ -77,6 +78,11 @@ namespace BarsacOMS.Api.Services
 
             int prendasMes = ordenesMes.SelectMany(o => o.Detalles).Sum(d => d.Cantidad);
 
+            var mesAnterior = new DateTime(anioActual, mesActual, 1).AddMonths(-1);
+            int prendasMesAnterior = await _context.Detalles
+                .Where(d => d.Orden.FechaPedido.Month == mesAnterior.Month && d.Orden.FechaPedido.Year == mesAnterior.Year)
+                .SumAsync(d => (int?)d.Cantidad) ?? 0;
+
             // 5. CÁLCULOS ANUALES PARA GRÁFICOS
             var mesesNom = new[] { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" };
             var facturadoMensual = new decimal[12];
@@ -109,6 +115,21 @@ namespace BarsacOMS.Api.Services
                 }
             }
 
+            // 6. INGRESOS Y EGRESOS MES POR MES DEL AÑO (lo pagado, por la fecha en que se pagó)
+            var ingresosEgresos = new SerieIngresosEgresosDto { Meses = mesesNom.ToList(), Ingresos = cobradoMensual.ToList() };
+            var pagosAnio = pagosList.Where(p => (p.FechaPago ?? p.FechaFactura).Year == anioActual).ToList();
+            for (int m = 1; m <= 12; m++)
+            {
+                var delMes = pagosAnio.Where(p => (p.FechaPago ?? p.FechaFactura).Month == m).ToList();
+                var sueldos = delMes.Where(EsSueldo).Sum(p => p.Importe);
+                var modistas = delMes.Where(p => !EsSueldo(p) && EsModista(p)).Sum(p => p.Importe);
+                var otros = delMes.Where(p => !EsSueldo(p) && !EsModista(p)).Sum(p => p.Importe);
+                ingresosEgresos.Sueldos.Add(sueldos);
+                ingresosEgresos.Modistas.Add(modistas);
+                ingresosEgresos.Otros.Add(otros);
+                ingresosEgresos.Egresos.Add(sueldos + modistas + otros);
+            }
+
             return new DashboardEstadisticasDto
             {
                 Kpis = new KpisDto
@@ -117,7 +138,10 @@ namespace BarsacOMS.Api.Services
                     CantOrdenesSaldo = cantOrdenesSaldo,
                     PrendasMes = prendasMes,
                     TotalEgresosMes = egresosSueldos + egresosModistas + egresosOtros,
-                    TotalCobradoMes = totalCobradoMes
+                    TotalCobradoMes = totalCobradoMes,
+                    Anio = anioActual,
+                    Mes = mesActual,
+                    PrendasMesAnterior = prendasMesAnterior
                 },
                 SaldosImpagos = listadoSaldosImpagos,
                 Graficos = new GraficosDto
@@ -138,7 +162,8 @@ namespace BarsacOMS.Api.Services
                     {
                         Meses = mesesNom.ToList(),
                         Cantidades = prendasMensual.ToList()
-                    }
+                    },
+                    IngresosEgresos = ingresosEgresos
                 }
             };
         }

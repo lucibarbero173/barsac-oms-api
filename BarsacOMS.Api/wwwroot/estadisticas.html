@@ -157,9 +157,15 @@
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 font-weight-bold text-gray-800">Estadísticas y Balances</h1>
+                        <div class="d-flex flex-wrap align-items-center mt-2 mt-sm-0">
+                            <label for="mesEstadisticas" class="small font-weight-bold mb-0 mr-2">Mes</label>
+                            <button type="button" class="btn btn-outline-secondary btn-sm mr-1" onclick="moverMes(-1)" title="Mes anterior"><i class="fas fa-chevron-left"></i></button>
+                            <input type="month" id="mesEstadisticas" class="form-control form-control-sm mr-1" style="width: 170px;">
+                            <button type="button" class="btn btn-outline-secondary btn-sm mr-3" onclick="moverMes(1)" title="Mes siguiente"><i class="fas fa-chevron-right"></i></button>
                         <button class="btn btn-primary shadow-sm" onclick="window.print()">
                             <i class="fas fa-download fa-sm text-white-50 mr-1"></i> Imprimir Reporte
                         </button>
+                        </div>
                     </div>
 
                     <!-- Tarjetas Metricas KPI -->
@@ -192,7 +198,7 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                                Prendas (Mes Actual)
+                                                <span id="lblPrendasMes">Prendas (Mes Actual)</span>
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="kpiPrendasMes">0 Unids</div>
                                             <div class="text-xs text-success mt-1" id="kpiTendenciaPrendas"><i class="fas fa-arrow-up"></i> - vs mes anterior</div>
@@ -212,7 +218,7 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Egresos Totales (Mes)
+                                                <span id="lblEgresosMes">Egresos Totales (Mes)</span>
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="kpiEgresosTotales">$0</div>
                                             <div class="text-xs text-muted mt-1">Sueldos + Modistas + Gastos</div>
@@ -232,7 +238,7 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Total Cobrado (Mes)
+                                                <span id="lblCobradoMes">Total Cobrado (Mes)</span>
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="kpiTotalCobrado">$0</div>
                                             <div class="text-xs text-muted mt-1">Ingresos efectivos</div>
@@ -265,7 +271,7 @@
                         <div class="col-xl-4 col-lg-5">
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-calculator mr-1"></i> Desglose de Egresos</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-calculator mr-1"></i> Desglose de Egresos <span class="small text-muted font-weight-normal" id="lblDesgloseMes"></span></h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="chart-pie pt-2 pb-2" style="position: relative; height:240px;">
@@ -275,6 +281,42 @@
                                         <span class="mr-2"><i class="fas fa-circle text-primary"></i> Sueldos</span>
                                         <span class="mr-2"><i class="fas fa-circle text-info"></i> Modistas</span>
                                         <span class="mr-2"><i class="fas fa-circle text-warning"></i> Gastos</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ingresos y egresos de cada mes del año -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-balance-scale mr-1"></i> Ingresos y egresos por mes — <span id="lblAnioIngresos"></span></h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-xl-7 mb-3">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm table-hover mb-0" id="tablaIngresosEgresos">
+                                            <thead>
+                                                <tr>
+                                                    <th>Mes</th>
+                                                    <th class="text-right">Ingresos (cobrado)</th>
+                                                    <th class="text-right">Sueldos</th>
+                                                    <th class="text-right">Modistas</th>
+                                                    <th class="text-right">Otros gastos</th>
+                                                    <th class="text-right">Egresos</th>
+                                                    <th class="text-right">Resultado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tablaIngresosEgresosBody"></tbody>
+                                            <tfoot id="tablaIngresosEgresosPie"></tfoot>
+                                        </table>
+                                    </div>
+                                    <div class="small text-muted mt-1">Tocá un mes para ver sus tarjetas y su desglose. Egresos: solo los pagos PAGADOS, por la fecha en que se pagaron.</div>
+                                </div>
+                                <div class="col-xl-5">
+                                    <div style="position: relative; height: 340px;">
+                                        <canvas id="chartIngresosEgresos"></canvas>
                                     </div>
                                 </div>
                             </div>

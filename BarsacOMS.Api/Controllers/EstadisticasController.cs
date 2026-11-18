@@ -17,11 +17,11 @@ namespace BarsacOMS.Api.Controllers
         }
 
         [HttpGet("dashboard")]
-        public async Task<IActionResult> GetDashboard()
+        public async Task<IActionResult> GetDashboard([FromQuery] int? anio, [FromQuery] int? mes)
         {
             try
             {
-                var data = await _estadisticasService.ObtenerDashboardEstadisticasAsync();
+                var data = await _estadisticasService.ObtenerDashboardEstadisticasAsync(anio, mes);
                 return Ok(data);
             }
             catch (Exception ex)

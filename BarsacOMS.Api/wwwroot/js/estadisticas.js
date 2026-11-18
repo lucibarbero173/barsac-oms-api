@@ -1,7 +1,33 @@
 ﻿document.addEventListener("DOMContentLoaded", function () {
+    const hoy = new Date();
+    document.getElementById("mesEstadisticas").value = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById("mesEstadisticas").addEventListener("change", cargarEstadisticas);
     cargarEstadisticas();
     cargarEstadisticasFaltantes();
 });
+
+const NOMBRES_MES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const graficos = {}; // se destruyen antes de redibujar (al cambiar de mes)
+
+function dibujarGrafico(id, config) {
+    if (graficos[id]) graficos[id].destroy();
+    graficos[id] = new Chart(document.getElementById(id).getContext("2d"), config);
+}
+
+// Flechitas: mes anterior / siguiente
+function moverMes(delta) {
+    const input = document.getElementById("mesEstadisticas");
+    const [a, m] = (input.value || '').split('-').map(Number);
+    if (!a || !m) return;
+    const d = new Date(a, m - 1 + delta, 1);
+    input.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    cargarEstadisticas();
+}
+
+function irAlMes(anio, mes) {
+    document.getElementById("mesEstadisticas").value = `${anio}-${String(mes).padStart(2, '0')}`;
+    cargarEstadisticas();
+}
 
 // Mismo catálogo de partes que usan Diseño y Corte.
 const PARTES_FALTANTE = {
@@ -106,7 +132,9 @@ function renderizarFaltantesPorTela(lista) {
 async function cargarEstadisticas() {
     try {
         const token = localStorage.getItem("token"); // O el nombre que uses para tu JWT
-        const response = await fetch('/api/Estadisticas/dashboard', {
+        const [anio, mes] = (document.getElementById("mesEstadisticas").value || '').split('-');
+        const params = anio && mes ? `?anio=${Number(anio)}&mes=${Number(mes)}` : '';
+        const response = await fetch(`/api/Estadisticas/dashboard${params}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -130,6 +158,7 @@ async function cargarEstadisticas() {
         renderizarGraficoFacturadoVsCobrado(data.graficos.facturadoVsCobrado);
         renderizarGraficoGastos(data.graficos.distribucionGastos);
         renderizarGraficoPrendas(data.graficos.prendasPorMes);
+        renderizarIngresosEgresos(data.graficos.ingresosEgresos, data.kpis.anio, data.kpis.mes);
 
     } catch (error) {
         console.error("Error:", error);
@@ -143,6 +172,80 @@ function renderizarKpis(kpis) {
     document.getElementById("kpiPrendasMes").innerText = `${kpis.prendasMes} Unids`;
     document.getElementById("kpiEgresosTotales").innerText = `$${kpis.totalEgresosMes.toLocaleString('es-AR')}`;
     document.getElementById("kpiTotalCobrado").innerText = `$${kpis.totalCobradoMes.toLocaleString('es-AR')}`;
+
+    // Títulos con el mes que se está mirando
+    const nombreMes = `${NOMBRES_MES[kpis.mes - 1]} ${kpis.anio}`;
+    document.getElementById("lblPrendasMes").innerText = `Prendas (${nombreMes})`;
+    document.getElementById("lblEgresosMes").innerText = `Egresos totales (${nombreMes})`;
+    document.getElementById("lblCobradoMes").innerText = `Total cobrado (${nombreMes})`;
+    document.getElementById("lblDesgloseMes").innerText = `(${nombreMes})`;
+
+    // Prendas contra el mes anterior
+    const tendencia = document.getElementById("kpiTendenciaPrendas");
+    const dif = kpis.prendasMes - kpis.prendasMesAnterior;
+    const pct = kpis.prendasMesAnterior > 0 ? Math.round(dif / kpis.prendasMesAnterior * 100) : null;
+    tendencia.className = `text-xs mt-1 ${dif >= 0 ? 'text-success' : 'text-danger'}`;
+    tendencia.innerHTML = `<i class="fas fa-arrow-${dif >= 0 ? 'up' : 'down'}"></i> ${dif >= 0 ? '+' : ''}${dif}${pct !== null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''} vs mes anterior (${kpis.prendasMesAnterior})`;
+}
+
+function renderizarIngresosEgresos(d, anio, mesElegido) {
+    document.getElementById("lblAnioIngresos").innerText = anio;
+    const m = (n) => (Number(n) < 0 ? '-$' : '$') + Math.abs(Number(n || 0)).toLocaleString('es-AR', { maximumFractionDigits: 0 });
+    const tbody = document.getElementById("tablaIngresosEgresosBody");
+    tbody.innerHTML = '';
+
+    const tot = { ingresos: 0, sueldos: 0, modistas: 0, otros: 0, egresos: 0 };
+    d.meses.forEach((_, i) => {
+        const resultado = d.ingresos[i] - d.egresos[i];
+        const vacio = d.ingresos[i] === 0 && d.egresos[i] === 0;
+        tot.ingresos += d.ingresos[i]; tot.sueldos += d.sueldos[i]; tot.modistas += d.modistas[i]; tot.otros += d.otros[i]; tot.egresos += d.egresos[i];
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.title = `Ver ${NOMBRES_MES[i]} ${anio}`;
+        if (i + 1 === mesElegido) tr.className = 'table-active font-weight-bold';
+        if (vacio) tr.classList.add('text-muted');
+        tr.innerHTML = `
+            <td>${NOMBRES_MES[i]}</td>
+            <td class="text-right text-success">${m(d.ingresos[i])}</td>
+            <td class="text-right">${m(d.sueldos[i])}</td>
+            <td class="text-right">${m(d.modistas[i])}</td>
+            <td class="text-right">${m(d.otros[i])}</td>
+            <td class="text-right text-warning">${m(d.egresos[i])}</td>
+            <td class="text-right font-weight-bold ${resultado >= 0 ? 'text-success' : 'text-danger'}">${vacio ? '-' : m(resultado)}</td>`;
+        tr.addEventListener('click', () => irAlMes(anio, i + 1));
+        tbody.appendChild(tr);
+    });
+
+    const resultadoAnio = tot.ingresos - tot.egresos;
+    document.getElementById("tablaIngresosEgresosPie").innerHTML = `
+        <tr class="font-weight-bold">
+            <td>Total ${anio}</td>
+            <td class="text-right text-success">${m(tot.ingresos)}</td>
+            <td class="text-right">${m(tot.sueldos)}</td>
+            <td class="text-right">${m(tot.modistas)}</td>
+            <td class="text-right">${m(tot.otros)}</td>
+            <td class="text-right text-warning">${m(tot.egresos)}</td>
+            <td class="text-right ${resultadoAnio >= 0 ? 'text-success' : 'text-danger'}">${m(resultadoAnio)}</td>
+        </tr>`;
+
+    dibujarGrafico("chartIngresosEgresos", {
+        type: 'bar',
+        data: {
+            labels: d.meses,
+            datasets: [
+                { type: 'line', label: 'Resultado', data: d.ingresos.map((v, i) => v - d.egresos[i]), borderColor: '#858796', backgroundColor: 'transparent', pointRadius: 3, lineTension: 0.2 },
+                { label: 'Ingresos', data: d.ingresos, backgroundColor: '#1cc88a' },
+                { label: 'Egresos', data: d.egresos, backgroundColor: '#f6c23e' }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            legend: { position: 'bottom' },
+            tooltips: { mode: 'index', intersect: false, callbacks: { label: (item, data) => ` ${data.datasets[item.datasetIndex].label}: ${m(item.yLabel)}` } },
+            onClick: (e, items) => { if (items && items.length) irAlMes(anio, items[0]._index + 1); },
+            scales: { yAxes: [{ ticks: { callback: v => '$' + Number(v).toLocaleString('es-AR', { notation: 'compact' }) } }] }
+        }
+    });
 }
 
 function renderizarTablaSaldos(saldos) {
@@ -228,8 +331,7 @@ function renderizarTablaSaldos(saldos) {
 }
 
 function renderizarGraficoFacturadoVsCobrado(data) {
-    const ctx = document.getElementById("chartFacturadoVsCobrado").getContext("2d");
-    new Chart(ctx, {
+    dibujarGrafico("chartFacturadoVsCobrado", {
         type: 'line',
         data: {
             labels: data.meses,
@@ -271,8 +373,7 @@ function renderizarGraficoFacturadoVsCobrado(data) {
 }
 
 function renderizarGraficoGastos(gastos) {
-    const ctx = document.getElementById("chartGastos").getContext("2d");
-    new Chart(ctx, {
+    dibujarGrafico("chartGastos", {
         type: 'doughnut',
         data: {
             labels: ["Sueldos", "Modistas", "Gastos/Proveedores"],
@@ -299,8 +400,7 @@ function renderizarGraficoGastos(gastos) {
 }
 
 function renderizarGraficoPrendas(data) {
-    const ctx = document.getElementById("chartPrendasMes").getContext("2d");
-    new Chart(ctx, {
+    dibujarGrafico("chartPrendasMes", {
         type: 'bar',
         data: {
             labels: data.meses,

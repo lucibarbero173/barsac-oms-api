@@ -14,6 +14,11 @@
         public int PrendasMes { get; set; }
         public decimal TotalEgresosMes { get; set; }
         public decimal TotalCobradoMes { get; set; }
+
+        // El mes que se está mirando (por defecto el actual) y las prendas del mes anterior
+        public int Anio { get; set; }
+        public int Mes { get; set; }
+        public int PrendasMesAnterior { get; set; }
     }
 
     public class SaldoImpagoDto
@@ -35,6 +40,18 @@
         public SerieComparativaDto FacturadoVsCobrado { get; set; } = new();
         public DistribucionGastosDto DistribucionGastos { get; set; } = new();
         public SerieProduccionDto PrendasPorMes { get; set; } = new();
+        public SerieIngresosEgresosDto IngresosEgresos { get; set; } = new();
+    }
+
+    // Los 12 meses del año elegido: lo cobrado y lo pagado (PAGADOS), mes por mes
+    public class SerieIngresosEgresosDto
+    {
+        public List<string> Meses { get; set; } = new();
+        public List<decimal> Ingresos { get; set; } = new();
+        public List<decimal> Egresos { get; set; } = new();
+        public List<decimal> Sueldos { get; set; } = new();
+        public List<decimal> Modistas { get; set; } = new();
+        public List<decimal> Otros { get; set; } = new();
     }
 
     public class SerieComparativaDto

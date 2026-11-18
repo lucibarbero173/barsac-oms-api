@@ -4,7 +4,7 @@ namespace BarsacOMS.Api.Services
 {
     public interface IEstadisticasService
     {
-        Task<DashboardEstadisticasDto> ObtenerDashboardEstadisticasAsync();
+        Task<DashboardEstadisticasDto> ObtenerDashboardEstadisticasAsync(int? anio = null, int? mes = null);
         Task<EstadisticasFaltantesDto> ObtenerEstadisticasFaltantesAsync();
     }
 }
